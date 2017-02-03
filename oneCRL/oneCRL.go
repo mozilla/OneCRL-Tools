@@ -1,6 +1,7 @@
 package oneCRL
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -10,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"log"
+	"os"
 	"io/ioutil"
 	"strings"
 )
@@ -210,4 +213,49 @@ func RFC4514ish(rdns pkix.RDNSequence) string {
 		retval = retval + sep + tStr + "=" + value
 	}
 	return retval
+}
+
+type OneCRLLoader interface {
+	LoadRecord(record Record)
+}
+
+func LoadRevocationsTxt(filename string, loader OneCRLLoader) error {
+	var (
+		err error
+	)
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var dn = ""
+	for scanner.Scan() {
+		// process line
+		line := scanner.Text()
+		// Ignore comments
+		if 0 == strings.Index(line, "#") {
+			continue
+		}
+		if 0 == strings.Index(line, " ") {
+			if len(dn) == 0 {
+				log.Fatal("A serial number with no issuer is not valid. Exiting.")
+			}
+			record := Record{IssuerName:dn, SerialNumber:strings.Trim(line," ")}
+			loader.LoadRecord(record)
+			continue
+		}
+		if 0 == strings.Index(line, "\t") {
+			log.Fatal("revocations.txt containing subject / pubkey pairs not yet supported");
+			log.Fatal("A public key hash with no subject is not valid. Exiting.")
+		}
+		dn = line
+	}
+	
+	if err = scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	return nil;
 }

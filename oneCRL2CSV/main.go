@@ -1,14 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"strings"
 	"github.com/mozmark/OneCRL-Tools/oneCRL"	
 )
 
@@ -28,56 +25,29 @@ type Results struct {
 	}
 }
 
-func getRevocationsTxt(filename string, separate bool, upper bool) error {
+type OneCRLPrinter struct {
+	separate bool
+	upper bool
+}
+
+func (p OneCRLPrinter) LoadRecord(record oneCRL.Record) {
 	var (
 		issuer string
 		serial string
 		err error
 	)
-	file, err := os.Open(filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	var dn = ""
-	for scanner.Scan() {
-		// process line
-		line := scanner.Text()
-		// Ignore comments
-		if 0 == strings.Index(line, "#") {
-			continue
-		}
-		if 0 == strings.Index(line, " ") {
-			if len(dn) == 0 {
-				log.Fatal("A serial number with no issuer is not valid. Exiting.")
-			}
-			issuer, err = oneCRL.DNToRFC4514(dn)
-			if nil != err {
-				log.Print(err)
-			}
-			
-			serial, err = oneCRL.SerialToString(strings.Trim(line, " "), separate, upper)
-			if nil != err {
-				log.Print(err)
-			}
-			fmt.Printf("\"%s\",\"%s\"\n", issuer, serial);
-			continue
-		}
-		if 0 == strings.Index(line, "\t") {
-			log.Fatal("revocations.txt containing subject / pubkey pairs not yet supported");
-			log.Fatal("A public key hash with no subject is not valid. Exiting.")
-		}
-		dn = line
-	}
-	
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+	issuer, err = oneCRL.DNToRFC4514(record.IssuerName)
+	if nil != err {
+		log.Print(err)
 	}
 
-	return nil;
+	serial, err = oneCRL.SerialToString(record.SerialNumber, p.separate, p.upper)
+	if nil != err {
+		log.Print(err)
+	}	
+	fmt.Printf("\"%s\",\"%s\"\n", issuer, serial);
 }
+
 
 func main() {
 	urlPtr := flag.String("url", "https://firefox.settings.services.mozilla.com/v1/buckets/blocklists/collections/certificates/records", "The URL of the blocklist record data")
@@ -86,11 +56,12 @@ func main() {
 	separate := flag.Bool("separate", false, "Should the serial number bytes be colon separated?")
 	flag.Parse()
 	res := new(Results)
+	printer := OneCRLPrinter{separate:*separate, upper:*upper}
 	// If no file is specified, fall back to loading from an URL
 	if len(*filePtr) == 0 {
 		getJSON(*urlPtr, res)
 	} else {
-		getRevocationsTxt(*filePtr, *separate, *upper)
+		oneCRL.LoadRevocationsTxt(*filePtr, printer)
 	}
 	for idx := range res.Data {
 		IssuerName := res.Data[idx].IssuerName
