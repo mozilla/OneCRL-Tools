@@ -50,30 +50,24 @@ func (p OneCRLPrinter) LoadRecord(record oneCRL.Record) {
 
 
 func main() {
-	urlPtr := flag.String("url", "https://firefox.settings.services.mozilla.com/v1/buckets/blocklists/collections/certificates/records", "The URL of the blocklist record data")
+	envPtr := flag.String("env", "production", "which environment to load records from (production or stage)")
+	// TODO: add flag for custom endpoint (e.g. local kinto)
 	filePtr := flag.String("file", "", "revocations.txt to load entries from");
 	upper := flag.Bool("upper", false, "Should hex values be upper case?")
 	separate := flag.Bool("separate", false, "Should the serial number bytes be colon separated?")
 	flag.Parse()
-	res := new(Results)
 	printer := OneCRLPrinter{separate:*separate, upper:*upper}
+	var env oneCRL.Environment
+	if *envPtr == "stage" {
+		env = oneCRL.Stage
+	} else {
+		env = oneCRL.Production
+	}
+	config := oneCRL.OneCRLConfig { Environment: env }
+	url := config.GetRecordURL()
 	// If no file is specified, fall back to loading from an URL
 	if len(*filePtr) == 0 {
-		getJSON(*urlPtr, res)
+		oneCRL.LoadJSONFromURL(url, printer)
 	} else {
-		oneCRL.LoadRevocationsTxt(*filePtr, printer)
+		oneCRL.LoadRevocationsTxtFromFile(*filePtr, printer)
 	}
-	for idx := range res.Data {
-		IssuerName := res.Data[idx].IssuerName
-		SerialNumber := res.Data[idx].SerialNumber
-		hexSerial, err2 := oneCRL.SerialToString(SerialNumber, *separate, *upper)
-		if nil != err2 {
-			log.Print(err2)
-		}
-		decodedIssuer, err3 := oneCRL.DNToRFC4514(IssuerName)
-		if err3 != nil {
-			log.Print(err3)
-		}
-		fmt.Printf("\"%s\",\"%s\", \"%s\"\n", decodedIssuer, hexSerial, IssuerName)
-	}
-}

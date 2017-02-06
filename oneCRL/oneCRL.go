@@ -17,6 +17,32 @@ import (
 	"strings"
 )
 
+const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
+const StagePrefix string = "https://settings.stage.mozaws.net"
+const RecordsPath string = "/v1/buckets/blocklists/collections/certificates/records"
+
+type Environment int
+
+const (
+	Production Environment = iota
+	Stage
+)
+
+type OneCRLConfig struct {
+	Environment Environment
+}
+
+func (config OneCRLConfig) GetRecordURL() string {
+
+	var prefix string
+	if config.Environment == Stage {
+		prefix = StagePrefix
+	} else {
+		prefix = ProductionPrefix
+	}
+	return prefix + RecordsPath
+}
+
 type Record struct {
 	IssuerName   string
 	SerialNumber string
@@ -31,7 +57,14 @@ type Record struct {
 	}
 }
 
-type Results struct {
+func (record Record) EqualsRecord(otherRecord Record) bool {
+	return record.IssuerName == otherRecord.IssuerName &&
+		record.SerialNumber == otherRecord.SerialNumber &&
+		record.Subject == otherRecord.Subject &&
+		record.PubKeyHash == otherRecord.PubKeyHash
+}
+
+type Records struct {
 	Data []Record
 }
 
@@ -67,7 +100,7 @@ func FetchExistingRevocations(url string) ([]string, error) {
 
 	var existing []string
 
-	res := new(Results)
+	res := new(Records)
 	data, err := getDataFromURL(url)
 	if nil != err {
 		return nil, errors.New(fmt.Sprintf("problem loading existing data from URL %s", err))
@@ -80,8 +113,6 @@ func FetchExistingRevocations(url string) ([]string, error) {
 
 	return existing, nil
 }
-
-//func FindCRLContaining(CRLs []string, 
 
 func ByteArrayEquals(a []byte, b []byte) bool {
     if len(a) != len(b) {
@@ -219,7 +250,29 @@ type OneCRLLoader interface {
 	LoadRecord(record Record)
 }
 
-func LoadRevocationsTxt(filename string, loader OneCRLLoader) error {
+// TODO: fix loading functions to get data from a reader
+
+func LoadJSONFromURL(url string, loader OneCRLLoader) error {
+	var err error
+	res := new(Records)
+	r, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+	err = json.NewDecoder(r.Body).Decode(res)
+	if nil != err {
+		return err
+	}
+
+	for idx := range res.Data {
+		loader.LoadRecord(res.Data[idx])
+	}
+
+	return nil
+}
+
+func LoadRevocationsTxtFromFile(filename string, loader OneCRLLoader) error {
 	var (
 		err error
 	)
