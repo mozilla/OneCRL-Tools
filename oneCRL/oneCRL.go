@@ -96,7 +96,7 @@ func FetchExistingRevocations(url string) ([]string, error) {
 		return nil, errors.New("No URL was specified")
 	}
 
-	fmt.Printf("Got URL data\n");
+	fmt.Printf("Got URL data\n")
 
 	var existing []string
 
@@ -130,10 +130,6 @@ func DNToRFC4514(name string) (string, error) {
 	rawDN, _ := base64.StdEncoding.DecodeString(name)
 	rdns := new(pkix.RDNSequence)
 	_, err := asn1.Unmarshal(rawDN, rdns)
-	if nil != err {
-		fmt.Printf("problem decoding %s\n", name);
-		//return "", err
-	}
 	
 	return RFC4514ish(*rdns), err
 }
@@ -150,7 +146,7 @@ func hexify(arr []byte, separate bool, upperCase bool) string {
 	if !upperCase {
 		retval = strings.ToLower(retval)
 	}
-	return retval;
+	return retval
 }
 
 func SerialToString(encoded string, separate bool, upper bool) (string, error) {
@@ -300,7 +296,7 @@ func LoadRevocationsTxtFromFile(filename string, loader OneCRLLoader) error {
 			continue
 		}
 		if 0 == strings.Index(line, "\t") {
-			log.Fatal("revocations.txt containing subject / pubkey pairs not yet supported");
+			log.Fatal("revocations.txt containing subject / pubkey pairs not yet supported")
 			log.Fatal("A public key hash with no subject is not valid. Exiting.")
 		}
 		dn = line
@@ -310,5 +306,5 @@ func LoadRevocationsTxtFromFile(filename string, loader OneCRLLoader) error {
 		log.Fatal(err)
 	}
 
-	return nil;
+	return nil
 }
