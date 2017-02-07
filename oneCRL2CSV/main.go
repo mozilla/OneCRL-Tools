@@ -45,14 +45,14 @@ func (p OneCRLPrinter) LoadRecord(record oneCRL.Record) {
 	if nil != err {
 		log.Print(err)
 	}	
-	fmt.Printf("\"%s\",\"%s\"\n", issuer, serial);
+	fmt.Printf("\"%s\",\"%s\"\n", issuer, serial)
 }
 
 
 func main() {
 	envPtr := flag.String("env", "production", "which environment to load records from (production or stage)")
 	// TODO: add flag for custom endpoint (e.g. local kinto)
-	filePtr := flag.String("file", "", "revocations.txt to load entries from");
+	filePtr := flag.String("file", "", "revocations.txt to load entries from")
 	upper := flag.Bool("upper", false, "Should hex values be upper case?")
 	separate := flag.Bool("separate", false, "Should the serial number bytes be colon separated?")
 	flag.Parse()

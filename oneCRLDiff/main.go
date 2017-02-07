@@ -53,10 +53,10 @@ func main() {
 		set2.FetchData(args[1])
 	}
 
-	fmt.Printf("set1 has %d entries\n",len((*set1).records.Data));
-	fmt.Printf("set2 has %d entries\n",len((*set2).records.Data));
+	fmt.Printf("set1 has %d entries\n",len((*set1).records.Data))
+	fmt.Printf("set2 has %d entries\n",len((*set2).records.Data))
 
-	fmt.Println("Removals");
+	fmt.Println("Removals")
 	changes := false
 	for _, record := range set1.records.Data {
 		found := false
@@ -71,11 +71,11 @@ func main() {
 		}
 	}
 	if !changes {
-		fmt.Println("(none)");
+		fmt.Println("(none)")
 	}
 
 	changes = false
-	fmt.Println("Additions");
+	fmt.Println("Additions")
 	for _, record := range set2.records.Data {
 		found := false
 		for _, record2 := range set1.records.Data {
@@ -89,6 +89,6 @@ func main() {
 		}
 	}
 	if !changes {
-		fmt.Println("(none)");
+		fmt.Println("(none)")
 	}
 }

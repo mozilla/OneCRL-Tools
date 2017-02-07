@@ -72,14 +72,13 @@ func main() {
 		stream = r.Body
 	}
 
-	existing, errCurrent := oneCRL.FetchExistingRevocations(*currentPtr)
-	if nil != errCurrent {
-		fmt.Printf("%s\n", errCurrent)
-		//return
+	existing, err:= oneCRL.FetchExistingRevocations(*currentPtr)
+	if nil != err{
+		fmt.Printf("%s\n", err)
 	}
 
 	if len(*exceptionsPtr) != 0 {
-		res := new(oneCRL.Results)
+		res := new(oneCRL.Records)
 		data, err := ioutil.ReadFile(*exceptionsPtr)
 		if nil != err {
 			fmt.Printf("problem loading oneCRL exceptions from file %s\n", err)
@@ -101,21 +100,21 @@ func main() {
 		row++
 
 		if each.Status == "Ready to Add" {
-			certData, errPEM := salesforce.CertDataFromSalesforcePEM(each.PEM)
-			if errPEM != nil {
+			certData, err:= salesforce.CertDataFromSalesforcePEM(each.PEM)
+			if err != nil {
 				fmt.Printf("(%d, %s, %s) can't decode PEM %s\n", row, each.CSN, each.CertName, each.PEM)
 			}
 
-			cert, err2 := constraintsx509.ParseCertificate(certData)
-			if err2 != nil {
+			cert, err := constraintsx509.ParseCertificate(certData)
+			if err != nil {
 				fmt.Printf("(%d, %s, %s) could not parse cert\n", row, each.CSN, each.CertName)
 				continue
 			}
 
 			issuerString := base64.StdEncoding.EncodeToString(cert.RawIssuer)
-			serialBytes, err3 := asn1.Marshal(cert.SerialNumber)
+			serialBytes, err := asn1.Marshal(cert.SerialNumber)
 
-			if err3 != nil {
+			if err != nil {
 				fmt.Printf("(%d, %s, %s) could not marshal serial number\n", row, each.CSN, each.CertName)
 				continue
 			}
@@ -141,15 +140,15 @@ func main() {
 				}
 
 				// fetch and parse the CRL
-				res, err4 := http.Get(CRLLocation)
-				if err4 != nil {
+				res, err := http.Get(CRLLocation)
+				if err != nil {
 					lineErrors += fmt.Sprintf("There was a problem fetching the CRL from %s\n", CRLLocation)
 					continue
 				}
 
 				buf := new(bytes.Buffer)
-				_, err6 := buf.ReadFrom(res.Body)
-				if err6 != nil {
+				_, err = buf.ReadFrom(res.Body)
+				if err != nil {
 					fmt.Println("Problem reading the CRL data at %s\n", CRLLocation)
 					continue
 				}
@@ -162,10 +161,10 @@ func main() {
 					crlData = pemBlock.Bytes
 				}
 
-				crl, err5 := constraintsx509.ParseCRL(crlData)
-				if err5 != nil {
+				crl, err := constraintsx509.ParseCRL(crlData)
+				if err != nil {
 					lineErrors += fmt.Sprintf("Could not parse the CRL at \"%s\" %v\n",
-											  CRLLocation, err5)
+											  CRLLocation, err)
 					continue
 				}
 
@@ -176,12 +175,17 @@ func main() {
 				}
 
 				// Check the cert issuer and the CRL issuer match
-				crlIssuerBytes, errMarshalCRLIssuer := asn1.Marshal(crl.TBSCertList.Issuer)
-				if nil != errMarshalCRLIssuer {
+				crlIssuerBytes, err := asn1.Marshal(crl.TBSCertList.Issuer)
+				if nil != err {
 					lineErrors += fmt.Sprintf("could not marshal CRL issuer %s\n", CRLLocation)
 				}
 
-				readibleCertIssuer, _ := oneCRL.DNToRFC4514(issuerString)
+				readibleCertIssuer, err := oneCRL.DNToRFC4514(issuerString)
+				if nil != err {
+					lineErrors += fmt.Sprintf("could not make readible issuer %s\n", CRLLocation)
+					continue
+				}
+
 				if ! (oneCRL.ByteArrayEquals(cert.RawIssuer, crlIssuerBytes)) {
 					if ! oneCRL.NamesDataMatches(cert.RawIssuer, crlIssuerBytes) {
 						lineErrors += fmt.Sprintf("CRL issuer from CRL at %s does not match issuer\n%s !=\n%s\nCRL issuer:  %s\nCert issuer: %s\n", CRLLocation,
