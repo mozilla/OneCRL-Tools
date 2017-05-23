@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"flag"
 	"net/http"
 	"log"
 	"os"
@@ -21,21 +22,35 @@ const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
 const StagePrefix string = "https://settings.stage.mozaws.net"
 const RecordsPath string = "/v1/buckets/blocklists/collections/certificates/records"
 
-type Environment int
+const BugzillaProductionPrefix string = "https://bugzilla.mozilla.org"
+const BugzillaStagePrefix string = "https://bugzilla.allizom.org"
 
+const KintoWriterURL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
+
+const IssuerPrefix string = "issuer: "
+const SerialPrefix string = "serial: "
+
+type OneCRLEnvironment int
 const (
-	Production Environment = iota
+	Production OneCRLEnvironment = iota
 	Stage
 )
 
 type OneCRLConfig struct {
-	Environment Environment
+	oneCRLEnvString *string
+	BugzillaBase *string
+	BugzillaAPIKey *string
+	Preview *string
+	KintoUser *string
+	KintoPassword *string
+	KintoUploadUrl *string
 }
 
 func (config OneCRLConfig) GetRecordURL() string {
-
+	// TODO: create single method to gather config
+	// ideally loading from yml file similar to JCJs (maybe even reuse config?)
 	var prefix string
-	if config.Environment == Stage {
+	if *config.oneCRLEnvString == "stage" {
 		prefix = StagePrefix
 	} else {
 		prefix = ProductionPrefix
@@ -43,18 +58,73 @@ func (config OneCRLConfig) GetRecordURL() string {
 	return prefix + RecordsPath
 }
 
+func (config OneCRLConfig) LoadConfig() error {
+	// TODO: load the config from configuration file
+	return nil
+}
+
+var Config = OneCRLConfig {}
+
+// TODO: explore tidying this using flag.Var instead
+func DefineFlags() {
+	Config.oneCRLEnvString = flag.String("onecrlenv", "production", "The OneCRL Environment to use by default")
+	Config.BugzillaBase = flag.String("bugzilla", BugzillaProductionPrefix, "The bugzilla instance to use by default")
+	Config.BugzillaAPIKey = flag.String("bzapikey", "", "The bugzilla API key")
+	Config.KintoUser = flag.String("kintouser", "", "The kinto user")
+	Config.KintoPassword = flag.String("kintopass", "", "The kinto user's pasword")
+	Config.KintoUploadURL = flag.String("uploadurl", "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records", "The kinto upload URL")
+}
+
+type AttachmentFlag struct {
+	Name string `json:"name"`
+	Status string `json:"status"`
+	Requestee string `json:"requestee"`
+	New bool `json:"new"`
+}
+
+type Attachment struct {
+	ApiKey string `json:"api_key"`
+	Ids []int `json:"ids"`
+	ContentType string `json:"content_type"`
+	Data string `json:"data"`
+	Summary string `json:"summary"`
+	FileName string `json:"file_name"`
+	Flags []AttachmentFlag `json:"flags"`
+	BugId int `json:"bug_id"`
+	Comment string `json:"comment"`
+}
+
+type AttachmentResponse struct {
+	Ids []string `json:"ids"`
+}
+
+type Bug struct {
+	ApiKey string `json:"api_key"`
+	Product string `json:"product"`
+	Component string `json:"component"`
+	Version string `json:"version"`
+	Summary string `json:"summary"`
+	Comment string `json:"comment"`
+	Description string `json:"description"`
+}
+
+type BugResponse struct {
+	Id int `json:"id"`
+}
+
 type Record struct {
-	IssuerName   string
-	SerialNumber string
-	Subject	     string
-	PubKeyHash	 string
+	IssuerName   string `json:"issuerName"`
+	SerialNumber string `json:"serialNumber"`
+	Subject	     string `json:"subject,omitempty"`
+	PubKeyHash	 string `json:"pubKeyHash,omitempty"`
+	Enabled bool `json:"enabled"`
 	Details struct {
-		Who string
-		Created string
-		Bug string
-		Name string
-		Why string
-	}
+		Who string `json:"who"`
+		Created string `json:"created"`
+		Bug string `json:"bug"`
+		Name string `json:"name"`
+		Why string `json:"why"`
+	} `json:"details"`
 }
 
 func (record Record) EqualsRecord(otherRecord Record) bool {
@@ -305,6 +375,92 @@ func LoadRevocationsTxtFromFile(filename string, loader OneCRLLoader) error {
 	if err = scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+
+	return nil
+}
+
+func LoadRevocationsFromBug(filename string, loader OneCRLLoader) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		// process line
+		line := scanner.Text()
+
+		// parse the issuer and serial lines from the bug data
+		issuerIndex := strings.Index(line, IssuerPrefix)
+		serialIndex := strings.Index(line, SerialPrefix)
+
+		issuer := line[issuerIndex + len(IssuerPrefix): serialIndex - 1]
+		serial := line[serialIndex + len(SerialPrefix): len(line)]
+
+		fmt.Printf("issuer: \"%s\"\n", issuer)
+		fmt.Printf("serial: \"%s\"\n", serial)
+
+		record := Record{IssuerName:issuer, SerialNumber:serial}
+		loader.LoadRecord(record)
+	}
+
+	if err = scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	return nil
+}
+
+func UploadRecords(records Records, createBug bool) error {
+	return nil;
+}
+
+func CreateBug(bug Bug, attachments []Attachment) (error) {
+	// POST the bug
+	url := *Config.BugzillaBase + "/rest/bug"
+	marshalled, err := json.Marshal(bug)
+	fmt.Printf("POSTing %s to %s\n", marshalled, url);
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(marshalled))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	fmt.Printf("status code is %d\n", resp.StatusCode)
+	if err != nil {
+		panic(err)
+	}
+	dec := json.NewDecoder(resp.Body)
+		var response BugResponse
+		err = dec.Decode(&response)
+		if err != nil {
+			panic(err)
+		} else {
+			fmt.Printf("%v\n", response.Id);
+			// loop over the attachments, add each to the bug
+			for _, attachment := range attachments {
+				attUrl := fmt.Sprintf(*Config.BugzillaBase + "/rest/bug/%d/attachment", response.Id)
+				attachment.Ids = []int {response.Id}
+				attachment.ApiKey = bug.ApiKey
+				attachment.FileName = "BugData.txt"
+				attachment.Summary = "Intermediates to be revoked"
+				attachment.ContentType = "text/plain"
+				attachment.Comment = "Revocation data for new records"
+				attachment.Flags = make([]AttachmentFlag,0,1)
+				attachment.BugId = response.Id
+				attMarshalled, err := json.Marshal(attachment)
+				fmt.Printf("POSTing %s to %s\n", attMarshalled, attUrl)
+				attReq, err := http.NewRequest("POST", attUrl, bytes.NewBuffer(attMarshalled))
+	            attReq.Header.Set("Content-Type", "application/json")
+				attClient := &http.Client{}
+				attResp, err := attClient.Do(attReq)
+				if err != nil {
+					panic(err)
+				}
+				fmt.Printf("att response %s\n", attResp);
+			}
+		}
+	defer resp.Body.Close()
 
 	return nil
 }

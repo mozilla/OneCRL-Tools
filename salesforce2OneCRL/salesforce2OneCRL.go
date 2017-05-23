@@ -20,6 +20,10 @@ import (
 	"time"
 )
 
+type OneCRLUpdate struct {
+	Data oneCRL.Record `json:"data"`
+}
+
 func getDataFromURL(url string) ([]byte, error) {
 	r, _ := http.Get(url)
 	defer r.Body.Close()
@@ -42,7 +46,12 @@ func main() {
 	outputFmtPtr := flag.String("output", "bug", "The format in which to output data. E.g. 'bug', 'revocations.txt'")
 	currentPtr := flag.String("current", "https://firefox.settings.services.mozilla.com/v1/buckets/blocklists/collections/certificates/records", "The URL of the current OneCRL records")
 	urlPtr := flag.String("url", "https://mozillacaprogram.secure.force.com/CA/PublicIntermediateCertsRevokedWithPEMCSV", "the URL of the salesforce data")
+
+	oneCRL.DefineFlags()
+
 	flag.Parse()
+
+	config := oneCRL.Config
 
 	var stream io.ReadCloser
 
@@ -233,11 +242,59 @@ func main() {
 	
 	issuerMap := make(map[string][]string)
 
+	attachment := ""
+
 	for _, record := range toAdd {
 		if issuers, ok := issuerMap[record.IssuerName]; ok {
 			issuerMap[record.IssuerName] = append(issuers, record.SerialNumber)
 		} else {
 			issuerMap[record.IssuerName] = []string{record.SerialNumber}
+		}
+		
+		update := new(OneCRLUpdate)
+		update.Data = record
+		marshalled, _ := json.Marshal(update)
+
+		// Upload the created entry to Kinto
+		// TODO: Batch these, don't send single requests
+		if *config.Preview != "yes" {
+			req, err := http.NewRequest("POST", *config.KintoUploadURL, bytes.NewBuffer(marshalled))
+			if len(*config.KintoUser) > 0 {
+				req.SetBasicAuth(*config.KintoUser, *config.KintoPassword)
+			}
+			req.Header.Set("Content-Type", "application/json")
+
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			fmt.Printf("status code is %d\n", resp.StatusCode)
+			defer resp.Body.Close()
+
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	// upload the created entries to bugzilla
+	
+	if *config.Preview != "yes" {
+		bug := oneCRL.Bug{}
+		bug.ApiKey = *config.BugzillaAPIKey
+		bug.Product = "Toolkit"
+		bug.Component = "Blocklisting"
+		bug.Version = "unspecified"
+		bug.Summary = "Test bug for bugzilla integration"
+		bug.Description = "Here are some entries: Please ensure that the entries are correct."
+		attachments := make([]oneCRL.Attachment, 1)
+		data := []byte(attachment)
+		str := base64.StdEncoding.EncodeToString(data)
+		attachments[0] = oneCRL.Attachment{}
+		attachments[0].ApiKey = bug.ApiKey
+		attachments[0].Data = str
+		err := oneCRL.CreateBug(bug, attachments)
+		if err != nil {
+			fmt.Printf(str)
+			panic(err)
 		}
 	}
 

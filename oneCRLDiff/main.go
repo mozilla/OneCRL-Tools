@@ -1,9 +1,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"github.com/mozmark/OneCRL-Tools/oneCRL"	
 )
@@ -32,9 +32,13 @@ func (set *OneCRLSet) FetchData(location string) error {
 func main() {
 	set1 := new(OneCRLSet)
 	set2 := new(OneCRLSet)
-	config := oneCRL.OneCRLConfig { Environment: oneCRL.Production }	
 
-	args := os.Args[1:]
+	oneCRL.DefineFlags()
+	flag.Parse()
+	
+	config := oneCRL.Config
+
+	args := flag.Args()
 	if len(args) < 1 {
 		log.Fatal("We need at least one OneCRL file to operate on")
 		return
