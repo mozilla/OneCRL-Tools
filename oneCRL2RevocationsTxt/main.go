@@ -40,18 +40,12 @@ func (r *revocations) LoadRecord(record oneCRL.Record) {
 }
 
 func main() {
-	envPtr := flag.String("env", "production", "which environment to load records from (production or stage)")
+	oneCRL.DefineFlags()
 	flag.Parse()
 
 	rev := new (revocations)
 	
-	var env oneCRL.Environment
-	if *envPtr == "stage" {
-		env = oneCRL.Stage
-	} else {
-		env = oneCRL.Production
-	}
-	config := oneCRL.OneCRLConfig { Environment: env }
+	config := oneCRL.Config
 	url := config.GetRecordURL()
 
 	oneCRL.LoadJSONFromURL(url, rev)
