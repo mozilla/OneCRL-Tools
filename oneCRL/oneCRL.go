@@ -49,15 +49,13 @@ type OneCRLConfig struct {
 }
 
 func (config OneCRLConfig) GetRecordURL() string {
-	// TODO: create single method to gather config
-	// ideally loading from yml file similar to JCJs (maybe even reuse config?)
-	var prefix string
 	if config.oneCRLEnvString == "stage" {
-		prefix = StagePrefix
-	} else {
-		prefix = ProductionPrefix
+		return StagePrefix + RecordsPath
 	}
-	return prefix + RecordsPath
+	if config.oneCRLEnvString == "production" {
+		return ProductionPrefix + RecordsPath
+	}
+	panic("valid onecrlenv values are \"stage\" and \"production\"")
 }
 
 const DEFAULT_ONECRLENV string = "production"
@@ -101,7 +99,7 @@ func (config OneCRLConfig) LoadConfig() error {
 var Config = OneCRLConfig {}
 
 func DefineFlags() {
-	flag.StringVar(&Config.oneCRLEnvString, "onecrlenv", DEFAULT_ONECRLENV, "The OneCRL Environment to use by default")
+	flag.StringVar(&Config.oneCRLEnvString, "onecrlenv", DEFAULT_ONECRLENV, "The OneCRL Environment to use by default - values other than 'stage' will result in the production instance being used")
 	flag.StringVar(&Config.BugzillaBase, "bugzilla", PREFIX_BUGZILLA_PROD, "The bugzilla instance to use by default")
 	flag.StringVar(&Config.BugzillaAPIKey, "bzapikey", DEFAULT_DEFAULT, "The bugzilla API key")
 	flag.StringVar(&Config.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
