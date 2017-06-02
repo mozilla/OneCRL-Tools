@@ -48,7 +48,11 @@ func main() {
 	config := oneCRL.Config
 	url := config.GetRecordURL()
 
-	oneCRL.LoadJSONFromURL(url, rev)
+	err := oneCRL.LoadJSONFromURL(url, rev)
+	if err != nil {
+		panic(err)
+	}
+
 	for issuer, serials := range rev.byIssuerSerialNumber {
 		fmt.Printf("%s\n", issuer)
 		for _, serial := range serials {
