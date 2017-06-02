@@ -11,10 +11,11 @@ import (
 	"errors"
 	"fmt"
 	"flag"
-	"net/http"
-	"log"
-	"os"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
 	"strings"
 )
 
@@ -22,8 +23,8 @@ const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
 const StagePrefix string = "https://settings.stage.mozaws.net"
 const RecordsPath string = "/v1/buckets/blocklists/collections/certificates/records"
 
-const BugzillaProductionPrefix string = "https://bugzilla.mozilla.org"
-const BugzillaStagePrefix string = "https://bugzilla.allizom.org"
+const PREFIX_BUGZILLA_PROD string = "https://bugzilla.mozilla.org"
+const PREFIX_BUGZILLA_STAGE string = "https://bugzilla.allizom.org"
 
 const KintoWriterURL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
 
@@ -37,20 +38,21 @@ const (
 )
 
 type OneCRLConfig struct {
-	oneCRLEnvString *string
-	BugzillaBase *string
-	BugzillaAPIKey *string
-	Preview *string
-	KintoUser *string
-	KintoPassword *string
-	KintoUploadUrl *string
+	oneCRLEnvString string `yaml:"onecrlenv"`
+	BugzillaBase string    `yaml:"bugzilla"`
+	BugzillaAPIKey string  `yaml:"bzapikey"`
+	Preview string         `yaml:"preview"`
+	KintoUser string       `yaml:"kintouser"`
+	KintoPassword string   `yaml:"kintopass"`
+	KintoUploadURL string  `yaml:"uploadurl"`
+
 }
 
 func (config OneCRLConfig) GetRecordURL() string {
 	// TODO: create single method to gather config
 	// ideally loading from yml file similar to JCJs (maybe even reuse config?)
 	var prefix string
-	if *config.oneCRLEnvString == "stage" {
+	if config.oneCRLEnvString == "stage" {
 		prefix = StagePrefix
 	} else {
 		prefix = ProductionPrefix
@@ -58,40 +60,72 @@ func (config OneCRLConfig) GetRecordURL() string {
 	return prefix + RecordsPath
 }
 
+const DEFAULT_ONECRLENV string = "production"
+const DEFAULT_UPLOAD_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
+const DEFAULT_DEFAULT string = ""
+
 func (config OneCRLConfig) LoadConfig() error {
 	// TODO: load the config from configuration file
+	loaded :=  OneCRLConfig{}
+
+	data, err := ioutil.ReadFile(".config.yml")
+	if nil != err {
+		return err
+	}
+	yaml.Unmarshal(data, &loaded)
+	fmt.Printf("The unmarshalled config is %v\n", loaded)
+
+	// Check the config values to see if any are already overridden
+	// for each value, if it's unset, copy the config file's value (if present)
+	if config.oneCRLEnvString == DEFAULT_ONECRLENV && loaded.oneCRLEnvString != "" {
+		config.oneCRLEnvString = loaded.oneCRLEnvString
+	}
+	if config.BugzillaBase == PREFIX_BUGZILLA_PROD && loaded.BugzillaBase != "" {
+		config.BugzillaBase = loaded.BugzillaBase
+	}
+	if config.BugzillaAPIKey == DEFAULT_DEFAULT && loaded.BugzillaAPIKey != "" {
+		config.BugzillaAPIKey = loaded.BugzillaAPIKey
+	}
+	if config.KintoUser == DEFAULT_DEFAULT && loaded.KintoUser!= "" {
+		config.KintoUser = loaded.KintoUser
+	}
+	if config.KintoPassword == DEFAULT_DEFAULT && loaded.KintoPassword!= "" {
+		config.KintoPassword = loaded.KintoPassword
+	}
+	if config.KintoUploadURL == DEFAULT_UPLOAD_URL && loaded.KintoUploadURL!= "" {
+		config.KintoUploadURL = loaded.KintoUploadURL
+	}
 	return nil
 }
 
 var Config = OneCRLConfig {}
 
-// TODO: explore tidying this using flag.Var instead
 func DefineFlags() {
-	Config.oneCRLEnvString = flag.String("onecrlenv", "production", "The OneCRL Environment to use by default")
-	Config.BugzillaBase = flag.String("bugzilla", BugzillaProductionPrefix, "The bugzilla instance to use by default")
-	Config.BugzillaAPIKey = flag.String("bzapikey", "", "The bugzilla API key")
-	Config.KintoUser = flag.String("kintouser", "", "The kinto user")
-	Config.KintoPassword = flag.String("kintopass", "", "The kinto user's pasword")
-	Config.KintoUploadURL = flag.String("uploadurl", "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records", "The kinto upload URL")
+	flag.StringVar(&Config.oneCRLEnvString, "onecrlenv", DEFAULT_ONECRLENV, "The OneCRL Environment to use by default")
+	flag.StringVar(&Config.BugzillaBase, "bugzilla", PREFIX_BUGZILLA_PROD, "The bugzilla instance to use by default")
+	flag.StringVar(&Config.BugzillaAPIKey, "bzapikey", DEFAULT_DEFAULT, "The bugzilla API key")
+	flag.StringVar(&Config.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
+	flag.StringVar(&Config.KintoPassword, "kintopass", DEFAULT_DEFAULT, "The kinto user's pasword")
+	flag.StringVar(&Config.KintoUploadURL, "uploadurl", DEFAULT_UPLOAD_URL, "The kinto upload URL")
 }
 
 type AttachmentFlag struct {
-	Name string `json:"name"`
-	Status string `json:"status"`
+	Name string      `json:"name"`
+	Status string    `json:"status"`
 	Requestee string `json:"requestee"`
-	New bool `json:"new"`
+	New bool         `json:"new"`
 }
 
 type Attachment struct {
-	ApiKey string `json:"api_key"`
-	Ids []int `json:"ids"`
-	ContentType string `json:"content_type"`
-	Data string `json:"data"`
-	Summary string `json:"summary"`
-	FileName string `json:"file_name"`
-	Flags []AttachmentFlag `json:"flags"`
-	BugId int `json:"bug_id"`
-	Comment string `json:"comment"`
+	ApiKey      string           `json:"api_key"`
+	Ids         []int            `json:"ids"`
+	ContentType string           `json:"content_type"`
+	Data        string           `json:"data"`
+	Summary     string           `json:"summary"`
+	FileName    string           `json:"file_name"`
+	Flags       []AttachmentFlag `json:"flags"`
+	BugId       int              `json:"bug_id"`
+	Comment     string           `json:"comment"`
 }
 
 type AttachmentResponse struct {
@@ -99,12 +133,12 @@ type AttachmentResponse struct {
 }
 
 type Bug struct {
-	ApiKey string `json:"api_key"`
-	Product string `json:"product"`
-	Component string `json:"component"`
-	Version string `json:"version"`
-	Summary string `json:"summary"`
-	Comment string `json:"comment"`
+	ApiKey      string `json:"api_key"`
+	Product     string `json:"product"`
+	Component   string `json:"component"`
+	Version     string `json:"version"`
+	Summary     string `json:"summary"`
+	Comment     string `json:"comment"`
 	Description string `json:"description"`
 }
 
@@ -115,15 +149,15 @@ type BugResponse struct {
 type Record struct {
 	IssuerName   string `json:"issuerName"`
 	SerialNumber string `json:"serialNumber"`
-	Subject	     string `json:"subject,omitempty"`
-	PubKeyHash	 string `json:"pubKeyHash,omitempty"`
-	Enabled bool `json:"enabled"`
+	Subject      string `json:"subject,omitempty"`
+	PubKeyHash   string `json:"pubKeyHash,omitempty"`
+	Enabled      bool   `json:"enabled"`
 	Details struct {
-		Who string `json:"who"`
+		Who     string `json:"who"`
 		Created string `json:"created"`
-		Bug string `json:"bug"`
-		Name string `json:"name"`
-		Why string `json:"why"`
+		Bug     string `json:"bug"`
+		Name    string `json:"name"`
+		Why     string `json:"why"`
 	} `json:"details"`
 }
 
@@ -418,7 +452,7 @@ func UploadRecords(records Records, createBug bool) error {
 
 func CreateBug(bug Bug, attachments []Attachment) (error) {
 	// POST the bug
-	url := *Config.BugzillaBase + "/rest/bug"
+	url := Config.BugzillaBase + "/rest/bug"
 	marshalled, err := json.Marshal(bug)
 	fmt.Printf("POSTing %s to %s\n", marshalled, url);
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(marshalled))
@@ -439,7 +473,7 @@ func CreateBug(bug Bug, attachments []Attachment) (error) {
 			fmt.Printf("%v\n", response.Id);
 			// loop over the attachments, add each to the bug
 			for _, attachment := range attachments {
-				attUrl := fmt.Sprintf(*Config.BugzillaBase + "/rest/bug/%d/attachment", response.Id)
+				attUrl := fmt.Sprintf(Config.BugzillaBase + "/rest/bug/%d/attachment", response.Id)
 				attachment.Ids = []int {response.Id}
 				attachment.ApiKey = bug.ApiKey
 				attachment.FileName = "BugData.txt"
@@ -448,6 +482,7 @@ func CreateBug(bug Bug, attachments []Attachment) (error) {
 				attachment.Comment = "Revocation data for new records"
 				attachment.Flags = make([]AttachmentFlag,0,1)
 				attachment.BugId = response.Id
+				fmt.Printf("Attempting to marshal %v\n", attachment)
 				attMarshalled, err := json.Marshal(attachment)
 				fmt.Printf("POSTing %s to %s\n", attMarshalled, attUrl)
 				attReq, err := http.NewRequest("POST", attUrl, bytes.NewBuffer(attMarshalled))

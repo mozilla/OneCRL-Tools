@@ -45,7 +45,7 @@ func main() {
 	exceptionsPtr := flag.String("exceptions", "exceptions.json", "A JSON document containing exceptional additions")
 	outputFmtPtr := flag.String("output", "bug", "The format in which to output data. E.g. 'bug', 'revocations.txt'")
 	currentPtr := flag.String("current", "https://firefox.settings.services.mozilla.com/v1/buckets/blocklists/collections/certificates/records", "The URL of the current OneCRL records")
-	urlPtr := flag.String("url", "https://mozillacaprogram.secure.force.com/CA/PublicIntermediateCertsRevokedWithPEMCSV", "the URL of the salesforce data")
+	urlPtr := flag.String("url", "https://ccadb-public.secure.force.com/mozilla/PublicIntermediateCertsRevokedWithPEMCSV", "the URL of the salesforce data")
 
 	oneCRL.DefineFlags()
 
@@ -257,16 +257,18 @@ func main() {
 
 		// Upload the created entry to Kinto
 		// TODO: Batch these, don't send single requests
-		if *config.Preview != "yes" {
-			req, err := http.NewRequest("POST", *config.KintoUploadURL, bytes.NewBuffer(marshalled))
-			if len(*config.KintoUser) > 0 {
-				req.SetBasicAuth(*config.KintoUser, *config.KintoPassword)
+		if config.Preview != "yes" {
+			req, err := http.NewRequest("POST", config.KintoUploadURL, bytes.NewBuffer(marshalled))
+			if len(config.KintoUser) > 0 {
+				req.SetBasicAuth(config.KintoUser, config.KintoPassword)
 			}
 			req.Header.Set("Content-Type", "application/json")
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			fmt.Printf("status code is %d\n", resp.StatusCode)
+			fmt.Printf("record data is %s\n", oneCRL.StringFromRecord(record))
+			attachment = attachment + oneCRL.StringFromRecord(record) + "\n"
 			defer resp.Body.Close()
 
 			if err != nil {
@@ -277,9 +279,9 @@ func main() {
 
 	// upload the created entries to bugzilla
 	
-	if *config.Preview != "yes" {
+	if config.Preview != "yes" {
 		bug := oneCRL.Bug{}
-		bug.ApiKey = *config.BugzillaAPIKey
+		bug.ApiKey = config.BugzillaAPIKey
 		bug.Product = "Toolkit"
 		bug.Component = "Blocklisting"
 		bug.Version = "unspecified"
