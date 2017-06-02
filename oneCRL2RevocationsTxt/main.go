@@ -46,6 +46,7 @@ func main() {
 	rev := new (revocations)
 	
 	config := oneCRL.Config
+
 	url := config.GetRecordURL()
 
 	err := oneCRL.LoadJSONFromURL(url, rev)
