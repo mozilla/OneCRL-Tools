@@ -16,8 +16,11 @@ import (
 	"github.com/mozmark/OneCRL-Tools/oneCRL"
 	"os"
 	"strings"
+	"syscall"
 	"github.com/mozmark/OneCRL-Tools/salesforce"
 	"time"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 type OneCRLUpdate struct {
@@ -54,8 +57,7 @@ func main() {
 
 	flag.Parse()
 
-	config := oneCRL.Config
-	config.LoadConfig()
+	config := oneCRL.GetConfig()
 
 	var stream io.ReadCloser
 
@@ -251,6 +253,8 @@ func main() {
 
 	attachment := ""
 
+	pw := config.KintoPassword
+
 	for _, record := range toAdd {
 		if issuers, ok := issuerMap[record.IssuerName]; ok {
 			issuerMap[record.IssuerName] = append(issuers, record.SerialNumber)
@@ -273,7 +277,15 @@ func main() {
 				fmt.Printf("Creds: %s / %s\n", config.KintoUser, config.KintoPassword)
 			}
 			if len(config.KintoUser) > 0 {
-				req.SetBasicAuth(config.KintoUser, config.KintoPassword)
+				if len(pw) == 0  {
+					fmt.Printf("Please enter the password for user %s\n", config.KintoUser)
+					bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+					if nil != err {
+						panic(err)
+					}
+					pw = string(bytePassword)
+				}
+				req.SetBasicAuth(config.KintoUser, pw)
 			}
 			req.Header.Set("Content-Type", "application/json")
 
