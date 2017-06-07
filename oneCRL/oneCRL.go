@@ -39,6 +39,7 @@ const (
 
 type OneCRLConfig struct {
 	oneCRLEnvString string `yaml:"onecrlenv"`
+	OneCRLVerbose   string `yaml:"onecrlverbose"`
 	BugzillaBase string    `yaml:"bugzilla"`
 	BugzillaAPIKey string  `yaml:"bzapikey"`
 	Preview string         `yaml:"preview"`
@@ -59,10 +60,11 @@ func (config OneCRLConfig) GetRecordURL() string {
 }
 
 const DEFAULT_ONECRLENV string = "production"
+const DEFAULT_ONECRLVERBOSE string = "no"
 const DEFAULT_UPLOAD_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
 const DEFAULT_DEFAULT string = ""
 
-func (config OneCRLConfig) LoadConfig() error {
+func (config *OneCRLConfig) LoadConfig() error {
 	// TODO: load the config from configuration file
 	loaded :=  OneCRLConfig{}
 
@@ -100,6 +102,7 @@ var Config = OneCRLConfig {}
 
 func DefineFlags() {
 	flag.StringVar(&Config.oneCRLEnvString, "onecrlenv", DEFAULT_ONECRLENV, "The OneCRL Environment to use by default - values other than 'stage' will result in the production instance being used")
+	flag.StringVar(&Config.OneCRLVerbose, "onecrlverbose", DEFAULT_ONECRLVERBOSE, "Be verbose about OneCRL stuff")
 	flag.StringVar(&Config.BugzillaBase, "bugzilla", PREFIX_BUGZILLA_PROD, "The bugzilla instance to use by default")
 	flag.StringVar(&Config.BugzillaAPIKey, "bzapikey", DEFAULT_DEFAULT, "The bugzilla API key")
 	flag.StringVar(&Config.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
@@ -198,7 +201,9 @@ func FetchExistingRevocations(url string) ([]string, error) {
 		return nil, errors.New("No URL was specified")
 	}
 
-	fmt.Printf("Got URL data\n")
+	if "yes" == Config.OneCRLVerbose {
+		fmt.Printf("Got URL data\n")
+	}
 
 	var existing []string
 
@@ -430,8 +435,9 @@ func LoadRevocationsFromBug(filename string, loader OneCRLLoader) error {
 		issuer := line[issuerIndex + len(IssuerPrefix): serialIndex - 1]
 		serial := line[serialIndex + len(SerialPrefix): len(line)]
 
-		fmt.Printf("issuer: \"%s\"\n", issuer)
-		fmt.Printf("serial: \"%s\"\n", serial)
+		if "yes" == Config.OneCRLVerbose {
+			fmt.Printf("Loading revocation. issuer: \"%s\", serial: \"%s\"\n", issuer, serial)
+		}
 
 		record := Record{IssuerName:issuer, SerialNumber:serial}
 		loader.LoadRecord(record)
@@ -452,15 +458,19 @@ func CreateBug(bug Bug, attachments []Attachment) (error) {
 	// POST the bug
 	url := Config.BugzillaBase + "/rest/bug"
 	marshalled, err := json.Marshal(bug)
-	fmt.Printf("POSTing %s to %s\n", marshalled, url);
+	if "yes" == Config.OneCRLVerbose {
+		fmt.Printf("POSTing %s to %s\n", marshalled, url);
+	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(marshalled))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	fmt.Printf("status code is %d\n", resp.StatusCode)
 	if err != nil {
 		panic(err)
+	}
+	if "yes" == Config.OneCRLVerbose {
+		fmt.Printf("status code is %d\n", resp.StatusCode)
 	}
 	dec := json.NewDecoder(resp.Body)
 		var response BugResponse
@@ -468,7 +478,9 @@ func CreateBug(bug Bug, attachments []Attachment) (error) {
 		if err != nil {
 			panic(err)
 		} else {
-			fmt.Printf("%v\n", response.Id);
+			if "yes" == Config.OneCRLVerbose {
+				fmt.Printf("%v\n", response.Id);
+			}
 			// loop over the attachments, add each to the bug
 			for _, attachment := range attachments {
 				attUrl := fmt.Sprintf(Config.BugzillaBase + "/rest/bug/%d/attachment", response.Id)
@@ -480,9 +492,13 @@ func CreateBug(bug Bug, attachments []Attachment) (error) {
 				attachment.Comment = "Revocation data for new records"
 				attachment.Flags = make([]AttachmentFlag,0,1)
 				attachment.BugId = response.Id
-				fmt.Printf("Attempting to marshal %v\n", attachment)
+				if "yes" == Config.OneCRLVerbose {
+					fmt.Printf("Attempting to marshal %v\n", attachment)
+				}
 				attMarshalled, err := json.Marshal(attachment)
-				fmt.Printf("POSTing %s to %s\n", attMarshalled, attUrl)
+				if "yes" == Config.OneCRLVerbose {
+					fmt.Printf("POSTing %s to %s\n", attMarshalled, attUrl)
+				}
 				attReq, err := http.NewRequest("POST", attUrl, bytes.NewBuffer(attMarshalled))
 	            attReq.Header.Set("Content-Type", "application/json")
 				attClient := &http.Client{}
@@ -490,7 +506,9 @@ func CreateBug(bug Bug, attachments []Attachment) (error) {
 				if err != nil {
 					panic(err)
 				}
-				fmt.Printf("att response %s\n", attResp);
+				if "yes" == Config.OneCRLVerbose {
+					fmt.Printf("att response %s\n", attResp);
+				}
 			}
 		}
 	defer resp.Body.Close()

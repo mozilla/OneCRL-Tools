@@ -46,12 +46,16 @@ func main() {
 	outputFmtPtr := flag.String("output", "bug", "The format in which to output data. E.g. 'bug', 'revocations.txt'")
 	currentPtr := flag.String("current", "https://firefox.settings.services.mozilla.com/v1/buckets/blocklists/collections/certificates/records", "The URL of the current OneCRL records")
 	urlPtr := flag.String("url", "https://ccadb-public.secure.force.com/mozilla/PublicIntermediateCertsRevokedWithPEMCSV", "the URL of the salesforce data")
+	bugPtr := flag.String("bug", "", "the URL of the bug relating to this change")
+	whoPtr := flag.String("who", "", "who made this change")
+	whyPtr := flag.String("why", "", "why is this change happening")
 
 	oneCRL.DefineFlags()
 
 	flag.Parse()
 
 	config := oneCRL.Config
+	config.LoadConfig()
 
 	var stream io.ReadCloser
 
@@ -236,6 +240,9 @@ func main() {
 			rec := oneCRL.Record{}
 			rec.IssuerName = issuerString
 			rec.SerialNumber = serialString
+			rec.Details.Bug = *bugPtr
+			rec.Details.Who = *whoPtr
+			rec.Details.Why = *whyPtr
 			toAdd[oneCRL.StringFromRecord(rec)] = rec
 		}
 	}
@@ -258,7 +265,13 @@ func main() {
 		// Upload the created entry to Kinto
 		// TODO: Batch these, don't send single requests
 		if config.Preview != "yes" {
+			if "yes" == config.OneCRLVerbose {
+				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", config.KintoUploadURL, marshalled)
+			}
 			req, err := http.NewRequest("POST", config.KintoUploadURL, bytes.NewBuffer(marshalled))
+			if "yes" == config.OneCRLVerbose {
+				fmt.Printf("Creds: %s / %s\n", config.KintoUser, config.KintoPassword)
+			}
 			if len(config.KintoUser) > 0 {
 				req.SetBasicAuth(config.KintoUser, config.KintoPassword)
 			}
@@ -266,8 +279,11 @@ func main() {
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
-			fmt.Printf("status code is %d\n", resp.StatusCode)
-			fmt.Printf("record data is %s\n", oneCRL.StringFromRecord(record))
+
+			if "yes" == config.OneCRLVerbose {
+				fmt.Printf("status code is %d\n", resp.StatusCode)
+				fmt.Printf("record data is %s\n", oneCRL.StringFromRecord(record))
+			}
 			attachment = attachment + oneCRL.StringFromRecord(record) + "\n"
 			defer resp.Body.Close()
 
