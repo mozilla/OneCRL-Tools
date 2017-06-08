@@ -45,7 +45,7 @@ func main() {
 
 	rev := new (revocations)
 	
-	config := oneCRL.Config
+	config := oneCRL.GetConfig()
 
 	url := config.GetRecordURL()
 
