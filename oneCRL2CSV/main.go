@@ -50,24 +50,22 @@ func (p OneCRLPrinter) LoadRecord(record oneCRL.Record) {
 
 
 func main() {
-	envPtr := flag.String("env", "production", "which environment to load records from (production or stage)")
 	// TODO: add flag for custom endpoint (e.g. local kinto)
 	filePtr := flag.String("file", "", "revocations.txt to load entries from")
 	upper := flag.Bool("upper", false, "Should hex values be upper case?")
 	separate := flag.Bool("separate", false, "Should the serial number bytes be colon separated?")
+	oneCRL.DefineFlags()
 	flag.Parse()
+
 	printer := OneCRLPrinter{separate:*separate, upper:*upper}
-	var env oneCRL.Environment
-	if *envPtr == "stage" {
-		env = oneCRL.Stage
-	} else {
-		env = oneCRL.Production
-	}
-	config := oneCRL.OneCRLConfig { Environment: env }
+
+	config := oneCRL.GetConfig()
 	url := config.GetRecordURL()
+
 	// If no file is specified, fall back to loading from an URL
 	if len(*filePtr) == 0 {
 		oneCRL.LoadJSONFromURL(url, printer)
 	} else {
 		oneCRL.LoadRevocationsTxtFromFile(*filePtr, printer)
 	}
+}
