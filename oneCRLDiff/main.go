@@ -36,7 +36,7 @@ func main() {
 	oneCRL.DefineFlags()
 	flag.Parse()
 	
-	config := oneCRL.Config
+	config := oneCRL.GetConfig()
 
 	args := flag.Args()
 	if len(args) < 1 {
