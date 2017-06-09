@@ -16,16 +16,9 @@ import (
 	"github.com/mozmark/OneCRL-Tools/oneCRL"
 	"os"
 	"strings"
-	"syscall"
 	"github.com/mozmark/OneCRL-Tools/salesforce"
 	"time"
-
-	"golang.org/x/crypto/ssh/terminal"
 )
-
-type OneCRLUpdate struct {
-	Data oneCRL.Record `json:"data"`
-}
 
 func getDataFromURL(url string) ([]byte, error) {
 	r, _ := http.Get(url)
@@ -46,7 +39,6 @@ func exists(item string, slice []string) bool {
 func main() {
 	filePtr := flag.String("file", "", "The file to read data from")
 	exceptionsPtr := flag.String("exceptions", "exceptions.json", "A JSON document containing exceptional additions")
-	outputFmtPtr := flag.String("output", "bug", "The format in which to output data. E.g. 'bug', 'revocations.txt'")
 	currentPtr := flag.String("current", "https://firefox.settings.services.mozilla.com/v1/buckets/blocklists/collections/certificates/records", "The URL of the current OneCRL records")
 	urlPtr := flag.String("url", "https://ccadb-public.secure.force.com/mozilla/PublicIntermediateCertsRevokedWithPEMCSV", "the URL of the salesforce data")
 	bugPtr := flag.String("bug", "", "the URL of the bug relating to this change")
@@ -57,11 +49,10 @@ func main() {
 
 	flag.Parse()
 
-	config := oneCRL.GetConfig()
-
 	var stream io.ReadCloser
 
-	toAdd := make(map[string]oneCRL.Record)
+	// make a slice of additions
+	additions := new(oneCRL.Records)
 
 	if "" != *filePtr {
 		fmt.Printf("loading salesforce data from %s\n", *filePtr)
@@ -103,7 +94,7 @@ func main() {
 		for idx := range res.Data {
 			record := res.Data[idx]
 			if !exists(oneCRL.StringFromRecord(record), existing) {
-				toAdd[oneCRL.StringFromRecord(record)] = record
+				additions.Data = append(additions.Data, record)
 			}
 		}
 	}
@@ -245,105 +236,15 @@ func main() {
 			rec.Details.Bug = *bugPtr
 			rec.Details.Who = *whoPtr
 			rec.Details.Why = *whyPtr
-			toAdd[oneCRL.StringFromRecord(rec)] = rec
+			additions.Data = append(additions.Data, rec)
 		}
 	}
 	
-	issuerMap := make(map[string][]string)
 
-	attachment := ""
-
-	pw := config.KintoPassword
-
-	for _, record := range toAdd {
-		if issuers, ok := issuerMap[record.IssuerName]; ok {
-			issuerMap[record.IssuerName] = append(issuers, record.SerialNumber)
-		} else {
-			issuerMap[record.IssuerName] = []string{record.SerialNumber}
-		}
-		
-		update := new(OneCRLUpdate)
-		update.Data = record
-		marshalled, _ := json.Marshal(update)
-
-		// Upload the created entry to Kinto
-		// TODO: Batch these, don't send single requests
-		if config.Preview != "yes" {
-			if "yes" == config.OneCRLVerbose {
-				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", config.KintoUploadURL, marshalled)
-			}
-			req, err := http.NewRequest("POST", config.KintoUploadURL, bytes.NewBuffer(marshalled))
-			if "yes" == config.OneCRLVerbose {
-				fmt.Printf("Creds: %s / %s\n", config.KintoUser, config.KintoPassword)
-			}
-			if len(config.KintoUser) > 0 {
-				if len(pw) == 0  {
-					fmt.Printf("Please enter the password for user %s\n", config.KintoUser)
-					bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
-					if nil != err {
-						panic(err)
-					}
-					pw = string(bytePassword)
-				}
-				req.SetBasicAuth(config.KintoUser, pw)
-			}
-			req.Header.Set("Content-Type", "application/json")
-
-			client := &http.Client{}
-			resp, err := client.Do(req)
-
-			if "yes" == config.OneCRLVerbose {
-				fmt.Printf("status code is %d\n", resp.StatusCode)
-				fmt.Printf("record data is %s\n", oneCRL.StringFromRecord(record))
-			}
-			attachment = attachment + oneCRL.StringFromRecord(record) + "\n"
-			defer resp.Body.Close()
-
-			if err != nil {
-				panic(err)
-			}
-		}
+	// TODO: Code from here on in should probably mostly live in something like
+	// an oneCRL.AddEntries function, taking a createBug flag as a param
+	err = oneCRL.AddEntries(additions, true)
+	if nil != err {
+		panic(err)
 	}
-
-	// upload the created entries to bugzilla
-	
-	if config.Preview != "yes" {
-		bug := oneCRL.Bug{}
-		bug.ApiKey = config.BugzillaAPIKey
-		bug.Product = "Toolkit"
-		bug.Component = "Blocklisting"
-		bug.Version = "unspecified"
-		bug.Summary = "Test bug for bugzilla integration"
-		bug.Description = "Here are some entries: Please ensure that the entries are correct."
-		attachments := make([]oneCRL.Attachment, 1)
-		data := []byte(attachment)
-		str := base64.StdEncoding.EncodeToString(data)
-		attachments[0] = oneCRL.Attachment{}
-		attachments[0].ApiKey = bug.ApiKey
-		attachments[0].Data = str
-		err := oneCRL.CreateBug(bug, attachments)
-		if err != nil {
-			fmt.Printf(str)
-			panic(err)
-		}
-	}
-
-	// output the generated entries
-	if *outputFmtPtr == "revocations.txt" {
-		fmt.Printf("# Auto generated contents. Do not edit.\n")
-	}
-	for issuer, serials := range issuerMap {
-		if *outputFmtPtr == "revocations.txt" {
-			fmt.Printf("%v\n", issuer)
-		}
-		for _, serial := range serials {
-			if *outputFmtPtr == "bug" {
-				fmt.Printf("issuer: %v serial: %v\n", issuer, serial)
-			}
-			if *outputFmtPtr == "revocations.txt" {
-				fmt.Printf(" %v\n", serial)
-			}
-		}
-	}
-
 }

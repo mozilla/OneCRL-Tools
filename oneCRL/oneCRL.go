@@ -17,6 +17,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"syscall"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
@@ -36,6 +38,11 @@ const (
 	Production OneCRLEnvironment = iota
 	Stage
 )
+
+// TODO: this looks unecessary - maybe remove
+type OneCRLUpdate struct {
+	Data Record `json:"data"`
+}
 
 type OneCRLConfig struct {
 	oneCRLConfig    string
@@ -530,5 +537,92 @@ func CreateBug(bug Bug, attachments []Attachment) (error) {
 		}
 	defer resp.Body.Close()
 
+	return nil
+}
+
+func AddEntries(records *Records, createBug bool) error {
+	issuerMap := make(map[string][]string)
+
+	attachment := ""
+
+	pw := conf.KintoPassword
+
+	for _, record := range records.Data{
+		// TODO: We don't need to build an issuer map if we're not outputting
+		// entries directly. If we *do* need to do this, the functionality for
+		// making revocations.txt style data should live in oneCRL.go
+		if issuers, ok := issuerMap[record.IssuerName]; ok {
+			issuerMap[record.IssuerName] = append(issuers, record.SerialNumber)
+		} else {
+			issuerMap[record.IssuerName] = []string{record.SerialNumber}
+		}
+		
+		update := new(OneCRLUpdate)
+		update.Data = record
+		marshalled, _ := json.Marshal(update)
+
+		// Upload the created entry to Kinto
+		// TODO: Batch these, don't send single requests
+		if conf.Preview != "yes" {
+			if "yes" == conf.OneCRLVerbose {
+				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", conf.KintoUploadURL, marshalled)
+			}
+			req, err := http.NewRequest("POST", conf.KintoUploadURL, bytes.NewBuffer(marshalled))
+			if "yes" == conf.OneCRLVerbose {
+				fmt.Printf("Creds: %s / %s\n", conf.KintoUser, conf.KintoPassword)
+			}
+			if len(conf.KintoUser) > 0 {
+				if len(pw) == 0  {
+					fmt.Printf("Please enter the password for user %s\n", conf.KintoUser)
+					bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+					if nil != err {
+						panic(err)
+					}
+					pw = string(bytePassword)
+				}
+				req.SetBasicAuth(conf.KintoUser, pw)
+			}
+			req.Header.Set("Content-Type", "application/json")
+
+			client := &http.Client{}
+			resp, err := client.Do(req)
+
+			if "yes" == conf.OneCRLVerbose {
+				fmt.Printf("status code is %d\n", resp.StatusCode)
+				fmt.Printf("record data is %s\n", StringFromRecord(record))
+			}
+			attachment = attachment + StringFromRecord(record) + "\n"
+			defer resp.Body.Close()
+
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	// upload the created entries to bugzilla
+	
+	if conf.Preview != "yes" {
+		bug := Bug{}
+		bug.ApiKey = conf.BugzillaAPIKey
+		bug.Product = "Toolkit"
+		bug.Component = "Blocklisting"
+		bug.Version = "unspecified"
+		bug.Summary = "Test bug for bugzilla integration"
+		bug.Description = "Here are some entries: Please ensure that the entries are correct."
+		attachments := make([]Attachment, 1)
+		data := []byte(attachment)
+		str := base64.StdEncoding.EncodeToString(data)
+		attachments[0] = Attachment{}
+		attachments[0].ApiKey = bug.ApiKey
+		attachments[0].Data = str
+		err := CreateBug(bug, attachments)
+		if err != nil {
+			fmt.Printf(str)
+			panic(err)
+		}
+	}
+
+	// TODO: put output into the bug
 	return nil
 }
