@@ -241,8 +241,6 @@ func main() {
 	}
 	
 
-	// TODO: Code from here on in should probably mostly live in something like
-	// an oneCRL.AddEntries function, taking a createBug flag as a param
 	err = oneCRL.AddEntries(additions, true)
 	if nil != err {
 		panic(err)
