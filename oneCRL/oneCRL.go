@@ -116,9 +116,9 @@ func (config *OneCRLConfig) loadConfig() error {
 	return nil
 }
 
-func GetConfig() OneCRLConfig {
+func GetConfig() *OneCRLConfig {
 	conf.loadConfig()
-	return conf
+	return &conf
 }
 
 

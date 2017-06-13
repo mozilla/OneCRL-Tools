@@ -48,6 +48,8 @@ func main() {
 	oneCRL.DefineFlags()
 
 	flag.Parse()
+	
+	oneCRL.GetConfig()
 
 	var stream io.ReadCloser
 
