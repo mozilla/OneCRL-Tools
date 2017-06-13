@@ -473,10 +473,6 @@ func LoadRevocationsFromBug(filename string, loader OneCRLLoader) error {
 	return nil
 }
 
-func UploadRecords(records Records, createBug bool) error {
-	return nil;
-}
-
 func CreateBug(bug Bug, attachments []Attachment) (error) {
 	// POST the bug
 	fmt.Printf("config is %v\n", conf)

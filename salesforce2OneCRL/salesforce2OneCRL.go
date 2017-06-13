@@ -238,6 +238,7 @@ func main() {
 			rec.Details.Bug = *bugPtr
 			rec.Details.Who = *whoPtr
 			rec.Details.Why = *whyPtr
+			rec.Enabled = true
 			additions.Data = append(additions.Data, rec)
 		}
 	}
