@@ -18,6 +18,7 @@ import (
 	"os"
 	"strings"
 	"syscall"
+	"time"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -473,8 +474,9 @@ func LoadRevocationsFromBug(filename string, loader OneCRLLoader) error {
 	return nil
 }
 
-func CreateBug(bug Bug, attachments []Attachment) (error) {
+func CreateBug(bug Bug) (int, error) {
 	// POST the bug
+	bugNum := -1;
 	fmt.Printf("config is %v\n", conf)
 	url := conf.BugzillaBase + "/rest/bug"
 	marshalled, err := json.Marshal(bug)
@@ -487,7 +489,7 @@ func CreateBug(bug Bug, attachments []Attachment) (error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return bugNum, err
 	}
 	if "yes" == conf.OneCRLVerbose {
 		fmt.Printf("status code is %d\n", resp.StatusCode)
@@ -496,43 +498,49 @@ func CreateBug(bug Bug, attachments []Attachment) (error) {
 		var response BugResponse
 		err = dec.Decode(&response)
 		if err != nil {
-			panic(err)
+			return bugNum, err
 		} else {
+			bugNum = response.Id
+
 			if "yes" == conf.OneCRLVerbose {
-				fmt.Printf("%v\n", response.Id);
-			}
-			// loop over the attachments, add each to the bug
-			for _, attachment := range attachments {
-				attUrl := fmt.Sprintf(conf.BugzillaBase + "/rest/bug/%d/attachment", response.Id)
-				attachment.Ids = []int {response.Id}
-				attachment.ApiKey = bug.ApiKey
-				attachment.FileName = "BugData.txt"
-				attachment.Summary = "Intermediates to be revoked"
-				attachment.ContentType = "text/plain"
-				attachment.Comment = "Revocation data for new records"
-				attachment.Flags = make([]AttachmentFlag,0,1)
-				attachment.BugId = response.Id
-				if "yes" == conf.OneCRLVerbose {
-					fmt.Printf("Attempting to marshal %v\n", attachment)
-				}
-				attMarshalled, err := json.Marshal(attachment)
-				if "yes" == conf.OneCRLVerbose {
-					fmt.Printf("POSTing %s to %s\n", attMarshalled, attUrl)
-				}
-				attReq, err := http.NewRequest("POST", attUrl, bytes.NewBuffer(attMarshalled))
-	            attReq.Header.Set("Content-Type", "application/json")
-				attClient := &http.Client{}
-				attResp, err := attClient.Do(attReq)
-				if err != nil {
-					panic(err)
-				}
-				if "yes" == conf.OneCRLVerbose {
-					fmt.Printf("att response %s\n", attResp);
-				}
+				fmt.Printf("%v\n", response.Id)
 			}
 		}
 	defer resp.Body.Close()
 
+	return bugNum, nil
+}
+
+func AttachToBug(bugNum int, apiKey string, attachments []Attachment) (error) {
+	// loop over the attachments, add each to the bug
+	for _, attachment := range attachments {
+		attUrl := fmt.Sprintf(conf.BugzillaBase + "/rest/bug/%d/attachment", bugNum)
+		attachment.Ids = []int {bugNum}
+		attachment.ApiKey = apiKey
+		attachment.FileName = "BugData.txt"
+		attachment.Summary = "Intermediates to be revoked"
+		attachment.ContentType = "text/plain"
+		attachment.Comment = "Revocation data for new records"
+		attachment.Flags = make([]AttachmentFlag,0,1)
+		attachment.BugId = bugNum
+		if "yes" == conf.OneCRLVerbose {
+			fmt.Printf("Attempting to marshal %v\n", attachment)
+		}
+		attMarshalled, err := json.Marshal(attachment)
+		if "yes" == conf.OneCRLVerbose {
+			fmt.Printf("POSTing %s to %s\n", attMarshalled, attUrl)
+		}
+		attReq, err := http.NewRequest("POST", attUrl, bytes.NewBuffer(attMarshalled))
+		attReq.Header.Set("Content-Type", "application/json")
+		attClient := &http.Client{}
+		attResp, err := attClient.Do(attReq)
+		if err != nil {
+			return err
+		}
+		if "yes" == conf.OneCRLVerbose {
+			fmt.Printf("att response %s\n", attResp);
+		}
+	}
 	return nil
 }
 
@@ -542,8 +550,25 @@ func AddEntries(records *Records, createBug bool) error {
 	attachment := ""
 
 	pw := conf.KintoPassword
+	bugNum := -1
 
-	for _, record := range records.Data{
+	if (conf.Preview != "yes") {
+		bug := Bug{}
+		bug.ApiKey = conf.BugzillaAPIKey
+		bug.Product = "Toolkit"
+		bug.Component = "Blocklisting"
+		bug.Version = "unspecified"
+		bug.Summary = "Test bug for bugzilla integration"
+		bug.Description = "Here are some entries: Please ensure that the entries are correct."
+
+		var err error
+		bugNum, err = CreateBug(bug)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	for _, record := range records.Data {
 		// TODO: We don't need to build an issuer map if we're not outputting
 		// entries directly. If we *do* need to do this, the functionality for
 		// making revocations.txt style data should live in oneCRL.go
@@ -551,6 +576,14 @@ func AddEntries(records *Records, createBug bool) error {
 			issuerMap[record.IssuerName] = append(issuers, record.SerialNumber)
 		} else {
 			issuerMap[record.IssuerName] = []string{record.SerialNumber}
+		}
+
+		if record.Details.Bug == "" {
+			record.Details.Bug = fmt.Sprintf("%s/show_bug.cgi?id=%d",conf.BugzillaBase, bugNum)
+		}
+		if record.Details.Created == "" {
+			now := time.Now()
+			record.Details.Created = now.Format("2006-01-02T15:04:05Z")
 		}
 		
 		update := new(OneCRLUpdate)
@@ -599,20 +632,15 @@ func AddEntries(records *Records, createBug bool) error {
 	// upload the created entries to bugzilla
 	
 	if conf.Preview != "yes" {
-		bug := Bug{}
-		bug.ApiKey = conf.BugzillaAPIKey
-		bug.Product = "Toolkit"
-		bug.Component = "Blocklisting"
-		bug.Version = "unspecified"
-		bug.Summary = "Test bug for bugzilla integration"
-		bug.Description = "Here are some entries: Please ensure that the entries are correct."
+
 		attachments := make([]Attachment, 1)
 		data := []byte(attachment)
 		str := base64.StdEncoding.EncodeToString(data)
 		attachments[0] = Attachment{}
-		attachments[0].ApiKey = bug.ApiKey
+		attachments[0].ApiKey = conf.BugzillaAPIKey
 		attachments[0].Data = str
-		err := CreateBug(bug, attachments)
+
+		err := AttachToBug(bugNum, conf.BugzillaAPIKey, attachments)
 		if err != nil {
 			fmt.Printf(str)
 			panic(err)
