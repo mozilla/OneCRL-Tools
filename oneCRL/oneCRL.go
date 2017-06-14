@@ -552,13 +552,16 @@ func AddEntries(records *Records, createBug bool) error {
 	pw := conf.KintoPassword
 	bugNum := -1
 
+	now := time.Now()
+	nowString := now.Format("2006-01-02T15:04:05Z")
+
 	if (conf.Preview != "yes") {
 		bug := Bug{}
 		bug.ApiKey = conf.BugzillaAPIKey
 		bug.Product = "Toolkit"
 		bug.Component = "Blocklisting"
 		bug.Version = "unspecified"
-		bug.Summary = "Test bug for bugzilla integration"
+		bug.Summary = fmt.Sprintf("CCADB entries generated %s", nowString)
 		bug.Description = "Here are some entries: Please ensure that the entries are correct."
 
 		var err error
@@ -582,8 +585,7 @@ func AddEntries(records *Records, createBug bool) error {
 			record.Details.Bug = fmt.Sprintf("%s/show_bug.cgi?id=%d",conf.BugzillaBase, bugNum)
 		}
 		if record.Details.Created == "" {
-			now := time.Now()
-			record.Details.Created = now.Format("2006-01-02T15:04:05Z")
+			record.Details.Created = nowString
 		}
 		
 		update := new(OneCRLUpdate)
