@@ -73,6 +73,7 @@ const DEFAULT_ONECRLENV string = "production"
 const DEFAULT_ONECRLVERBOSE string = "no"
 const DEFAULT_UPLOAD_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
 const DEFAULT_DEFAULT string = ""
+const DEFAULT_PREVIEW string = "no"
 
 var conf = OneCRLConfig {}
 
@@ -108,6 +109,9 @@ func (config *OneCRLConfig) loadConfig() error {
 	if config.KintoUser == DEFAULT_DEFAULT && loaded.KintoUser!= "" {
 		config.KintoUser = loaded.KintoUser
 	}
+	if config.Preview == DEFAULT_PREVIEW && loaded.Preview != "" {
+		config.Preview = loaded.Preview
+	}
 	if config.KintoPassword == DEFAULT_DEFAULT && loaded.KintoPassword!= "" {
 		config.KintoPassword = loaded.KintoPassword
 	}
@@ -139,6 +143,7 @@ func DefineFlags() {
 	flag.StringVar(&conf.OneCRLVerbose, "onecrlverbose", DEFAULT_ONECRLVERBOSE, "Be verbose about OneCRL stuff")
 	flag.StringVar(&conf.BugzillaBase, "bugzilla", PREFIX_BUGZILLA_PROD, "The bugzilla instance to use by default")
 	flag.StringVar(&conf.BugzillaAPIKey, "bzapikey", DEFAULT_DEFAULT, "The bugzilla API key")
+	flag.StringVar(&conf.Preview, "preview", DEFAULT_PREVIEW, "Preview (don't write changes)")
 	flag.StringVar(&conf.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
 	flag.StringVar(&conf.KintoPassword, "kintopass", DEFAULT_DEFAULT, "The kinto user's pasword")
 	flag.StringVar(&conf.KintoUploadURL, "uploadurl", DEFAULT_UPLOAD_URL, "The kinto upload URL")
@@ -626,9 +631,7 @@ func AddEntries(records *Records, createBug bool) error {
 				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", conf.KintoUploadURL, marshalled)
 			}
 			req, err := http.NewRequest("POST", conf.KintoUploadURL, bytes.NewBuffer(marshalled))
-			if "yes" == conf.OneCRLVerbose {
-				fmt.Printf("Creds: %s / %s\n", conf.KintoUser, conf.KintoPassword)
-			}
+
 			if len(conf.KintoUser) > 0 {
 				req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
 			}
@@ -647,13 +650,13 @@ func AddEntries(records *Records, createBug bool) error {
 			if err != nil {
 				panic(err)
 			}
+		} else {
+			fmt.Printf("Would POST to \"%s\" with \"%s\"\n", conf.KintoUploadURL, marshalled)
 		}
 	}
 
 	// upload the created entries to bugzilla
-	
 	if conf.Preview != "yes" {
-
 		attachments := make([]Attachment, 1)
 		data := []byte(attachment)
 		str := base64.StdEncoding.EncodeToString(data)
