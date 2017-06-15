@@ -114,6 +114,16 @@ func (config *OneCRLConfig) loadConfig() error {
 	if config.KintoUploadURL == DEFAULT_UPLOAD_URL && loaded.KintoUploadURL!= "" {
 		config.KintoUploadURL = loaded.KintoUploadURL
 	}
+
+	if len(config.KintoUser) > 0 && len(config.KintoPassword) == 0 {
+		fmt.Printf("Please enter the password for user %s\n", config.KintoUser)
+		bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+		if nil != err {
+			panic(err)
+		}
+		config.KintoPassword = string(bytePassword)
+	}
+
 	return nil
 }
 
@@ -213,11 +223,22 @@ func StringFromIssuerSerial(issuer string, serial string) string {
 }
 
 
-func getDataFromURL(url string) ([]byte, error) {
-	r, _ := http.Get(url)
-	defer r.Body.Close()
+func getDataFromURL(url string, user string, pass string) ([]byte, error) {
 
-	return ioutil.ReadAll(r.Body)
+	req, err := http.NewRequest("GET", url, nil)
+	if len(user) > 0 {
+		req.SetBasicAuth(user, pass)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if nil != err {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	return ioutil.ReadAll(resp.Body)
 }
 
 func FetchExistingRevocations(url string) ([]string, error) {
@@ -231,12 +252,19 @@ func FetchExistingRevocations(url string) ([]string, error) {
 
 	var existing []string
 
+	user, pass := conf.KintoUser, conf.KintoPassword
+
 	res := new(Records)
-	data, err := getDataFromURL(url)
+	data, err := getDataFromURL(url, user, pass)
 	if nil != err {
 		return nil, errors.New(fmt.Sprintf("problem loading existing data from URL %s", err))
 	}
-	json.Unmarshal(data, res)
+
+	err = json.Unmarshal(data, res)
+	if nil != err {
+		return nil, err
+	}
+
 	existing = make([]string, len(res.Data))
 	for idx := range res.Data {
 		existing[idx] = StringFromRecord(res.Data[idx])
@@ -549,7 +577,6 @@ func AddEntries(records *Records, createBug bool) error {
 
 	attachment := ""
 
-	pw := conf.KintoPassword
 	bugNum := -1
 
 	now := time.Now()
@@ -603,15 +630,7 @@ func AddEntries(records *Records, createBug bool) error {
 				fmt.Printf("Creds: %s / %s\n", conf.KintoUser, conf.KintoPassword)
 			}
 			if len(conf.KintoUser) > 0 {
-				if len(pw) == 0  {
-					fmt.Printf("Please enter the password for user %s\n", conf.KintoUser)
-					bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
-					if nil != err {
-						panic(err)
-					}
-					pw = string(bytePassword)
-				}
-				req.SetBasicAuth(conf.KintoUser, pw)
+				req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
 			}
 			req.Header.Set("Content-Type", "application/json")
 
