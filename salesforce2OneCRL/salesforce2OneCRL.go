@@ -39,7 +39,6 @@ func exists(item string, slice []string) bool {
 func main() {
 	filePtr := flag.String("file", "", "The file to read data from")
 	exceptionsPtr := flag.String("exceptions", "exceptions.json", "A JSON document containing exceptional additions")
-	currentPtr := flag.String("current", "https://firefox.settings.services.mozilla.com/v1/buckets/blocklists/collections/certificates/records", "The URL of the current OneCRL records")
 	urlPtr := flag.String("url", "https://ccadb-public.secure.force.com/mozilla/PublicIntermediateCertsRevokedWithPEMCSV", "the URL of the salesforce data")
 	bugPtr := flag.String("bug", "", "the URL of the bug relating to this change")
 	whoPtr := flag.String("who", "", "who made this change")
@@ -49,7 +48,7 @@ func main() {
 
 	flag.Parse()
 	
-	oneCRL.GetConfig()
+	conf := oneCRL.GetConfig()
 
 	var stream io.ReadCloser
 
@@ -80,7 +79,7 @@ func main() {
 		stream = r.Body
 	}
 
-	existing, err:= oneCRL.FetchExistingRevocations(*currentPtr)
+	existing, err:= oneCRL.FetchExistingRevocations(conf.KintoCollectionURL)
 	if nil != err{
 		fmt.Printf("%s\n", err)
 	}

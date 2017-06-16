@@ -54,7 +54,7 @@ type OneCRLConfig struct {
 	Preview         string `yaml:"preview"`
 	KintoUser       string `yaml:"kintouser"`
 	KintoPassword   string `yaml:"kintopass"`
-	KintoUploadURL  string `yaml:"uploadurl"`
+	KintoCollectionURL  string `yaml:"collectionurl"`
 
 }
 
@@ -71,7 +71,7 @@ func (config OneCRLConfig) GetRecordURL() string {
 const DEFAULT_ONECRLCONFIG string = ".config.yml"
 const DEFAULT_ONECRLENV string = "production"
 const DEFAULT_ONECRLVERBOSE string = "no"
-const DEFAULT_UPLOAD_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
+const DEFAULT_COLLECTION_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
 const DEFAULT_DEFAULT string = ""
 const DEFAULT_PREVIEW string = "no"
 
@@ -115,8 +115,8 @@ func (config *OneCRLConfig) loadConfig() error {
 	if config.KintoPassword == DEFAULT_DEFAULT && loaded.KintoPassword!= "" {
 		config.KintoPassword = loaded.KintoPassword
 	}
-	if config.KintoUploadURL == DEFAULT_UPLOAD_URL && loaded.KintoUploadURL!= "" {
-		config.KintoUploadURL = loaded.KintoUploadURL
+	if config.KintoCollectionURL == DEFAULT_COLLECTION_URL && loaded.KintoCollectionURL!= "" {
+		config.KintoCollectionURL = loaded.KintoCollectionURL
 	}
 
 	if len(config.KintoUser) > 0 && len(config.KintoPassword) == 0 {
@@ -146,7 +146,7 @@ func DefineFlags() {
 	flag.StringVar(&conf.Preview, "preview", DEFAULT_PREVIEW, "Preview (don't write changes)")
 	flag.StringVar(&conf.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
 	flag.StringVar(&conf.KintoPassword, "kintopass", DEFAULT_DEFAULT, "The kinto user's pasword")
-	flag.StringVar(&conf.KintoUploadURL, "uploadurl", DEFAULT_UPLOAD_URL, "The kinto upload URL")
+	flag.StringVar(&conf.KintoCollectionURL, "collectionurl", DEFAULT_COLLECTION_URL, "The kinto collection URL")
 }
 
 type AttachmentFlag struct {
@@ -628,9 +628,9 @@ func AddEntries(records *Records, createBug bool) error {
 		// TODO: Batch these, don't send single requests
 		if conf.Preview != "yes" {
 			if "yes" == conf.OneCRLVerbose {
-				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", conf.KintoUploadURL, marshalled)
+				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL, marshalled)
 			}
-			req, err := http.NewRequest("POST", conf.KintoUploadURL, bytes.NewBuffer(marshalled))
+			req, err := http.NewRequest("POST", conf.KintoCollectionURL, bytes.NewBuffer(marshalled))
 
 			if len(conf.KintoUser) > 0 {
 				req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
@@ -651,7 +651,7 @@ func AddEntries(records *Records, createBug bool) error {
 				panic(err)
 			}
 		} else {
-			fmt.Printf("Would POST to \"%s\" with \"%s\"\n", conf.KintoUploadURL, marshalled)
+			fmt.Printf("Would POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL, marshalled)
 		}
 	}
 
