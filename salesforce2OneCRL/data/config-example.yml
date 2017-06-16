@@ -1,0 +1,10 @@
+onecrlenv: stage
+# The hostname of your bugzilla instance
+bugzilla: https://bugzilla.example.com
+# Your bugzilla API key
+bzapikey: aBugzillaAPIKey
+preview: no
+# The kinto username
+kintouser: test
+# The URL of the records in your kinto collection
+collectionurl: https://kinto.dev.mozaws.net/v1/buckets/default/collections/test-items/records
