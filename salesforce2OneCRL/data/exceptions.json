@@ -1,0 +1,65 @@
+{"data":[
+  {
+    "serialNumber": "ByembA==",
+    "details": {
+      "who": ".",
+      "created": "2017-01-06T16:05:53Z",
+      "bug": "",
+      "name": "Revoked intermediates",
+      "why": "."
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q="
+  },
+  {
+    "serialNumber": "Bye2Cg==",
+    "details": {
+      "who": ".",
+      "created": "2017-01-06T16:09:23Z",
+      "bug": "",
+      "name": "Revoked intermediates",
+      "why": "."
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q="
+  },
+  {
+    "serialNumber": "Byemaw==",
+    "details": {
+      "who": ".",
+      "created": "2017-06-15T16:43:23Z",
+      "name": "Revoked intermediates",
+      "why": ""
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q="
+  },
+  {
+    "serialNumber": "ByembQ==",
+    "details": {
+      "who": ".",
+      "created": "2017-06-15T16:43:23Z",
+      "name": "Revoked intermediates",
+      "why": ""
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q="
+  },
+  {
+    "serialNumber": "RsdOCxepZXHEs1ErwPc=",
+    "details": {
+      "who": ".",
+      "created": "2017-06-15T16:43:23Z",
+      "name": "Revoked intermediates",
+      "why": ""
+    },
+    "issuerName": "MFwxCzAJBgNVBAYTAkJFMRUwEwYDVQQLEwxUcnVzdGVkIFJvb3QxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExGzAZBgNVBAMTElRydXN0ZWQgUm9vdCBDQSBHMg=="
+  },
+  {
+    "serialNumber": "ByemaA==",
+    "details": {
+      "who": ".",
+      "created": "2017-06-15T16:43:23Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1372336",
+      "name": "Banca d'Italia Root's X-Certificate",
+      "why": "Banca d' Italia does not have a current audit for Baseline Requirements compliance"
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q="
+  }
+]}
