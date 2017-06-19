@@ -51,6 +51,7 @@ type OneCRLConfig struct {
 	OneCRLVerbose   string `yaml:"onecrlverbose"`
 	BugzillaBase    string `yaml:"bugzilla"`
 	BugzillaAPIKey  string `yaml:"bzapikey"`
+	BugDescription  string `yaml:"bugdescription"`
 	Preview         string `yaml:"preview"`
 	KintoUser       string `yaml:"kintouser"`
 	KintoPassword   string `yaml:"kintopass"`
@@ -74,6 +75,7 @@ const DEFAULT_ONECRLVERBOSE string = "no"
 const DEFAULT_COLLECTION_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
 const DEFAULT_DEFAULT string = ""
 const DEFAULT_PREVIEW string = "no"
+const DEFAULT_DESCRIPTION string = "Here are some entries: Please ensure that the entries are correct."
 
 var conf = OneCRLConfig {}
 
@@ -105,6 +107,9 @@ func (config *OneCRLConfig) loadConfig() error {
 	}
 	if config.BugzillaAPIKey == DEFAULT_DEFAULT && loaded.BugzillaAPIKey != "" {
 		config.BugzillaAPIKey = loaded.BugzillaAPIKey
+	}
+	if config.BugDescription == DEFAULT_DESCRIPTION && loaded.BugDescription!= "" {
+		config.BugDescription= loaded.BugDescription
 	}
 	if config.KintoUser == DEFAULT_DEFAULT && loaded.KintoUser!= "" {
 		config.KintoUser = loaded.KintoUser
@@ -143,6 +148,7 @@ func DefineFlags() {
 	flag.StringVar(&conf.OneCRLVerbose, "onecrlverbose", DEFAULT_ONECRLVERBOSE, "Be verbose about OneCRL stuff")
 	flag.StringVar(&conf.BugzillaBase, "bugzilla", PREFIX_BUGZILLA_PROD, "The bugzilla instance to use by default")
 	flag.StringVar(&conf.BugzillaAPIKey, "bzapikey", DEFAULT_DEFAULT, "The bugzilla API key")
+	flag.StringVar(&conf.BugDescription, "bugdescription", DEFAULT_DESCRIPTION, "The bugzilla comment to put in the bug")
 	flag.StringVar(&conf.Preview, "preview", DEFAULT_PREVIEW, "Preview (don't write changes)")
 	flag.StringVar(&conf.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
 	flag.StringVar(&conf.KintoPassword, "kintopass", DEFAULT_DEFAULT, "The kinto user's pasword")
@@ -594,7 +600,7 @@ func AddEntries(records *Records, createBug bool) error {
 		bug.Component = "Blocklisting"
 		bug.Version = "unspecified"
 		bug.Summary = fmt.Sprintf("CCADB entries generated %s", nowString)
-		bug.Description = "Here are some entries: Please ensure that the entries are correct."
+		bug.Description = conf.BugDescription
 
 		var err error
 		bugNum, err = CreateBug(bug)
