@@ -61,5 +61,16 @@
       "why": "Banca d' Italia does not have a current audit for Baseline Requirements compliance"
     },
     "issuerName": "MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q="
+  },
+  {
+    "serialNumber": "ZhcM4uyLfYi04utzLnOP46Z89nI=",
+    "details": {
+      "who": ".",
+      "created": "2017-06-21T12:45:09Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1374809",
+      "name": "Leaked private key for Cisco cert",
+      "why": "Private key leaked"
+    },
+    "issuerName": "MF4xCzAJBgNVBAYTAlVTMTAwLgYDVQQKEydIeWRyYW50SUQgKEF2YWxhbmNoZSBDbG91ZCBDb3Jwb3JhdGlvbikxHTAbBgNVBAMTFEh5ZHJhbnRJRCBTU0wgSUNBIEcy"
   }
 ]}
