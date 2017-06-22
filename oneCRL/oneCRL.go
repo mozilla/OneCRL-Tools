@@ -24,7 +24,8 @@ import (
 
 const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
 const StagePrefix string = "https://settings.stage.mozaws.net"
-const RecordsPath string = "/v1/buckets/blocklists/collections/certificates/records"
+const RecordsPathPrefix string = "/v1/buckets/"
+const RecordsPathSuffix string = "/collections/certificates/records"
 
 const PREFIX_BUGZILLA_PROD string = "https://bugzilla.mozilla.org"
 const PREFIX_BUGZILLA_STAGE string = "https://bugzilla.allizom.org"
@@ -34,11 +35,11 @@ const KintoWriterURL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/
 const IssuerPrefix string = "issuer: "
 const SerialPrefix string = "serial: "
 
-type OneCRLEnvironment int
-const (
-	Production OneCRLEnvironment = iota
-	Stage
-)
+//type OneCRLEnvironment int
+//const (
+//	Production OneCRLEnvironment = iota
+//	Stage
+//)
 
 // TODO: this looks unecessary - maybe remove
 type OneCRLUpdate struct {
@@ -46,20 +47,23 @@ type OneCRLUpdate struct {
 }
 
 type OneCRLConfig struct {
-	oneCRLConfig    string
-	oneCRLEnvString string `yaml:"onecrlenv"`
-	OneCRLVerbose   string `yaml:"onecrlverbose"`
-	BugzillaBase    string `yaml:"bugzilla"`
-	BugzillaAPIKey  string `yaml:"bzapikey"`
-	BugDescription  string `yaml:"bugdescription"`
-	Preview         string `yaml:"preview"`
-	KintoUser       string `yaml:"kintouser"`
-	KintoPassword   string `yaml:"kintopass"`
-	KintoCollectionURL  string `yaml:"collectionurl"`
+	oneCRLConfig		string
+	oneCRLEnvString		string `yaml:"onecrlenv"`
+	oneCRLBucketString	string `yaml:"onecrlbucket"`
+	OneCRLVerbose		string `yaml:"onecrlverbose"`
+	BugzillaBase		string `yaml:"bugzilla"`
+	BugzillaAPIKey		string `yaml:"bzapikey"`
+	BugDescription		string `yaml:"bugdescription"`
+	Preview				string `yaml:"preview"`
+	KintoUser			string `yaml:"kintouser"`
+	KintoPassword		string `yaml:"kintopass"`
+	KintoCollectionURL	string `yaml:"collectionurl"`
 
 }
 
 func (config OneCRLConfig) GetRecordURL() string {
+	var RecordsPath string = RecordsPathPrefix + config.oneCRLBucketString + RecordsPathSuffix
+
 	if config.oneCRLEnvString == "stage" {
 		return StagePrefix + RecordsPath
 	}
@@ -71,6 +75,7 @@ func (config OneCRLConfig) GetRecordURL() string {
 
 const DEFAULT_ONECRLCONFIG string = ".config.yml"
 const DEFAULT_ONECRLENV string = "production"
+const DEFAULT_ONECRLBUCKET string = "blocklists"
 const DEFAULT_ONECRLVERBOSE string = "no"
 const DEFAULT_COLLECTION_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
 const DEFAULT_DEFAULT string = ""
@@ -99,6 +104,11 @@ func (config *OneCRLConfig) loadConfig() error {
 	if config.oneCRLEnvString == DEFAULT_ONECRLENV && loaded.oneCRLEnvString != "" {
 		config.oneCRLEnvString = loaded.oneCRLEnvString
 	}
+
+	if config.oneCRLBucketString == DEFAULT_ONECRLBUCKET && loaded.oneCRLBucketString != "" {
+		config.oneCRLBucketString = loaded.oneCRLBucketString
+	}
+
 	fmt.Printf("loaded bugzilla base is %s\n", loaded.BugzillaBase)
 	if config.BugzillaBase == PREFIX_BUGZILLA_PROD && loaded.BugzillaBase != "" {
 		fmt.Printf("overriding with loaded bugzilla base\n")
@@ -145,6 +155,7 @@ func GetConfig() *OneCRLConfig {
 func DefineFlags() {
 	flag.StringVar(&conf.oneCRLConfig, "onecrlconfig", DEFAULT_ONECRLCONFIG, "The OneCRL config file")
 	flag.StringVar(&conf.oneCRLEnvString, "onecrlenv", DEFAULT_ONECRLENV, "The OneCRL Environment to use by default - values other than 'stage' will result in the production instance being used")
+	flag.StringVar(&conf.oneCRLBucketString, "onecrlbucket", DEFAULT_ONECRLBUCKET, "The OneCRL bucket to use for reads")
 	flag.StringVar(&conf.OneCRLVerbose, "onecrlverbose", DEFAULT_ONECRLVERBOSE, "Be verbose about OneCRL stuff")
 	flag.StringVar(&conf.BugzillaBase, "bugzilla", PREFIX_BUGZILLA_PROD, "The bugzilla instance to use by default")
 	flag.StringVar(&conf.BugzillaAPIKey, "bzapikey", DEFAULT_DEFAULT, "The bugzilla API key")
