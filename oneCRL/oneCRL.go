@@ -45,6 +45,7 @@ type OneCRLConfig struct {
 	OneCRLVerbose		string `yaml:"onecrlverbose"`
 	BugzillaBase		string `yaml:"bugzilla"`
 	BugzillaAPIKey		string `yaml:"bzapikey"`
+	BugzillaReviewers	string `yaml:"reviewers"`
 	BugDescription		string `yaml:"bugdescription"`
 	Preview				string `yaml:"preview"`
 	KintoUser			string `yaml:"kintouser"`
@@ -110,6 +111,9 @@ func (config *OneCRLConfig) loadConfig() error {
 	if config.BugzillaAPIKey == DEFAULT_DEFAULT && loaded.BugzillaAPIKey != "" {
 		config.BugzillaAPIKey = loaded.BugzillaAPIKey
 	}
+	if config.BugzillaReviewers == DEFAULT_DEFAULT && loaded.BugzillaReviewers != "" {
+		config.BugzillaReviewers = loaded.BugzillaReviewers
+	}
 	if config.BugDescription == DEFAULT_DESCRIPTION && loaded.BugDescription!= "" {
 		config.BugDescription= loaded.BugDescription
 	}
@@ -151,6 +155,7 @@ func DefineFlags() {
 	flag.StringVar(&conf.OneCRLVerbose, "onecrlverbose", DEFAULT_ONECRLVERBOSE, "Be verbose about OneCRL stuff")
 	flag.StringVar(&conf.BugzillaBase, "bugzilla", PREFIX_BUGZILLA_PROD, "The bugzilla instance to use by default")
 	flag.StringVar(&conf.BugzillaAPIKey, "bzapikey", DEFAULT_DEFAULT, "The bugzilla API key")
+	flag.StringVar(&conf.BugzillaReviewers, "reviewers", DEFAULT_DEFAULT, "The reviewers for the buzilla attachmenets")
 	flag.StringVar(&conf.BugDescription, "bugdescription", DEFAULT_DESCRIPTION, "The bugzilla comment to put in the bug")
 	flag.StringVar(&conf.Preview, "preview", DEFAULT_PREVIEW, "Preview (don't write changes)")
 	flag.StringVar(&conf.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
@@ -558,11 +563,11 @@ func AttachToBug(bugNum int, apiKey string, attachments []Attachment) (error) {
 		attUrl := fmt.Sprintf(conf.BugzillaBase + "/rest/bug/%d/attachment", bugNum)
 		attachment.Ids = []int {bugNum}
 		attachment.ApiKey = apiKey
+		// TODO: Don't set these if they're already set
 		attachment.FileName = "BugData.txt"
 		attachment.Summary = "Intermediates to be revoked"
 		attachment.ContentType = "text/plain"
 		attachment.Comment = "Revocation data for new records"
-		attachment.Flags = make([]AttachmentFlag,0,1)
 		attachment.BugId = bugNum
 		if "yes" == conf.OneCRLVerbose {
 			fmt.Printf("Attempting to marshal %v\n", attachment)
@@ -681,9 +686,6 @@ func AddEntries(records *Records, createBug bool) error {
 
 		if "yes" == conf.OneCRLVerbose {
 			fmt.Printf("requested review - status code is %d\n", resp.StatusCode)
-			bodyBytes, _ := ioutil.ReadAll(resp.Body)
-			bodyString := string(bodyBytes)
-			fmt.Printf("response is %s\n", bodyString)
 		}
 
 		defer resp.Body.Close()
@@ -702,6 +704,21 @@ func AddEntries(records *Records, createBug bool) error {
 		attachments[0] = Attachment{}
 		attachments[0].ApiKey = conf.BugzillaAPIKey
 		attachments[0].Data = str
+
+
+		attachments[0].Flags = make([]AttachmentFlag,0,1)
+		// create flags for the reviewers
+		for _, reviewer := range strings.Split(conf.BugzillaReviewers, ",") {
+			trimmedReviewer := strings.Trim(reviewer," ")
+			if len(trimmedReviewer) > 0 {
+				flag := AttachmentFlag{}
+				flag.Name = "review"
+				flag.Status = "?"
+				flag.Requestee = trimmedReviewer
+				flag.New = true
+				attachments[0].Flags = append(attachments[0].Flags, flag)
+			}
+		}
 
 		err := AttachToBug(bugNum, conf.BugzillaAPIKey, attachments)
 		if err != nil {
