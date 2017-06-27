@@ -79,7 +79,7 @@ func main() {
 		stream = r.Body
 	}
 
-	existing, err:= oneCRL.FetchExistingRevocations(conf.KintoCollectionURL)
+	existing, err:= oneCRL.FetchExistingRevocations(conf.KintoCollectionURL + "/records")
 	if nil != err{
 		fmt.Printf("%s\n", err)
 	}

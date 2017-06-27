@@ -30,16 +30,8 @@ const RecordsPathSuffix string = "/collections/certificates/records"
 const PREFIX_BUGZILLA_PROD string = "https://bugzilla.mozilla.org"
 const PREFIX_BUGZILLA_STAGE string = "https://bugzilla.allizom.org"
 
-const KintoWriterURL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
-
 const IssuerPrefix string = "issuer: "
 const SerialPrefix string = "serial: "
-
-//type OneCRLEnvironment int
-//const (
-//	Production OneCRLEnvironment = iota
-//	Stage
-//)
 
 // TODO: this looks unecessary - maybe remove
 type OneCRLUpdate struct {
@@ -77,7 +69,7 @@ const DEFAULT_ONECRLCONFIG string = ".config.yml"
 const DEFAULT_ONECRLENV string = "production"
 const DEFAULT_ONECRLBUCKET string = "blocklists"
 const DEFAULT_ONECRLVERBOSE string = "no"
-const DEFAULT_COLLECTION_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates/records"
+const DEFAULT_COLLECTION_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates"
 const DEFAULT_DEFAULT string = ""
 const DEFAULT_PREVIEW string = "no"
 const DEFAULT_DESCRIPTION string = "Here are some entries: Please ensure that the entries are correct."
@@ -527,7 +519,6 @@ func LoadRevocationsFromBug(filename string, loader OneCRLLoader) error {
 func CreateBug(bug Bug) (int, error) {
 	// POST the bug
 	bugNum := -1;
-	fmt.Printf("config is %v\n", conf)
 	url := conf.BugzillaBase + "/rest/bug"
 	marshalled, err := json.Marshal(bug)
 	if "yes" == conf.OneCRLVerbose {
@@ -645,9 +636,9 @@ func AddEntries(records *Records, createBug bool) error {
 		// TODO: Batch these, don't send single requests
 		if conf.Preview != "yes" {
 			if "yes" == conf.OneCRLVerbose {
-				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL, marshalled)
+				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL + "/records", marshalled)
 			}
-			req, err := http.NewRequest("POST", conf.KintoCollectionURL, bytes.NewBuffer(marshalled))
+			req, err := http.NewRequest("POST", conf.KintoCollectionURL + "/records", bytes.NewBuffer(marshalled))
 
 			if len(conf.KintoUser) > 0 {
 				req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
@@ -668,8 +659,39 @@ func AddEntries(records *Records, createBug bool) error {
 				panic(err)
 			}
 		} else {
-			fmt.Printf("Would POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL, marshalled)
+			fmt.Printf("Would POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL + "/records", marshalled)
 		}
+	}
+
+	// TODO: request review on the Kinto change
+	if conf.Preview != "yes" {
+		// TODO: Factor out the request stuff...
+		reviewJSON := "{\"data\": {\"status\": \"to-review\"}}"
+
+		// PATCH the object to set the status to to-review
+		req, err := http.NewRequest("PATCH", conf.KintoCollectionURL, bytes.NewBuffer([]byte(reviewJSON)))
+
+		if len(conf.KintoUser) > 0 {
+			req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+
+		if "yes" == conf.OneCRLVerbose {
+			fmt.Printf("requested review - status code is %d\n", resp.StatusCode)
+			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			bodyString := string(bodyBytes)
+			fmt.Printf("response is %s\n", bodyString)
+		}
+
+		defer resp.Body.Close()
+
+		if err != nil {
+			panic(err)
+		}
+
 	}
 
 	// upload the created entries to bugzilla
