@@ -597,10 +597,12 @@ func AddEntries(records *Records, createBug bool) error {
 
 	bugNum := -1
 
+	shouldWrite := conf.Preview != "yes" && len(records.Data) > 0
+
 	now := time.Now()
 	nowString := now.Format("2006-01-02T15:04:05Z")
 
-	if (conf.Preview != "yes") {
+	if shouldWrite {
 		bug := Bug{}
 		bug.ApiKey = conf.BugzillaAPIKey
 		bug.Product = "Toolkit"
@@ -669,7 +671,7 @@ func AddEntries(records *Records, createBug bool) error {
 	}
 
 	// TODO: request review on the Kinto change
-	if conf.Preview != "yes" {
+	if shouldWrite {
 		// TODO: Factor out the request stuff...
 		reviewJSON := "{\"data\": {\"status\": \"to-review\"}}"
 
@@ -694,10 +696,8 @@ func AddEntries(records *Records, createBug bool) error {
 			panic(err)
 		}
 
-	}
 
-	// upload the created entries to bugzilla
-	if conf.Preview != "yes" {
+		// upload the created entries to bugzilla
 		attachments := make([]Attachment, 1)
 		data := []byte(attachment)
 		str := base64.StdEncoding.EncodeToString(data)
@@ -720,7 +720,7 @@ func AddEntries(records *Records, createBug bool) error {
 			}
 		}
 
-		err := AttachToBug(bugNum, conf.BugzillaAPIKey, attachments)
+		err = AttachToBug(bugNum, conf.BugzillaAPIKey, attachments)
 		if err != nil {
 			fmt.Printf(str)
 			panic(err)
