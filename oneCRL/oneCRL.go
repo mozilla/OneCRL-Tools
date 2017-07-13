@@ -10,194 +10,23 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"flag"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strings"
-	"syscall"
 	"time"
-	"golang.org/x/crypto/ssh/terminal"
+	"github.com/mozmark/OneCRL-Tools/config"
+	"github.com/mozmark/OneCRL-Tools/util"
 )
-
-const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
-const StagePrefix string = "https://settings.stage.mozaws.net"
-const RecordsPathPrefix string = "/v1/buckets/"
-const RecordsPathSuffix string = "/collections/certificates/records"
-
-const PREFIX_BUGZILLA_PROD string = "https://bugzilla.mozilla.org"
-const PREFIX_BUGZILLA_STAGE string = "https://bugzilla.allizom.org"
 
 const IssuerPrefix string = "issuer: "
 const SerialPrefix string = "serial: "
 
+
 // TODO: this looks unecessary - maybe remove
 type OneCRLUpdate struct {
 	Data Record `json:"data"`
-}
-
-type OneCRLConfig struct {
-	oneCRLConfig		string
-	oneCRLEnvString		string `yaml:"onecrlenv"`
-	oneCRLBucketString	string `yaml:"onecrlbucket"`
-	OneCRLVerbose		string `yaml:"onecrlverbose"`
-	BugzillaBase		string `yaml:"bugzilla"`
-	BugzillaAPIKey		string `yaml:"bzapikey"`
-	BugzillaReviewers	string `yaml:"reviewers"`
-	BugDescription		string `yaml:"bugdescription"`
-	Preview				string `yaml:"preview"`
-	KintoUser			string `yaml:"kintouser"`
-	KintoPassword		string `yaml:"kintopass"`
-	KintoCollectionURL	string `yaml:"collectionurl"`
-
-}
-
-func (config OneCRLConfig) GetRecordURL() string {
-	var RecordsPath string = RecordsPathPrefix + config.oneCRLBucketString + RecordsPathSuffix
-
-	if config.oneCRLEnvString == "stage" {
-		return StagePrefix + RecordsPath
-	}
-	if config.oneCRLEnvString == "production" {
-		return ProductionPrefix + RecordsPath
-	}
-	panic("valid onecrlenv values are \"stage\" and \"production\"")
-}
-
-const DEFAULT_ONECRLCONFIG string = ".config.yml"
-const DEFAULT_ONECRLENV string = "production"
-const DEFAULT_ONECRLBUCKET string = "blocklists"
-const DEFAULT_ONECRLVERBOSE string = "no"
-const DEFAULT_COLLECTION_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates"
-const DEFAULT_DEFAULT string = ""
-const DEFAULT_PREVIEW string = "no"
-const DEFAULT_DESCRIPTION string = "Here are some entries: Please ensure that the entries are correct."
-
-var conf = OneCRLConfig {}
-
-func (config *OneCRLConfig) loadConfig() error {
-	// TODO: load the config from configuration file
-	loaded :=  OneCRLConfig{}
-
-	filename := config.oneCRLConfig
-	if len(filename) == 0 {
-		filename = DEFAULT_ONECRLCONFIG
-	}
-	data, err := ioutil.ReadFile(filename)
-	if nil != err {
-		return err
-	}
-	yaml.Unmarshal(data, &loaded)
-	fmt.Printf("The unmarshalled config is %v\n", loaded)
-
-	// Check the config values to see if any are already overridden
-	// for each value, if it's unset, copy the config file's value (if present)
-	if config.oneCRLEnvString == DEFAULT_ONECRLENV && loaded.oneCRLEnvString != "" {
-		config.oneCRLEnvString = loaded.oneCRLEnvString
-	}
-
-	if config.oneCRLBucketString == DEFAULT_ONECRLBUCKET && loaded.oneCRLBucketString != "" {
-		config.oneCRLBucketString = loaded.oneCRLBucketString
-	}
-
-	fmt.Printf("loaded bugzilla base is %s\n", loaded.BugzillaBase)
-	if config.BugzillaBase == PREFIX_BUGZILLA_PROD && loaded.BugzillaBase != "" {
-		fmt.Printf("overriding with loaded bugzilla base\n")
-		config.BugzillaBase = loaded.BugzillaBase
-		fmt.Printf("overridden bugzilla base is %s\n", config.BugzillaBase)
-	}
-	if config.BugzillaAPIKey == DEFAULT_DEFAULT && loaded.BugzillaAPIKey != "" {
-		config.BugzillaAPIKey = loaded.BugzillaAPIKey
-	}
-	if config.BugzillaReviewers == DEFAULT_DEFAULT && loaded.BugzillaReviewers != "" {
-		config.BugzillaReviewers = loaded.BugzillaReviewers
-	}
-	if config.BugDescription == DEFAULT_DESCRIPTION && loaded.BugDescription!= "" {
-		config.BugDescription= loaded.BugDescription
-	}
-	if config.KintoUser == DEFAULT_DEFAULT && loaded.KintoUser!= "" {
-		config.KintoUser = loaded.KintoUser
-	}
-	if config.Preview == DEFAULT_PREVIEW && loaded.Preview != "" {
-		config.Preview = loaded.Preview
-	}
-	if config.KintoPassword == DEFAULT_DEFAULT && loaded.KintoPassword!= "" {
-		config.KintoPassword = loaded.KintoPassword
-	}
-	if config.KintoCollectionURL == DEFAULT_COLLECTION_URL && loaded.KintoCollectionURL!= "" {
-		config.KintoCollectionURL = loaded.KintoCollectionURL
-	}
-
-	if len(config.KintoUser) > 0 && len(config.KintoPassword) == 0 {
-		fmt.Printf("Please enter the password for user %s\n", config.KintoUser)
-		bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
-		if nil != err {
-			panic(err)
-		}
-		config.KintoPassword = string(bytePassword)
-	}
-
-	return nil
-}
-
-func GetConfig() *OneCRLConfig {
-	conf.loadConfig()
-	return &conf
-}
-
-
-func DefineFlags() {
-	flag.StringVar(&conf.oneCRLConfig, "onecrlconfig", DEFAULT_ONECRLCONFIG, "The OneCRL config file")
-	flag.StringVar(&conf.oneCRLEnvString, "onecrlenv", DEFAULT_ONECRLENV, "The OneCRL Environment to use by default - values other than 'stage' will result in the production instance being used")
-	flag.StringVar(&conf.oneCRLBucketString, "onecrlbucket", DEFAULT_ONECRLBUCKET, "The OneCRL bucket to use for reads")
-	flag.StringVar(&conf.OneCRLVerbose, "onecrlverbose", DEFAULT_ONECRLVERBOSE, "Be verbose about OneCRL stuff")
-	flag.StringVar(&conf.BugzillaBase, "bugzilla", PREFIX_BUGZILLA_PROD, "The bugzilla instance to use by default")
-	flag.StringVar(&conf.BugzillaAPIKey, "bzapikey", DEFAULT_DEFAULT, "The bugzilla API key")
-	flag.StringVar(&conf.BugzillaReviewers, "reviewers", DEFAULT_DEFAULT, "The reviewers for the buzilla attachmenets")
-	flag.StringVar(&conf.BugDescription, "bugdescription", DEFAULT_DESCRIPTION, "The bugzilla comment to put in the bug")
-	flag.StringVar(&conf.Preview, "preview", DEFAULT_PREVIEW, "Preview (don't write changes)")
-	flag.StringVar(&conf.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
-	flag.StringVar(&conf.KintoPassword, "kintopass", DEFAULT_DEFAULT, "The kinto user's pasword")
-	flag.StringVar(&conf.KintoCollectionURL, "collectionurl", DEFAULT_COLLECTION_URL, "The kinto collection URL")
-}
-
-type AttachmentFlag struct {
-	Name string      `json:"name"`
-	Status string    `json:"status"`
-	Requestee string `json:"requestee"`
-	New bool         `json:"new"`
-}
-
-type Attachment struct {
-	ApiKey      string           `json:"api_key"`
-	Ids         []int            `json:"ids"`
-	ContentType string           `json:"content_type"`
-	Data        string           `json:"data"`
-	Summary     string           `json:"summary"`
-	FileName    string           `json:"file_name"`
-	Flags       []AttachmentFlag `json:"flags"`
-	BugId       int              `json:"bug_id"`
-	Comment     string           `json:"comment"`
-}
-
-type AttachmentResponse struct {
-	Ids []string `json:"ids"`
-}
-
-type Bug struct {
-	ApiKey      string `json:"api_key"`
-	Product     string `json:"product"`
-	Component   string `json:"component"`
-	Version     string `json:"version"`
-	Summary     string `json:"summary"`
-	Comment     string `json:"comment"`
-	Description string `json:"description"`
-}
-
-type BugResponse struct {
-	Id int `json:"id"`
 }
 
 type Record struct {
@@ -261,6 +90,8 @@ func getDataFromURL(url string, user string, pass string) ([]byte, error) {
 }
 
 func FetchExistingRevocations(url string) ([]string, error) {
+	conf := config.GetConfig()
+
 	if len(url) == 0 {
 		return nil, errors.New("No URL was specified")
 	}
@@ -488,6 +319,7 @@ func LoadRevocationsTxtFromFile(filename string, loader OneCRLLoader) error {
 }
 
 func LoadRevocationsFromBug(filename string, loader OneCRLLoader) error {
+	conf := config.GetConfig()
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -521,76 +353,9 @@ func LoadRevocationsFromBug(filename string, loader OneCRLLoader) error {
 	return nil
 }
 
-func CreateBug(bug Bug) (int, error) {
-	// POST the bug
-	bugNum := -1;
-	url := conf.BugzillaBase + "/rest/bug"
-	marshalled, err := json.Marshal(bug)
-	if "yes" == conf.OneCRLVerbose {
-		fmt.Printf("POSTing %s to %s\n", marshalled, url);
-	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(marshalled))
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return bugNum, err
-	}
-	if "yes" == conf.OneCRLVerbose {
-		fmt.Printf("status code is %d\n", resp.StatusCode)
-	}
-	dec := json.NewDecoder(resp.Body)
-		var response BugResponse
-		err = dec.Decode(&response)
-		if err != nil {
-			return bugNum, err
-		} else {
-			bugNum = response.Id
-
-			if "yes" == conf.OneCRLVerbose {
-				fmt.Printf("%v\n", response.Id)
-			}
-		}
-	defer resp.Body.Close()
-
-	return bugNum, nil
-}
-
-func AttachToBug(bugNum int, apiKey string, attachments []Attachment) (error) {
-	// loop over the attachments, add each to the bug
-	for _, attachment := range attachments {
-		attUrl := fmt.Sprintf(conf.BugzillaBase + "/rest/bug/%d/attachment", bugNum)
-		attachment.Ids = []int {bugNum}
-		attachment.ApiKey = apiKey
-		// TODO: Don't set these if they're already set
-		attachment.FileName = "BugData.txt"
-		attachment.Summary = "Intermediates to be revoked"
-		attachment.ContentType = "text/plain"
-		attachment.Comment = "Revocation data for new records"
-		attachment.BugId = bugNum
-		if "yes" == conf.OneCRLVerbose {
-			fmt.Printf("Attempting to marshal %v\n", attachment)
-		}
-		attMarshalled, err := json.Marshal(attachment)
-		if "yes" == conf.OneCRLVerbose {
-			fmt.Printf("POSTing %s to %s\n", attMarshalled, attUrl)
-		}
-		attReq, err := http.NewRequest("POST", attUrl, bytes.NewBuffer(attMarshalled))
-		attReq.Header.Set("Content-Type", "application/json")
-		attClient := &http.Client{}
-		attResp, err := attClient.Do(attReq)
-		if err != nil {
-			return err
-		}
-		if "yes" == conf.OneCRLVerbose {
-			fmt.Printf("att response %s\n", attResp);
-		}
-	}
-	return nil
-}
-
 func AddEntries(records *Records, createBug bool) error {
+	conf := config.GetConfig()
+
 	issuerMap := make(map[string][]string)
 
 	attachment := ""
@@ -603,7 +368,7 @@ func AddEntries(records *Records, createBug bool) error {
 	nowString := now.Format("2006-01-02T15:04:05Z")
 
 	if shouldWrite {
-		bug := Bug{}
+		bug := bugs.Bug{}
 		bug.ApiKey = conf.BugzillaAPIKey
 		bug.Product = "Toolkit"
 		bug.Component = "Blocklisting"
@@ -612,7 +377,7 @@ func AddEntries(records *Records, createBug bool) error {
 		bug.Description = conf.BugDescription
 
 		var err error
-		bugNum, err = CreateBug(bug)
+		bugNum, err = bugs.CreateBug(bug, conf)
 		if err != nil {
 			panic(err)
 		}
@@ -698,20 +463,20 @@ func AddEntries(records *Records, createBug bool) error {
 
 
 		// upload the created entries to bugzilla
-		attachments := make([]Attachment, 1)
+		attachments := make([]bugs.Attachment, 1)
 		data := []byte(attachment)
 		str := base64.StdEncoding.EncodeToString(data)
-		attachments[0] = Attachment{}
+		attachments[0] = bugs.Attachment{}
 		attachments[0].ApiKey = conf.BugzillaAPIKey
 		attachments[0].Data = str
 
 
-		attachments[0].Flags = make([]AttachmentFlag,0,1)
+		attachments[0].Flags = make([]bugs.AttachmentFlag,0,1)
 		// create flags for the reviewers
 		for _, reviewer := range strings.Split(conf.BugzillaReviewers, ",") {
 			trimmedReviewer := strings.Trim(reviewer," ")
 			if len(trimmedReviewer) > 0 {
-				flag := AttachmentFlag{}
+				flag := bugs.AttachmentFlag{}
 				flag.Name = "review"
 				flag.Status = "?"
 				flag.Requestee = trimmedReviewer
@@ -720,7 +485,7 @@ func AddEntries(records *Records, createBug bool) error {
 			}
 		}
 
-		err = AttachToBug(bugNum, conf.BugzillaAPIKey, attachments)
+		err = bugs.AttachToBug(bugNum, conf.BugzillaAPIKey, attachments, conf)
 		if err != nil {
 			fmt.Printf(str)
 			panic(err)

@@ -13,6 +13,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"github.com/mozmark/OneCRL-Tools/config"
 	"github.com/mozmark/OneCRL-Tools/oneCRL"
 	"os"
 	"strings"
@@ -44,11 +45,11 @@ func main() {
 	whoPtr := flag.String("who", "", "who made this change")
 	whyPtr := flag.String("why", "", "why is this change happening")
 
-	oneCRL.DefineFlags()
+	config.DefineFlags()
 
 	flag.Parse()
 	
-	conf := oneCRL.GetConfig()
+	conf := config.GetConfig()
 
 	var stream io.ReadCloser
 
