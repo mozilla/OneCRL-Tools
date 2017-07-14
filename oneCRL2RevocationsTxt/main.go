@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mozmark/OneCRL-Tools/oneCRL"	
+	"github.com/mozmark/OneCRL-Tools/config"	
 )
 
 type revocations struct {
@@ -40,12 +41,12 @@ func (r *revocations) LoadRecord(record oneCRL.Record) {
 }
 
 func main() {
-	oneCRL.DefineFlags()
+	config.DefineFlags()
 	flag.Parse()
 
 	rev := new (revocations)
 	
-	config := oneCRL.GetConfig()
+	config := config.GetConfig()
 
 	url := config.GetRecordURL()
 
