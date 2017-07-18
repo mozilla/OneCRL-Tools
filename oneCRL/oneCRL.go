@@ -373,7 +373,7 @@ func AddEntries(records *Records, createBug bool) error {
 		bug.Product = "Toolkit"
 		bug.Component = "Blocklisting"
 		bug.Version = "unspecified"
-		bug.Summary = fmt.Sprintf("CCADB entries generated %s", nowString)
+		bug.Summary = fmt.Sprintf("CCADB OneCRL entries generated %s", nowString)
 		bug.Description = conf.BugDescription
 
 		var err error
