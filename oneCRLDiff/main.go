@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"github.com/mozmark/OneCRL-Tools/oneCRL"	
+	"github.com/mozmark/OneCRL-Tools/config"
+	"github.com/mozmark/OneCRL-Tools/oneCRL"
 )
 
 type OneCRLSet struct {
@@ -16,16 +17,17 @@ func (set *OneCRLSet) LoadRecord(record oneCRL.Record) {
 	set.records.Data = append(set.records.Data, record)
 }
 
-func (set *OneCRLSet) FetchData(location string) error {
+func (set *OneCRLSet) FetchData(location string, config *config.OneCRLConfig) error {
 	if 0 == strings.Index(strings.ToLower(location),"http://") ||
 	   0 == strings.Index(strings.ToLower(location),"https://") {
 	   return oneCRL.LoadJSONFromURL(location, set)
-   } else if location == "production" {
-	   return oneCRL.LoadJSONFromURL(oneCRL.ProductionPrefix + oneCRL.RecordsPath, set)
-   } else if location == "stage" {
-	   return oneCRL.LoadJSONFromURL(oneCRL.StagePrefix + oneCRL.RecordsPath, set)
    } else {
-	   return oneCRL.LoadRevocationsTxtFromFile(location, set)
+	   err, url := config.GetRecordURLForEnv(location)
+	   if nil == err {
+		   return oneCRL.LoadJSONFromURL(url, set)
+	   } else {
+		   return oneCRL.LoadRevocationsTxtFromFile(location, set)
+	   }
    }
 }
 
@@ -33,10 +35,10 @@ func main() {
 	set1 := new(OneCRLSet)
 	set2 := new(OneCRLSet)
 
-	oneCRL.DefineFlags()
+	config.DefineFlags()
 	flag.Parse()
 	
-	config := oneCRL.GetConfig()
+	config := config.GetConfig()
 
 	args := flag.Args()
 	if len(args) < 1 {
@@ -50,11 +52,14 @@ func main() {
 	if len(args) < 2 {
 		// TODO: Read env. options and (optionally) fetch data from a different
 		// environment than production
-		set1.FetchData(config.GetRecordURL())
-		set2.FetchData(args[0])
+		err, url := config.GetRecordURL()
+		if nil == err {
+			set1.FetchData(url, config)
+			set2.FetchData(args[0], config)
+		}
 	} else {
-		set1.FetchData(args[0])
-		set2.FetchData(args[1])
+		set1.FetchData(args[0], config)
+		set2.FetchData(args[1], config)
 	}
 
 	fmt.Printf("set1 has %d entries\n",len((*set1).records.Data))

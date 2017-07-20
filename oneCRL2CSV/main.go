@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"github.com/mozmark/OneCRL-Tools/oneCRL"	
+	"github.com/mozmark/OneCRL-Tools/config"
+	"github.com/mozmark/OneCRL-Tools/oneCRL"
 )
 
 func getJSON(url string, target interface{}) error {
@@ -54,17 +55,21 @@ func main() {
 	filePtr := flag.String("file", "", "revocations.txt to load entries from")
 	upper := flag.Bool("upper", false, "Should hex values be upper case?")
 	separate := flag.Bool("separate", false, "Should the serial number bytes be colon separated?")
-	oneCRL.DefineFlags()
+	config.DefineFlags()
 	flag.Parse()
 
 	printer := OneCRLPrinter{separate:*separate, upper:*upper}
 
-	config := oneCRL.GetConfig()
-	url := config.GetRecordURL()
+	config := config.GetConfig()
 
 	// If no file is specified, fall back to loading from an URL
 	if len(*filePtr) == 0 {
-		oneCRL.LoadJSONFromURL(url, printer)
+		err, url := config.GetRecordURL()
+		if nil == err {
+			oneCRL.LoadJSONFromURL(url, printer)
+		} else {
+			panic(err)
+		}
 	} else {
 		oneCRL.LoadRevocationsTxtFromFile(*filePtr, printer)
 	}

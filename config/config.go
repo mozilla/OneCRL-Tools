@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"syscall"
@@ -30,19 +31,22 @@ type OneCRLConfig struct {
 	KintoUser			string `yaml:"kintouser"`
 	KintoPassword		string `yaml:"kintopass"`
 	KintoCollectionURL	string `yaml:"collectionurl"`
-
 }
 
-func (config OneCRLConfig) GetRecordURL() string {
+func (config OneCRLConfig) GetRecordURLForEnv(environment string) (error, string) {
 	var RecordsPath string = RecordsPathPrefix + config.oneCRLBucketString + RecordsPathSuffix
 
-	if config.oneCRLEnvString == "stage" {
-		return StagePrefix + RecordsPath
+	if environment == "stage" {
+		return nil, StagePrefix + RecordsPath
 	}
-	if config.oneCRLEnvString == "production" {
-		return ProductionPrefix + RecordsPath
+	if environment == "production" {
+		return nil, ProductionPrefix + RecordsPath
 	}
-	panic("valid onecrlenv values are \"stage\" and \"production\"")
+	return errors.New("valid onecrlenv values are \"stage\" and \"production\""), ""
+}
+
+func (config OneCRLConfig) GetRecordURL() (error, string) {
+	return config.GetRecordURLForEnv(config.oneCRLEnvString)
 }
 
 const DEFAULT_ONECRLCONFIG string = ".config.yml"
