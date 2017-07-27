@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"github.com/mozmark/OneCRL-Tools/config"
@@ -370,13 +371,18 @@ func AddEntries(records *Records, createBug bool) error {
 	if shouldWrite {
 		bug := bugs.Bug{}
 		bug.ApiKey = conf.BugzillaAPIKey
+		blocks, err := strconv.Atoi(conf.BugzillaBlockee)
+		if len(conf.BugzillaBlockee) != 0 {
+			if nil == err {
+				bug.Blocks = append(bug.Blocks, blocks)
+			}
+		}
 		bug.Product = "Toolkit"
 		bug.Component = "Blocklisting"
 		bug.Version = "unspecified"
 		bug.Summary = fmt.Sprintf("CCADB entries generated %s", nowString)
 		bug.Description = conf.BugDescription
 
-		var err error
 		bugNum, err = bugs.CreateBug(bug, conf)
 		if err != nil {
 			panic(err)
@@ -419,6 +425,10 @@ func AddEntries(records *Records, createBug bool) error {
 
 			client := &http.Client{}
 			resp, err := client.Do(req)
+
+			if nil != err {
+				panic(err)
+			}
 
 			if "yes" == conf.OneCRLVerbose {
 				fmt.Printf("status code is %d\n", resp.StatusCode)

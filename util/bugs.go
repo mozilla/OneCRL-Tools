@@ -39,6 +39,7 @@ type Bug struct {
 	Summary     string `json:"summary"`
 	Comment     string `json:"comment"`
 	Description string `json:"description"`
+	Blocks      []int  `json:"blocks,omitempty"`
 }
 
 type BugResponse struct {
@@ -72,6 +73,7 @@ func CreateBug(bug Bug, conf *config.OneCRLConfig) (int, error) {
 		} else {
 			bugNum = response.Id
 
+			fmt.Printf("%s\n", err)
 			if "yes" == conf.OneCRLVerbose {
 				fmt.Printf("%v\n", response.Id)
 			}

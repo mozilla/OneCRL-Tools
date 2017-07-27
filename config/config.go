@@ -26,6 +26,7 @@ type OneCRLConfig struct {
 	BugzillaBase		string `yaml:"bugzilla"`
 	BugzillaAPIKey		string `yaml:"bzapikey"`
 	BugzillaReviewers	string `yaml:"reviewers"`
+	BugzillaBlockee		string `yaml:"blockee"`
 	BugDescription		string `yaml:"bugdescription"`
 	Preview				string `yaml:"preview"`
 	KintoUser			string `yaml:"kintouser"`
@@ -96,6 +97,9 @@ func (config *OneCRLConfig) loadConfig() error {
 	if config.BugzillaReviewers == DEFAULT_DEFAULT && loaded.BugzillaReviewers != "" {
 		config.BugzillaReviewers = loaded.BugzillaReviewers
 	}
+	if config.BugzillaBlockee == DEFAULT_DEFAULT && loaded.BugzillaBlockee != "" {
+		config.BugzillaBlockee = loaded.BugzillaBlockee
+	}
 	if config.BugDescription == DEFAULT_DESCRIPTION && loaded.BugDescription!= "" {
 		config.BugDescription= loaded.BugDescription
 	}
@@ -139,6 +143,7 @@ func DefineFlags() {
 	flag.StringVar(&conf.BugzillaBase, "bugzilla", PREFIX_BUGZILLA_PROD, "The bugzilla instance to use by default")
 	flag.StringVar(&conf.BugzillaAPIKey, "bzapikey", DEFAULT_DEFAULT, "The bugzilla API key")
 	flag.StringVar(&conf.BugzillaReviewers, "reviewers", DEFAULT_DEFAULT, "The reviewers for the buzilla attachmenets")
+	flag.StringVar(&conf.BugzillaBlockee, "blockee", DEFAULT_DEFAULT, "What bugzilla bug should this bug block")
 	flag.StringVar(&conf.BugDescription, "bugdescription", DEFAULT_DESCRIPTION, "The bugzilla comment to put in the bug")
 	flag.StringVar(&conf.Preview, "preview", DEFAULT_PREVIEW, "Preview (don't write changes)")
 	flag.StringVar(&conf.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
