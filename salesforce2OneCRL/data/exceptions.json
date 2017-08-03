@@ -72,5 +72,27 @@
       "why": "Private key leaked"
     },
     "issuerName": "MF4xCzAJBgNVBAYTAlVTMTAwLgYDVQQKEydIeWRyYW50SUQgKEF2YWxhbmNoZSBDbG91ZCBDb3Jwb3JhdGlvbikxHTAbBgNVBAMTFEh5ZHJhbnRJRCBTU0wgSUNBIEcy"
+  },
+  {
+    "serialNumber": "Wu0lOm5kylP5uOu6md4xmWC3AtQ=",
+    "details": {
+      "who": ".",
+      "created": "2017-08-03T15:53:42Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1386894",
+      "name": "StartCom BR SSL ICA",
+      "why": "The two intermediates have issued many certificates that do not comply with the Baseline Requirements."
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAkZSMRMwEQYDVQQKEwpDZXJ0aW5vbWlzMRcwFQYDVQQLEw4wMDAyIDQzMzk5ODkwMzEdMBsGA1UEAxMUQ2VydGlub21pcyAtIFJvb3QgQ0E="
+  },
+  {
+    "serialNumber": "Z7mwlz4NA2s+8dnwRzT/RvK9ZZQ=",
+    "details": {
+      "who": ".",
+      "created": "2017-08-03T15:53:42Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1386894",
+      "name": "StartCom EV SSL ICA",
+      "why": "The two intermediates have issued many certificates that do not comply with the Baseline Requirements."
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAkZSMRMwEQYDVQQKEwpDZXJ0aW5vbWlzMRcwFQYDVQQLEw4wMDAyIDQzMzk5ODkwMzEdMBsGA1UEAxMUQ2VydGlub21pcyAtIFJvb3QgQ0E="
   }
 ]}
