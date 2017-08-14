@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	constraintsx509  "constraintcrypto/x509"
+	constraintsx509  "github.com/jcjones/constraintcrypto/x509"
 	"encoding/asn1"
 	"encoding/base64"
 	"encoding/hex"
