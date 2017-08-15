@@ -1,0 +1,6 @@
+language: go
+go: stable
+install:
+    - go get gopkg.in/yaml.v2
+    - go get golang.org/x/crypto/ssh/terminal
+script: tests/integration.sh
