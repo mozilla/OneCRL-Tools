@@ -48,9 +48,12 @@ func main() {
 	
 	config := config.GetConfig()
 
-	url := config.GetRecordURL()
+	err, url := config.GetRecordURL()
+	if err != nil {
+		panic(err)
+	}
 
-	err := oneCRL.LoadJSONFromURL(url, rev)
+	err = oneCRL.LoadJSONFromURL(url, rev)
 	if err != nil {
 		panic(err)
 	}
