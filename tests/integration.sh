@@ -1,11 +1,11 @@
 #!/bin/bash
 
 echo -n "Testing oneCRL2RevocationsTxt installation ..."
-go install github.com/mozilla/OneCRL-Tools/oneCRL2RevocationsTxt &>/tmp/oneCRL2RevocationsTxt-install.out
+go install ./oneCRL2RevocationsTxt &>/tmp/oneCRL2RevocationsTxt-install.out
 if [ $? -ne 0 ]
 then
 	echo " fail"
-	echo "FAIL: go install github.com/mozilla/OneCRL-Tools/oneCRL2RevocationsTxt"
+	echo "FAIL: go install ./oneCRL2RevocationsTxt"
 	cat /tmp/oneCRL2RevocationsTxt-install.out
 	exit 5
 fi
