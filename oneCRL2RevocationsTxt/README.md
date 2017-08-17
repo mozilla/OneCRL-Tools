@@ -7,7 +7,7 @@ You need to have [Go](https://golang.org) intalled.
 Check out OneCRL-Tools to your go root and do a:
 
 ```
-go install github.com/mozmark/OneCRL-Tools/oneCRL2RevocationsTxt
+go install github.com/mozilla/OneCRL-Tools/oneCRL2RevocationsTxt
 ```
 
 ## Running
