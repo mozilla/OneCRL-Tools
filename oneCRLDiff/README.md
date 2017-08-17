@@ -7,7 +7,7 @@ You need to have [Go](https://golang.org) intalled.
 Check out OneCRL-Tools to your go root and do a:
 
 ```
-go install github.com/mozmark/OneCRL-Tools/oneCRLDiff
+go install github.com/mozilla/OneCRL-Tools/oneCRLDiff
 ```
 
 ## Running

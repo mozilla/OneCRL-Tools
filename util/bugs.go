@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"github.com/mozmark/OneCRL-Tools/config"
+	"github.com/mozilla/OneCRL-Tools/config"
 )
 
 type AttachmentFlag struct {

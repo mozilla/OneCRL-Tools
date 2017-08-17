@@ -1,0 +1,11 @@
+language: go
+go: stable
+install:
+    # Handle forks by copying this checkout to the expected fork directory
+    - mkdir -p ${GOPATH}/src/github.com/mozilla/OneCRL-Tools
+    - rsync -az ${TRAVIS_BUILD_DIR}/ $HOME/gopath/src/github.com/mozilla/OneCRL-Tools/
+    # Now install dependencies
+    - go get -t ./...
+script:
+    - go test -v ./...
+    - tests/integration.sh
