@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"github.com/mozmark/OneCRL-Tools/config"
-	"github.com/mozmark/OneCRL-Tools/oneCRL"
+	"github.com/mozilla/OneCRL-Tools/config"
+	"github.com/mozilla/OneCRL-Tools/oneCRL"
 )
 
 type OneCRLSet struct {
