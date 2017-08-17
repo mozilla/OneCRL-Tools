@@ -13,11 +13,11 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"github.com/mozmark/OneCRL-Tools/config"
-	"github.com/mozmark/OneCRL-Tools/oneCRL"
+	"github.com/mozilla/OneCRL-Tools/config"
+	"github.com/mozilla/OneCRL-Tools/oneCRL"
 	"os"
 	"strings"
-	"github.com/mozmark/OneCRL-Tools/salesforce"
+	"github.com/mozilla/OneCRL-Tools/salesforce"
 	"time"
 )
 

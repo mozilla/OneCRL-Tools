@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/mozmark/OneCRL-Tools/oneCRL"	
-	"github.com/mozmark/OneCRL-Tools/config"	
+	"github.com/mozilla/OneCRL-Tools/oneCRL"	
+	"github.com/mozilla/OneCRL-Tools/config"	
 )
 
 type revocations struct {

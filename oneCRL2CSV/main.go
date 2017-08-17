@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"github.com/mozmark/OneCRL-Tools/config"
-	"github.com/mozmark/OneCRL-Tools/oneCRL"
+	"github.com/mozilla/OneCRL-Tools/config"
+	"github.com/mozilla/OneCRL-Tools/oneCRL"
 )
 
 func getJSON(url string, target interface{}) error {

@@ -17,8 +17,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"github.com/mozmark/OneCRL-Tools/config"
-	"github.com/mozmark/OneCRL-Tools/util"
+	"github.com/mozilla/OneCRL-Tools/config"
+	"github.com/mozilla/OneCRL-Tools/util"
 )
 
 const IssuerPrefix string = "issuer: "
