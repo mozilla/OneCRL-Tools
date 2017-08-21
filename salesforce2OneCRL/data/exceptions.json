@@ -74,25 +74,14 @@
     "issuerName": "MF4xCzAJBgNVBAYTAlVTMTAwLgYDVQQKEydIeWRyYW50SUQgKEF2YWxhbmNoZSBDbG91ZCBDb3Jwb3JhdGlvbikxHTAbBgNVBAMTFEh5ZHJhbnRJRCBTU0wgSUNBIEcy"
   },
   {
-    "serialNumber": "Wu0lOm5kylP5uOu6md4xmWC3AtQ=",
+    "serialNumber": "RV864VwhzbpUT4KqR1Hr2w==",
     "details": {
       "who": ".",
-      "created": "2017-08-03T15:53:42Z",
-      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1386894",
-      "name": "StartCom BR SSL ICA",
-      "why": "The two intermediates have issued many certificates that do not comply with the Baseline Requirements."
+      "created": "2017-08-17T17:54:25Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1391095",
+      "name": "Add AC FNMT Usuarios certificate to OneCRL",
+      "why": "https://groups.google.com/forum/#!msg/mozilla.dev.security.policy/Qo1ZNwlYKnY/UrAodnoQBwAJ"
     },
-    "issuerName": "MFoxCzAJBgNVBAYTAkZSMRMwEQYDVQQKEwpDZXJ0aW5vbWlzMRcwFQYDVQQLEw4wMDAyIDQzMzk5ODkwMzEdMBsGA1UEAxMUQ2VydGlub21pcyAtIFJvb3QgQ0E="
-  },
-  {
-    "serialNumber": "Z7mwlz4NA2s+8dnwRzT/RvK9ZZQ=",
-    "details": {
-      "who": ".",
-      "created": "2017-08-03T15:53:42Z",
-      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1386894",
-      "name": "StartCom EV SSL ICA",
-      "why": "The two intermediates have issued many certificates that do not comply with the Baseline Requirements."
-    },
-    "issuerName": "MFoxCzAJBgNVBAYTAkZSMRMwEQYDVQQKEwpDZXJ0aW5vbWlzMRcwFQYDVQQLEw4wMDAyIDQzMzk5ODkwMzEdMBsGA1UEAxMUQ2VydGlub21pcyAtIFJvb3QgQ0E="
+    "issuerName": "MDsxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEZMBcGA1UECwwQQUMgUkFJWiBGTk1ULVJDTQ=="
   }
 ]}
