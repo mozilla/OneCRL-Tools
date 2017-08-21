@@ -83,5 +83,38 @@
       "why": "https://groups.google.com/forum/#!msg/mozilla.dev.security.policy/Qo1ZNwlYKnY/UrAodnoQBwAJ"
     },
     "issuerName": "MDsxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEZMBcGA1UECwwQQUMgUkFJWiBGTk1ULVJDTQ=="
+  },
+  {
+    "serialNumber": "AZkNBFXrl1Zg",
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2017-08-21T16:42:55Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1381863",
+      "name": "TÜRKTRUST Basit Elektronik Sertifika Hizmetleri H5 - Add TurkTrust Intermediate Certs to OneCRL per CA's request",
+      "why": "CA request"
+    },
+    "issuerName": "MIGxMQswCQYDVQQGEwJUUjEPMA0GA1UEBwwGQW5rYXJhMU0wSwYDVQQKDERUw5xSS1RSVVNUIEJpbGdpIMSwbGV0acWfaW0gdmUgQmlsacWfaW0gR8O8dmVubGnEn2kgSGl6bWV0bGVyaSBBLsWeLjFCMEAGA1UEAww5VMOcUktUUlVTVCBFbGVrdHJvbmlrIFNlcnRpZmlrYSBIaXptZXQgU2HEn2xhecSxY8Sxc8SxIEg1"
+  },
+  {
+    "serialNumber": "Aay2vr4aoUeZ",
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2017-08-21T16:42:55Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1381863",
+      "name": "TÜRKTRUST Nesne İmzalama Sertifikası Hizmetleri H5 - Add TurkTrust Intermediate Certs to OneCRL per CA's request",
+      "why": "CA request"
+    },
+    "issuerName": "MIGxMQswCQYDVQQGEwJUUjEPMA0GA1UEBwwGQW5rYXJhMU0wSwYDVQQKDERUw5xSS1RSVVNUIEJpbGdpIMSwbGV0acWfaW0gdmUgQmlsacWfaW0gR8O8dmVubGnEn2kgSGl6bWV0bGVyaSBBLsWeLjFCMEAGA1UEAww5VMOcUktUUlVTVCBFbGVrdHJvbmlrIFNlcnRpZmlrYSBIaXptZXQgU2HEn2xhecSxY8Sxc8SxIEg1"
+  },
+  {
+    "serialNumber": "AUMyuCiycPJJ",
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2017-08-21T16:42:55Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1381863",
+      "name": "TÜRKTRUST EV SSL Sertifikası Hizmetleri H5 - Add TurkTrust Intermediate Certs to OneCRL per CA's request",
+      "why": "CA request"
+    },
+    "issuerName": "MIGxMQswCQYDVQQGEwJUUjEPMA0GA1UEBwwGQW5rYXJhMU0wSwYDVQQKDERUw5xSS1RSVVNUIEJpbGdpIMSwbGV0acWfaW0gdmUgQmlsacWfaW0gR8O8dmVubGnEn2kgSGl6bWV0bGVyaSBBLsWeLjFCMEAGA1UEAww5VMOcUktUUlVTVCBFbGVrdHJvbmlrIFNlcnRpZmlrYSBIaXptZXQgU2HEn2xhecSxY8Sxc8SxIEg1"
   }
 ]}
