@@ -56,6 +56,14 @@ type Records struct {
 	Data []Record
 }
 
+// the subset of stuff we actually care about from Kinto metadata
+type KintoMetadata struct {
+	User struct {
+		Principals	[]string  `json:"principals"`
+		Id			string	  `json:"id"`
+	} `json:"user"`
+}
+
 func StringFromRecord(record Record) string {
 	if "" != record.Subject {
 		return stringFromSubjectPubKeyHash(record.Subject, record.PubKeyHash)
@@ -368,6 +376,46 @@ func AddEntries(records *Records, createBug bool) error {
 	now := time.Now()
 	nowString := now.Format("2006-01-02T15:04:05Z")
 
+	// Check that we're correctly authenticated to Kinto
+	if shouldWrite {
+		kintoBase := strings.SplitAfter(conf.KintoCollectionURL,"/v1/")[0]
+
+		req, err := http.NewRequest("GET", kintoBase, nil)
+
+		if len(conf.KintoUser) > 0 {
+			req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+
+		if nil != err {
+			return err
+		}
+
+		if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
+			return errors.New(
+				fmt.Sprintf("There was a problem checking auth status: %d",
+				resp.StatusCode));
+		}
+
+		res := new(KintoMetadata)
+		err = json.NewDecoder(resp.Body).Decode(res)
+
+		if nil != err {
+			return err
+		}
+
+		if "" == res.User.Id {
+			return errors.New("Cannot perform Kinto operations; user is not authenticated")
+		}
+		fmt.Printf("authenticated as user %s\n", res.User.Id)
+
+		defer resp.Body.Close()
+	}
+
+	// File a bugzilla bug - so we've got a bug URL to add to the kinto entries
 	if shouldWrite {
 		bug := bugs.Bug{}
 		bug.ApiKey = conf.BugzillaAPIKey
@@ -430,6 +478,12 @@ func AddEntries(records *Records, createBug bool) error {
 				panic(err)
 			}
 
+			if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
+				return errors.New(
+					fmt.Sprintf("There was a problem adding a record: %d",
+								resp.StatusCode));
+			}
+
 			if "yes" == conf.OneCRLVerbose {
 				fmt.Printf("status code is %d\n", resp.StatusCode)
 				fmt.Printf("record data is %s\n", StringFromRecord(record))
@@ -445,7 +499,6 @@ func AddEntries(records *Records, createBug bool) error {
 		}
 	}
 
-	// TODO: request review on the Kinto change
 	if shouldWrite {
 		// TODO: Factor out the request stuff...
 		reviewJSON := "{\"data\": {\"status\": \"to-review\"}}"
@@ -471,6 +524,11 @@ func AddEntries(records *Records, createBug bool) error {
 			panic(err)
 		}
 
+		if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
+			return errors.New(
+				fmt.Sprintf("There was a problem with requesting review: %d",
+							resp.StatusCode));
+		}
 
 		// upload the created entries to bugzilla
 		attachments := make([]bugs.Attachment, 1)
