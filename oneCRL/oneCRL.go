@@ -368,6 +368,7 @@ func checkResponseStatus(resp *http.Response, message string) error {
 }
 
 func checkKintoAuth(collectionUrl string) error {
+	conf := config.GetConfig()
 	kintoBase := strings.SplitAfter(collectionUrl, "/v1/")[0]
 
 	req, err := http.NewRequest("GET", kintoBase, nil)
@@ -403,6 +404,8 @@ func checkKintoAuth(collectionUrl string) error {
 	fmt.Printf("authenticated as user %s\n", res.User.Id)
 
 	defer resp.Body.Close()
+
+	return nil
 }
 
 func AddEntries(records *Records, createBug bool) error {
