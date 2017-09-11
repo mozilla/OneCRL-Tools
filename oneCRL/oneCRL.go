@@ -96,7 +96,7 @@ func getDataFromURL(url string, user string, pass string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func FetchExistingRevocations(url string) ([]string, error) {
+func FetchExistingRecords(url string) (*Records, error) {
 	conf := config.GetConfig()
 
 	if len(url) == 0 {
@@ -107,8 +107,6 @@ func FetchExistingRevocations(url string) ([]string, error) {
 		fmt.Printf("Got URL data\n")
 	}
 
-	var existing []string
-
 	user, pass := conf.KintoUser, conf.KintoPassword
 
 	res := new(Records)
@@ -118,11 +116,17 @@ func FetchExistingRevocations(url string) ([]string, error) {
 	}
 
 	err = json.Unmarshal(data, res)
+	return res, err
+}
+
+func FetchExistingRevocations(url string) ([]string, error) {
+	res, err := FetchExistingRecords(url)
+
 	if nil != err {
 		return nil, err
 	}
 
-	existing = make([]string, len(res.Data))
+	existing := make([]string, len(res.Data))
 	for idx := range res.Data {
 		existing[idx] = StringFromRecord(res.Data[idx])
 	}
