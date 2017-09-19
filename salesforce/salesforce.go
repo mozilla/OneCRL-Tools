@@ -27,7 +27,6 @@ type RevokedCertInfo struct {
 	Reason		  string
 }
 
-
 func FetchSalesforceCSV(stream io.ReadCloser) SalesforceCSV {
 	records := SalesforceCSV{}
 
@@ -88,7 +87,7 @@ func FetchRevokedCertInfoFrom(location string) ([]RevokedCertInfo, error) {
 
 func FetchRevokedCertInfo(stream io.ReadCloser) []RevokedCertInfo {
 	records := FetchSalesforceCSV(stream)
-	certs := make([]RevokedCertInfo, len(records.Rows))
+	certs := make([]RevokedCertInfo, 0)
 
 	for _, each := range records.Rows {
 		certInfo := RevokedCertInfo{}
