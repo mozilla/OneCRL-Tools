@@ -46,6 +46,17 @@ type BugResponse struct {
 	Id int `json:"id"`
 }
 
+const getBugDataIncludeFields string = "id,summary"
+
+type SearchResponse struct {
+	Bugs []BugData `json:"bugs"`
+}
+
+type BugData struct {
+	Summary string `json:"summary"`
+	Id int `json:"id"`
+}
+
 func CreateBug(bug Bug, conf *config.OneCRLConfig) (int, error) {
 	// POST the bug
 	bugNum := -1;
@@ -114,4 +125,35 @@ func AttachToBug(bugNum int, apiKey string, attachments []Attachment, conf *conf
 		}
 	}
 	return nil
+}
+
+func GetBugData(bugNumStrings []string, conf *config.OneCRLConfig) (SearchResponse, error) {
+	var response SearchResponse
+	bugNumString := ""
+	for _, bugNum := range (bugNumStrings) {
+		if 0 != len(bugNumString) {
+			bugNumString = fmt.Sprintf("%s,%s", bugNumString, bugNum)
+		} else {
+			bugNumString = bugNum
+		}
+	}
+	// TODO: we should appropriately escape the bug number and fields
+	getUrl := fmt.Sprintf(conf.BugzillaBase + "/rest/bug?id=%s&include_fields=%s", bugNumString, getBugDataIncludeFields)
+	fmt.Printf("get bug URL is %s\n", getUrl)
+
+	getReq, err := http.NewRequest("GET", getUrl, nil)
+
+	client := &http.Client{}
+	resp, err := client.Do(getReq)
+
+	if err != nil {
+		return response, err
+	}
+	
+	dec := json.NewDecoder(resp.Body)
+	err = dec.Decode(&response)
+
+	defer resp.Body.Close()
+
+	return response, err
 }
