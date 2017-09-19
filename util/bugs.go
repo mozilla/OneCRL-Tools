@@ -139,7 +139,6 @@ func GetBugData(bugNumStrings []string, conf *config.OneCRLConfig) (SearchRespon
 	}
 	// TODO: we should appropriately escape the bug number and fields
 	getUrl := fmt.Sprintf(conf.BugzillaBase + "/rest/bug?id=%s&include_fields=%s", bugNumString, getBugDataIncludeFields)
-	fmt.Printf("get bug URL is %s\n", getUrl)
 
 	getReq, err := http.NewRequest("GET", getUrl, nil)
 

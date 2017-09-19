@@ -30,6 +30,7 @@ type OneCRLUpdate struct {
 }
 
 type Record struct {
+	Id			string `json:"id"`
 	IssuerName   string `json:"issuerName"`
 	SerialNumber string `json:"serialNumber"`
 	Subject      string `json:"subject,omitempty"`
