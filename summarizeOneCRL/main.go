@@ -73,12 +73,15 @@ func GetReportLines(conf *config.OneCRLConfig, urlPtr *string) ([]ReportLine, er
 
 	for _, entry := range existing.Data {
 		reportLine:= ReportLine{}
+		// grab a CCADB entry:
+		CCADBEntry := revocationInfoToCCADBEntry[oneCRL.StringFromIssuerSerial(entry.IssuerName, entry.SerialNumber)]
+
 		// TODO: Parse date, make it human readible?
 		reportLine.Created = entry.Details.Created
 		reportLine.Why = entry.Details.Why
 		// if there's no "why" detail in OneCRL, get the reason info from CCADB
 		if 1 >= len(entry.Details.Why) {
-			reportLine.Why = revocationInfoToCCADBEntry[oneCRL.StringFromIssuerSerial(entry.IssuerName, entry.SerialNumber)].Reason
+			reportLine.Why = CCADBEntry.Reason
 		}
 
 		reportLine.Bug = entry.Details.Bug
@@ -92,6 +95,16 @@ func GetReportLines(conf *config.OneCRLConfig, urlPtr *string) ([]ReportLine, er
 				reportLine.Bug = bugURLParts[1]
 			}
 		}
+
+		// TODO: Decode the serial number into a (readible) hex representation
+		reportLine.SerialNumber, _ = oneCRL.SerialToString(entry.SerialNumber, false, false)
+
+		reportLine.IssuerName, _ = oneCRL.DNToRFC4514(entry.IssuerName)
+		fmt.Printf("blah %s\n",reportLine.IssuerName)
+
+		reportLine.SubjectName = CCADBEntry.CertName
+
+		reportLine.NotAfter = CCADBEntry.ValidTo
 
 		// collect the bug number for subsequent summary addition
 		if 0 != len(reportLine.Bug) {
@@ -113,8 +126,8 @@ func GetReportLines(conf *config.OneCRLConfig, urlPtr *string) ([]ReportLine, er
 	}
 
 	// loop over the report lines and fill in the summary from the bug
-	for _, reportLine := range(reportLines) {
-		reportLine.Summary = bugMap[reportLine.Bug].Summary
+	for idx, reportLine := range(reportLines) {
+		reportLines[idx].Summary = bugMap[reportLine.Bug].Summary
 	}
 
 	return reportLines, nil
@@ -146,11 +159,16 @@ func renderToHTML(reportLines []ReportLine, filename string) {
 		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.Created))
 		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.Why))
 		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.Summary))
-		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.Bug))
+		if 0 != len(reportLine.BugURL) {
+			w.WriteString(fmt.Sprintf("<td><a href=\"%s\">%s</a></td>", reportLine.BugURL, reportLine.Bug))
+		} else {
+			w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.Bug))
+		}
+
 		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.SerialNumber))
 		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.IssuerName))
-		w.WriteString("<td>Subject name</td>")
-		w.WriteString("<td>Not after</td>")
+		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.SubjectName))
+		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.NotAfter))
 		w.WriteString("</tr>\n")
 	}
 	

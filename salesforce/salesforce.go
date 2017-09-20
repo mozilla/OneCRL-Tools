@@ -25,6 +25,7 @@ type RevokedCertInfo struct {
 	CertName	  string
 	SerialNumber  string
 	Reason		  string
+	ValidTo		  string
 }
 
 func FetchSalesforceCSV(stream io.ReadCloser) SalesforceCSV {
@@ -96,6 +97,7 @@ func FetchRevokedCertInfo(stream io.ReadCloser) []RevokedCertInfo {
 		certInfo.AlternateCRL = each[records.ColumnNames["Alternate CRL"]]
 		certInfo.CRLs = strings.Split(each[records.ColumnNames["CRL URL(s)"]] + ", " + certInfo.AlternateCRL, ", ")
 		certInfo.Reason= each[records.ColumnNames["RFC 5280 Revocation Reason Code"]]
+		certInfo.ValidTo= each[records.ColumnNames["Valid To [GMT]"]]
 
 		// Also get some data for more helpful errors
 		certInfo.CSN = each[records.ColumnNames["Certificate Serial Number"]]
