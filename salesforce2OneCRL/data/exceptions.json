@@ -138,5 +138,83 @@
       "why": "Unknown"
     },
     "issuerName": "MFExCzAJBgNVBAYTAkVTMUIwQAYDVQQDDDlBdXRvcmlkYWQgZGUgQ2VydGlmaWNhY2lvbiBGaXJtYXByb2Zlc2lvbmFsIENJRiBBNjI2MzQwNjg="
-  }
+
+  },
+  {
+    "serialNumber": "BydWSw==",
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2017-09-22T18:05:01Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1400600",
+      "name": "Baltimore Cybertrust Cross Certificates issued to Siemens Internet CA V1.0",
+      "why": "Three cross certificates issued by the Baltimore Cybertrust Root to the Siemens Internet CA V1.0 have not yet been revoked but should be added to OneCRL."
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q="
+  },
+  {
+    "serialNumber": "DL0FAAzqeadFvWvsl9xaiA==",
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2017-09-22T18:05:01Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1400600",
+      "name": "Baltimore Cybertrust Cross Certificates issued to Siemens Internet CA V1.0",
+      "why": "Three cross certificates issued by the Baltimore Cybertrust Root to the Siemens Internet CA V1.0 have not yet been revoked but should be added to OneCRL."
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q="
+  },
+  {
+    "serialNumber": "CcaPWuZtcdneSnerYJH33A==",
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2017-09-22T18:05:01Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1400600",
+      "name": "Baltimore Cybertrust Cross Certificates issued to Siemens Internet CA V1.0",
+      "why": "Three cross certificates issued by the Baltimore Cybertrust Root to the Siemens Internet CA V1.0 have not yet been revoked but should be added to OneCRL."
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q="
+  },
+  {
+    "serialNumber": "ObszBuNYqt9If26rE5MLnA==",
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2017-09-22T18:05:01Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1402128",
+      "name": "Add Cartão de Cidadão to OneCRL",
+      "why": "These issue only client certificates and do not need to be trusted for SSL/TLS server authentication"
+    },
+    "issuerName": "MDMxCzAJBgNVBAYTAlBUMQ0wCwYDVQQKDARTQ0VFMRUwEwYDVQQDDAxFQ1JhaXpFc3RhZG8="
+  },
+  {
+    "serialNumber": "a0zzyZD4OEdRpzTBCGWFnQ==",
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2017-09-22T18:05:01Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1402128",
+      "name": "Add Cartão de Cidadão to OneCRL",
+      "why": "These issue only client certificates and do not need to be trusted for SSL/TLS server authentication"
+    },
+    "issuerName": "MDMxCzAJBgNVBAYTAlBUMQ0wCwYDVQQKDARTQ0VFMRUwEwYDVQQDDAxFQ1JhaXpFc3RhZG8="
+  },
+  {
+    "serialNumber": "Z7mwlz4NA2s+8dnwRzT/RvK9ZZQ=",
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2017-09-22T18:05:01Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1402158",
+      "name": "Certinomis Cross-Signed StartCom certs",
+      "why": "."
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAkZSMRMwEQYDVQQKEwpDZXJ0aW5vbWlzMRcwFQYDVQQLEw4wMDAyIDQzMzk5ODkwMzEdMBsGA1UEAxMUQ2VydGlub21pcyAtIFJvb3QgQ0E="
+  },
+  {
+    "serialNumber": "Wu0lOm5kylP5uOu6md4xmWC3AtQ=",
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2017-09-22T18:05:01Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1402158",
+      "name": "Certinomis Cross-Signed StartCom certs",
+      "why": "."
+    },
+    "issuerName": "MFoxCzAJBgNVBAYTAkZSMRMwEQYDVQQKEwpDZXJ0aW5vbWlzMRcwFQYDVQQLEw4wMDAyIDQzMzk5ODkwMzEdMBsGA1UEAxMUQ2VydGlub21pcyAtIFJvb3QgQ0E="
+   }
 ]}
