@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mozilla/OneCRL-Tools/config"
+	"github.com/mozilla/OneCRL-Tools/util"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,13 +19,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"github.com/mozilla/OneCRL-Tools/config"
-	"github.com/mozilla/OneCRL-Tools/util"
 )
 
 const IssuerPrefix string = "issuer: "
 const SerialPrefix string = "serial: "
-
 
 // TODO: this looks unecessary - maybe remove
 type OneCRLUpdate struct {
@@ -36,7 +35,7 @@ type Record struct {
 	Subject      string `json:"subject,omitempty"`
 	PubKeyHash   string `json:"pubKeyHash,omitempty"`
 	Enabled      bool   `json:"enabled"`
-	Details struct {
+	Details      struct {
 		Who     string `json:"who"`
 		Created string `json:"created"`
 		Bug     string `json:"bug"`
@@ -56,6 +55,14 @@ type Records struct {
 	Data []Record
 }
 
+// the subset of stuff we actually care about from Kinto metadata
+type KintoMetadata struct {
+	User struct {
+		Principals []string `json:"principals"`
+		Id         string   `json:"id"`
+	} `json:"user"`
+}
+
 func StringFromRecord(record Record) string {
 	if "" != record.Subject {
 		return stringFromSubjectPubKeyHash(record.Subject, record.PubKeyHash)
@@ -70,7 +77,6 @@ func stringFromSubjectPubKeyHash(subject string, pubKeyHash string) string {
 func StringFromIssuerSerial(issuer string, serial string) string {
 	return fmt.Sprintf("issuer: %s serial: %s", issuer, serial)
 }
-
 
 func getDataFromURL(url string, user string, pass string) ([]byte, error) {
 
@@ -125,22 +131,22 @@ func FetchExistingRevocations(url string) ([]string, error) {
 }
 
 func ByteArrayEquals(a []byte, b []byte) bool {
-    if len(a) != len(b) {
-        return false
-    }
-    for i, v := range a {
-        if v != b[i] {
-            return false
-        }
-    }
-    return true
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func DNToRFC4514(name string) (string, error) {
 	rawDN, _ := base64.StdEncoding.DecodeString(name)
 	rdns := new(pkix.RDNSequence)
 	_, err := asn1.Unmarshal(rawDN, rdns)
-	
+
 	return RFC4514ish(*rdns), err
 }
 
@@ -235,8 +241,8 @@ func RFC4514ish(rdns pkix.RDNSequence) string {
 			t[4] == 1 &&
 			t[5] == 9 &&
 			t[6] == 1 {
-				tStr = "emailAddress"
-			}
+			tStr = "emailAddress"
+		}
 
 		sep := ""
 		if len(retval) > 0 {
@@ -301,7 +307,7 @@ func LoadRevocationsTxtFromFile(filename string, loader OneCRLLoader) error {
 			if len(dn) == 0 {
 				log.Fatal("A serial number with no issuer is not valid. Exiting.")
 			}
-			record := Record{IssuerName:dn, SerialNumber:strings.Trim(line," ")}
+			record := Record{IssuerName: dn, SerialNumber: strings.Trim(line, " ")}
 			loader.LoadRecord(record)
 			continue
 		}
@@ -311,7 +317,7 @@ func LoadRevocationsTxtFromFile(filename string, loader OneCRLLoader) error {
 		}
 		dn = line
 	}
-	
+
 	if err = scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
@@ -336,20 +342,68 @@ func LoadRevocationsFromBug(filename string, loader OneCRLLoader) error {
 		issuerIndex := strings.Index(line, IssuerPrefix)
 		serialIndex := strings.Index(line, SerialPrefix)
 
-		issuer := line[issuerIndex + len(IssuerPrefix): serialIndex - 1]
-		serial := line[serialIndex + len(SerialPrefix): len(line)]
+		issuer := line[issuerIndex+len(IssuerPrefix) : serialIndex-1]
+		serial := line[serialIndex+len(SerialPrefix) : len(line)]
 
 		if "yes" == conf.OneCRLVerbose {
 			fmt.Printf("Loading revocation. issuer: \"%s\", serial: \"%s\"\n", issuer, serial)
 		}
 
-		record := Record{IssuerName:issuer, SerialNumber:serial}
+		record := Record{IssuerName: issuer, SerialNumber: serial}
 		loader.LoadRecord(record)
 	}
 
 	if err = scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+
+	return nil
+}
+
+func checkResponseStatus(resp *http.Response, message string) error {
+	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
+		return errors.New(fmt.Sprintf("%s: %d", message, resp.StatusCode))
+	}
+	return nil
+}
+
+func checkKintoAuth(collectionUrl string) error {
+	conf := config.GetConfig()
+	kintoBase := strings.SplitAfter(collectionUrl, "/v1/")[0]
+
+	req, err := http.NewRequest("GET", kintoBase, nil)
+
+	if len(conf.KintoUser) > 0 {
+		req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
+	if nil != err {
+		return err
+	}
+
+	err = checkResponseStatus(resp, "There was a problem checking auth status")
+
+	if nil != err {
+		return err
+	}
+
+	res := new(KintoMetadata)
+	err = json.NewDecoder(resp.Body).Decode(res)
+
+	if nil != err {
+		return err
+	}
+
+	if "" == res.User.Id {
+		return errors.New("Cannot perform Kinto operations; user is not authenticated")
+	}
+	fmt.Printf("authenticated as user %s\n", res.User.Id)
+
+	defer resp.Body.Close()
 
 	return nil
 }
@@ -368,6 +422,16 @@ func AddEntries(records *Records, createBug bool) error {
 	now := time.Now()
 	nowString := now.Format("2006-01-02T15:04:05Z")
 
+	// Check that we're correctly authenticated to Kinto
+	if shouldWrite {
+		err := checkKintoAuth(conf.KintoCollectionURL)
+
+		if nil != err {
+			return err
+		}
+	}
+
+	// File a bugzilla bug - so we've got a bug URL to add to the kinto entries
 	if shouldWrite {
 		bug := bugs.Bug{}
 		bug.ApiKey = conf.BugzillaAPIKey
@@ -400,12 +464,12 @@ func AddEntries(records *Records, createBug bool) error {
 		}
 
 		if record.Details.Bug == "" {
-			record.Details.Bug = fmt.Sprintf("%s/show_bug.cgi?id=%d",conf.BugzillaBase, bugNum)
+			record.Details.Bug = fmt.Sprintf("%s/show_bug.cgi?id=%d", conf.BugzillaBase, bugNum)
 		}
 		if record.Details.Created == "" {
 			record.Details.Created = nowString
 		}
-		
+
 		update := new(OneCRLUpdate)
 		update.Data = record
 		marshalled, _ := json.Marshal(update)
@@ -414,9 +478,9 @@ func AddEntries(records *Records, createBug bool) error {
 		// TODO: Batch these, don't send single requests
 		if conf.Preview != "yes" {
 			if "yes" == conf.OneCRLVerbose {
-				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL + "/records", marshalled)
+				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL+"/records", marshalled)
 			}
-			req, err := http.NewRequest("POST", conf.KintoCollectionURL + "/records", bytes.NewBuffer(marshalled))
+			req, err := http.NewRequest("POST", conf.KintoCollectionURL+"/records", bytes.NewBuffer(marshalled))
 
 			if len(conf.KintoUser) > 0 {
 				req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
@@ -430,6 +494,12 @@ func AddEntries(records *Records, createBug bool) error {
 				panic(err)
 			}
 
+			err = checkResponseStatus(resp, "There was a problem adding a record")
+
+			if nil != err {
+				return err
+			}
+
 			if "yes" == conf.OneCRLVerbose {
 				fmt.Printf("status code is %d\n", resp.StatusCode)
 				fmt.Printf("record data is %s\n", StringFromRecord(record))
@@ -441,11 +511,10 @@ func AddEntries(records *Records, createBug bool) error {
 				panic(err)
 			}
 		} else {
-			fmt.Printf("Would POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL + "/records", marshalled)
+			fmt.Printf("Would POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL+"/records", marshalled)
 		}
 	}
 
-	// TODO: request review on the Kinto change
 	if shouldWrite {
 		// TODO: Factor out the request stuff...
 		reviewJSON := "{\"data\": {\"status\": \"to-review\"}}"
@@ -471,6 +540,11 @@ func AddEntries(records *Records, createBug bool) error {
 			panic(err)
 		}
 
+		err = checkResponseStatus(resp, "There was a problem with requesting review")
+
+		if nil != err {
+			return err
+		}
 
 		// upload the created entries to bugzilla
 		attachments := make([]bugs.Attachment, 1)
@@ -480,11 +554,10 @@ func AddEntries(records *Records, createBug bool) error {
 		attachments[0].ApiKey = conf.BugzillaAPIKey
 		attachments[0].Data = str
 
-
-		attachments[0].Flags = make([]bugs.AttachmentFlag,0,1)
+		attachments[0].Flags = make([]bugs.AttachmentFlag, 0, 1)
 		// create flags for the reviewers
 		for _, reviewer := range strings.Split(conf.BugzillaReviewers, ",") {
-			trimmedReviewer := strings.Trim(reviewer," ")
+			trimmedReviewer := strings.Trim(reviewer, " ")
 			if len(trimmedReviewer) > 0 {
 				flag := bugs.AttachmentFlag{}
 				flag.Name = "review"
