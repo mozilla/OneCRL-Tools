@@ -96,7 +96,7 @@ func getDataFromURL(url string, user string, pass string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func FetchExistingRevocations(url string) ([]string, error) {
+func FetchExistingRevocations(url string) (*Records, error) {
 	conf := config.GetConfig()
 
 	if len(url) == 0 {
@@ -107,27 +107,18 @@ func FetchExistingRevocations(url string) ([]string, error) {
 		fmt.Printf("Got URL data\n")
 	}
 
-	var existing []string
-
 	user, pass := conf.KintoUser, conf.KintoPassword
 
 	res := new(Records)
-	data, err := getDataFromURL(url, user, pass)
-	if nil != err {
+	if data, err := getDataFromURL(url, user, pass); nil != err {
 		return nil, errors.New(fmt.Sprintf("problem loading existing data from URL %s", err))
+	} else {
+		if err := json.Unmarshal(data, res); nil != err {
+			return nil, err
+		} else {
+			return res, nil
+		}
 	}
-
-	err = json.Unmarshal(data, res)
-	if nil != err {
-		return nil, err
-	}
-
-	existing = make([]string, len(res.Data))
-	for idx := range res.Data {
-		existing[idx] = StringFromRecord(res.Data[idx])
-	}
-
-	return existing, nil
 }
 
 func ByteArrayEquals(a []byte, b []byte) bool {
@@ -408,7 +399,7 @@ func checkKintoAuth(collectionUrl string) error {
 	return nil
 }
 
-func AddEntries(records *Records, createBug bool) error {
+func AddEntries(records *Records, existing *Records, createBug bool) error {
 	conf := config.GetConfig()
 
 	issuerMap := make(map[string][]string)
@@ -545,6 +536,8 @@ func AddEntries(records *Records, createBug bool) error {
 		if nil != err {
 			return err
 		}
+
+		// TODO: Add revocations.txt to bug
 
 		// upload the created entries to bugzilla
 		attachments := make([]bugs.Attachment, 1)
