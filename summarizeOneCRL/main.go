@@ -96,11 +96,9 @@ func GetReportLines(conf *config.OneCRLConfig, urlPtr *string) ([]ReportLine, er
 			}
 		}
 
-		// TODO: Decode the serial number into a (readible) hex representation
 		reportLine.SerialNumber, _ = oneCRL.SerialToString(entry.SerialNumber, false, false)
 
 		reportLine.IssuerName, _ = oneCRL.DNToRFC4514(entry.IssuerName)
-		fmt.Printf("blah %s\n",reportLine.IssuerName)
 
 		reportLine.SubjectName = CCADBEntry.CertName
 
