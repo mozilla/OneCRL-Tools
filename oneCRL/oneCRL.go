@@ -404,7 +404,7 @@ func AddEntries(records *Records, existing *Records, createBug bool) error {
 
 	issuerMap := make(map[string][]string)
 
-	attachment := ""
+	bugStyle := ""
 
 	bugNum := -1
 
@@ -495,7 +495,7 @@ func AddEntries(records *Records, existing *Records, createBug bool) error {
 				fmt.Printf("status code is %d\n", resp.StatusCode)
 				fmt.Printf("record data is %s\n", StringFromRecord(record))
 			}
-			attachment = attachment + StringFromRecord(record) + "\n"
+			bugStyle = bugStyle + StringFromRecord(record) + "\n"
 			defer resp.Body.Close()
 
 			if err != nil {
@@ -537,17 +537,42 @@ func AddEntries(records *Records, existing *Records, createBug bool) error {
 			return err
 		}
 
-		// TODO: Add revocations.txt to bug
+		// Generate Revocations.txt data to attach to the bug
+		rTxt := new (RevocationsTxtData)
+		for _, record := range existing.Data {
+			rTxt.LoadRecord(record)
+		}
+		for _, record := range records.Data {
+			rTxt.LoadRecord(record)
+		}
+
+		revocationsTxtString := rTxt.ToRevocationsTxtString()
+		fmt.Printf("revocations.txt should be %s\n", revocationsTxtString)
 
 		// upload the created entries to bugzilla
-		attachments := make([]bugs.Attachment, 1)
-		data := []byte(attachment)
-		str := base64.StdEncoding.EncodeToString(data)
+		attachments := make([]bugs.Attachment, 2)
+		bugStyleData := []byte(bugStyle)
+		encodedBugStyleData := base64.StdEncoding.EncodeToString(bugStyleData)
 		attachments[0] = bugs.Attachment{}
+		attachments[0].FileName = "BugData.txt"
+		attachments[0].Summary = "Intermediates to be revoked"
+		attachments[0].ContentType= "text/plain"
+		attachments[0].Comment = "Revocations data for new records"
 		attachments[0].ApiKey = conf.BugzillaAPIKey
-		attachments[0].Data = str
-
+		attachments[0].Data = encodedBugStyleData
 		attachments[0].Flags = make([]bugs.AttachmentFlag, 0, 1)
+
+		revocationsTxtData := []byte(revocationsTxtString)
+		encodedRevocationsTxtData := base64.StdEncoding.EncodeToString(revocationsTxtData)
+		attachments[1] = bugs.Attachment{}
+		attachments[1].FileName = "revocations.txt"
+		attachments[1].Summary = "existing and new revocations in the form of a revocations.txt file"
+		attachments[1].ContentType= "text/plain"
+		attachments[1].Comment = "Revocations data for new and existing records"
+		attachments[1].ApiKey = conf.BugzillaAPIKey
+		attachments[1].Data = encodedRevocationsTxtData
+		attachments[1].Flags = make([]bugs.AttachmentFlag, 0, 1)
+
 		// create flags for the reviewers
 		for _, reviewer := range strings.Split(conf.BugzillaReviewers, ",") {
 			trimmedReviewer := strings.Trim(reviewer, " ")
@@ -558,12 +583,12 @@ func AddEntries(records *Records, existing *Records, createBug bool) error {
 				flag.Requestee = trimmedReviewer
 				flag.New = true
 				attachments[0].Flags = append(attachments[0].Flags, flag)
+				attachments[1].Flags = append(attachments[1].Flags, flag)
 			}
 		}
 
 		err = bugs.AttachToBug(bugNum, conf.BugzillaAPIKey, attachments, conf)
 		if err != nil {
-			fmt.Printf(str)
 			panic(err)
 		}
 	}
