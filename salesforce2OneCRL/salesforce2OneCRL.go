@@ -66,13 +66,14 @@ func LoadExceptions(location string, existing []string, records *oneCRL.Records)
 		}
 	}
 
-	json.Unmarshal(data, res)
+	if err := json.Unmarshal(data, res); nil != err {
+		return err
+	}
 
 	for idx := range res.Data {
 		record := res.Data[idx]
 		if !exists(oneCRL.StringFromRecord(record), existing) {
 			records.Data = append(records.Data, record)
-			fmt.Println(".")
 		}
 	}
 	return nil
