@@ -7,12 +7,12 @@ import (
 	"github.com/mozilla/OneCRL-Tools/config"	
 )
 
-type revocations struct {
+type RevocationsTxtData struct {
 	byIssuerSerialNumber map[string][]string
 	bySubjectPubKeyHash map[string][]string
 }
 
-func (r *revocations) LoadRecord(record oneCRL.Record) {
+func (r *RevocationsTxtData) LoadRecord(record oneCRL.Record) {
 	// if there's no issuer name, assume we're revoking by Subject / PubKeyHash
 	// otherwise it's issuer / serial
 	if 0 == len(record.IssuerName) {
@@ -40,11 +40,31 @@ func (r *revocations) LoadRecord(record oneCRL.Record) {
 	}
 }
 
+func (r *RevocationsTxtData) ToRevocationsTxtString() string {
+	RevocationsTxtString := ""
+
+	for issuer, serials := range r.byIssuerSerialNumber {
+		RevocationsTxtString = RevocationsTxtString + fmt.Sprintf("%s\n", issuer)
+		for _, serial := range serials {
+			RevocationsTxtString = RevocationsTxtString + fmt.Sprintf(" %s\n", serial)
+		}
+	}
+	for subject, pubKeyHashes := range r.bySubjectPubKeyHash {
+		RevocationsTxtString = RevocationsTxtString +
+			fmt.Sprintf("%s\n", subject)
+		for _, pubKeyHash := range pubKeyHashes {
+			RevocationsTxtString = RevocationsTxtString +
+				fmt.Sprintf("\t%s\n", pubKeyHash)
+		}
+	}
+	return RevocationsTxtString
+}
+
 func main() {
 	config.DefineFlags()
 	flag.Parse()
 
-	rev := new (revocations)
+	rev := new (RevocationsTxtData)
 	
 	config := config.GetConfig()
 
@@ -58,16 +78,5 @@ func main() {
 		panic(err)
 	}
 
-	for issuer, serials := range rev.byIssuerSerialNumber {
-		fmt.Printf("%s\n", issuer)
-		for _, serial := range serials {
-			fmt.Printf(" %s\n", serial)
-		}
-	}
-	for subject, pubKeyHashes := range rev.bySubjectPubKeyHash {
-		fmt.Printf("%s\n", subject)
-		for _, pubKeyHash := range pubKeyHashes {
-			fmt.Printf("\t%s\n", pubKeyHash)
-		}
-	}
+	fmt.Printf(rev.ToRevocationsTxtString())
 }
