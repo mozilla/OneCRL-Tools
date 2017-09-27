@@ -38,7 +38,7 @@ func recordExists(item oneCRL.Record, records *oneCRL.Records) bool {
 	return false
 }
 
-func LoadExceptions(location string, existing []string, records *oneCRL.Records) error {
+func LoadExceptions(location string, existing *oneCRL.Records, records *oneCRL.Records) error {
 	res := new(oneCRL.Records)
 	var data []byte
 
@@ -72,7 +72,7 @@ func LoadExceptions(location string, existing []string, records *oneCRL.Records)
 
 	for idx := range res.Data {
 		record := res.Data[idx]
-		if !exists(oneCRL.StringFromRecord(record), existing) {
+		if !recordExists(record, existing) {
 			records.Data = append(records.Data, record)
 		}
 	}
