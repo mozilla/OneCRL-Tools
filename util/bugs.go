@@ -89,11 +89,6 @@ func AttachToBug(bugNum int, apiKey string, attachments []Attachment, conf *conf
 		attUrl := fmt.Sprintf(conf.BugzillaBase + "/rest/bug/%d/attachment", bugNum)
 		attachment.Ids = []int {bugNum}
 		attachment.ApiKey = apiKey
-		// TODO: Don't set these if they're already set
-		attachment.FileName = "BugData.txt"
-		attachment.Summary = "Intermediates to be revoked"
-		attachment.ContentType = "text/plain"
-		attachment.Comment = "Revocation data for new records"
 		attachment.BugId = bugNum
 		if "yes" == conf.OneCRLVerbose {
 			fmt.Printf("Attempting to marshal %v\n", attachment)
