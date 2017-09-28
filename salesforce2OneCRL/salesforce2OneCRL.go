@@ -29,16 +29,16 @@ func getDataFromURL(url string) ([]byte, error) {
 	return ioutil.ReadAll(r.Body)
 }
 
-func exists(item string, slice []string) bool {
-	for idx := range slice {
-		if slice[idx] == item {
+func recordExists(item oneCRL.Record, records *oneCRL.Records) bool {
+	for _, record := range records.Data {
+		if record == item {
 			return true
 		}
 	}
 	return false
 }
 
-func LoadExceptions(location string, existing []string, records *oneCRL.Records) error {
+func LoadExceptions(location string, existing *oneCRL.Records, records *oneCRL.Records) error {
 	res := new(oneCRL.Records)
 	var data []byte
 
@@ -72,7 +72,7 @@ func LoadExceptions(location string, existing []string, records *oneCRL.Records)
 
 	for idx := range res.Data {
 		record := res.Data[idx]
-		if !exists(oneCRL.StringFromRecord(record), existing) {
+		if !recordExists(record, existing) {
 			records.Data = append(records.Data, record)
 		}
 	}
@@ -161,8 +161,8 @@ func main() {
 
 			serialString := base64.StdEncoding.EncodeToString(serialBytes[2:])
 
-			stringRep := oneCRL.StringFromIssuerSerial(issuerString, serialString)
-			if exists(stringRep, existing) {
+			record := oneCRL.Record{IssuerName: issuerString, SerialNumber: serialString}
+			if recordExists(record, existing) {
 				fmt.Printf("(%d, %s, %s) revocation already in OneCRL\n", row, each.CSN, each.CertName)
 				continue
 			}
@@ -276,7 +276,7 @@ func main() {
 	}
 	
 
-	err = oneCRL.AddEntries(additions, true)
+	err = oneCRL.AddEntries(additions, existing, true)
 	if nil != err {
 		panic(err)
 	}
