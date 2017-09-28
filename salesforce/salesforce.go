@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package salesforce
 
 import (
@@ -6,26 +10,26 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"net/http"
+	"os"
 	"strings"
 )
 
 type SalesforceCSV struct {
 	ColumnNames map[string]int
-	Rows [][]string
+	Rows        [][]string
 }
 
 type RevokedCertInfo struct {
-	Status		  string
-	PEM			  string
-	AlternateCRL  string
-	CRLs		  []string
-	CSN			  string
-	CertName	  string
-	SerialNumber  string
-	Reason		  string
-	ValidTo		  string
+	Status       string
+	PEM          string
+	AlternateCRL string
+	CRLs         []string
+	CSN          string
+	CertName     string
+	SerialNumber string
+	Reason       string
+	ValidTo      string
 }
 
 func FetchSalesforceCSV(stream io.ReadCloser) SalesforceCSV {
@@ -41,7 +45,7 @@ func FetchSalesforceCSV(stream io.ReadCloser) SalesforceCSV {
 	}
 
 	columnMap := make(map[string]int)
-	
+
 	// Extract column headers from the first row so we don't have to
 	// hardcode the column numbers
 	for this, that := range rawCSVData[0] {
@@ -95,9 +99,9 @@ func FetchRevokedCertInfo(stream io.ReadCloser) []RevokedCertInfo {
 		certInfo.Status = each[records.ColumnNames["OneCRL Status"]]
 		certInfo.PEM = each[records.ColumnNames["PEM Info"]]
 		certInfo.AlternateCRL = each[records.ColumnNames["Alternate CRL"]]
-		certInfo.CRLs = strings.Split(each[records.ColumnNames["CRL URL(s)"]] + ", " + certInfo.AlternateCRL, ", ")
-		certInfo.Reason= each[records.ColumnNames["RFC 5280 Revocation Reason Code"]]
-		certInfo.ValidTo= each[records.ColumnNames["Valid To [GMT]"]]
+		certInfo.CRLs = strings.Split(each[records.ColumnNames["CRL URL(s)"]]+", "+certInfo.AlternateCRL, ", ")
+		certInfo.Reason = each[records.ColumnNames["RFC 5280 Revocation Reason Code"]]
+		certInfo.ValidTo = each[records.ColumnNames["Valid To [GMT]"]]
 
 		// Also get some data for more helpful errors
 		certInfo.CSN = each[records.ColumnNames["Certificate Serial Number"]]
@@ -105,7 +109,7 @@ func FetchRevokedCertInfo(stream io.ReadCloser) []RevokedCertInfo {
 
 		// And get some data for reconciling OneCRL entries and CCADB entries
 		// for reporting
-		certInfo.SerialNumber= each[records.ColumnNames["Certificate Serial Number"]]
+		certInfo.SerialNumber = each[records.ColumnNames["Certificate Serial Number"]]
 
 		certs = append(certs, certInfo)
 	}
@@ -113,7 +117,7 @@ func FetchRevokedCertInfo(stream io.ReadCloser) []RevokedCertInfo {
 	return certs
 }
 
-func CertDataFromSalesforcePEM (PEM string) ([]byte, error) {
+func CertDataFromSalesforcePEM(PEM string) ([]byte, error) {
 	block, _ := pem.Decode([]byte(strings.Replace(PEM, "'", "", -1)))
 	if block != nil {
 		return block.Bytes, nil

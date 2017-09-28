@@ -1,42 +1,56 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package main
 
 import (
 	"bufio"
-	constraintsx509  "github.com/jcjones/constraintcrypto/x509"
 	"encoding/asn1"
 	"encoding/base64"
+	"errors"
 	"flag"
 	"fmt"
+	constraintsx509 "github.com/jcjones/constraintcrypto/x509"
 	"github.com/mozilla/OneCRL-Tools/config"
 	"github.com/mozilla/OneCRL-Tools/oneCRL"
 	"github.com/mozilla/OneCRL-Tools/salesforce"
-	"github.com/mozilla/OneCRL-Tools/util"	
+	"github.com/mozilla/OneCRL-Tools/util"
 	"os"
 	"strings"
 )
 
 type ReportLine struct {
-	Created string
-	Why string
-	Summary string
-	Bug string
-	BugURL string
+	Created      string
+	Why          string
+	Summary      string
+	Bug          string
+	BugURL       string
 	SerialNumber string
-	IssuerName string
-	SubjectName string
-	NotAfter  string
+	IssuerName   string
+	SubjectName  string
+	NotAfter     string
 }
 
 func GetReportLines(conf *config.OneCRLConfig, urlPtr *string) ([]ReportLine, error) {
-	existing, err := oneCRL.FetchExistingRecords(conf.KintoCollectionURL + "/records")
 	reportLines := make([]ReportLine, 0)
+
+	existing, err := oneCRL.FetchExistingRevocations(conf.KintoCollectionURL + "/records")
+
+	if err != nil {
+		return reportLines, err
+	}
 
 	revokedCerts, err := salesforce.FetchRevokedCertInfoFrom(*urlPtr)
 
-	revocationInfoToCCADBEntry := make(map[string] salesforce.RevokedCertInfo)
+	if err != nil {
+		return reportLines, err
+	}
+
+	revocationInfoToCCADBEntry := make(map[string]salesforce.RevokedCertInfo)
 	for idx, revoked := range revokedCerts {
 		// make a map of issuer/serial to revoked
-		certData, err:= salesforce.CertDataFromSalesforcePEM(revoked.PEM)
+		certData, err := salesforce.CertDataFromSalesforcePEM(revoked.PEM)
 		if err != nil {
 			fmt.Printf("(%d, %s, %s) can't decode PEM %s\n%v\n", idx, revoked.CSN, revoked.CertName, revoked.PEM, revoked)
 			continue
@@ -50,29 +64,19 @@ func GetReportLines(conf *config.OneCRLConfig, urlPtr *string) ([]ReportLine, er
 
 		issuerString := base64.StdEncoding.EncodeToString(cert.RawIssuer)
 		serialBytes, err := asn1.Marshal(cert.SerialNumber)
-
 		if err != nil {
 			fmt.Printf("(%s, %s) could not marshal serial number\n", revoked.CSN, revoked.CertName)
 			continue
 		}
 
 		serialString := base64.StdEncoding.EncodeToString(serialBytes[2:])
-		
-		if false {
-			fmt.Printf("Look! %s %s\n", issuerString, serialString);
-		}
-
 		revocationInfoToCCADBEntry[oneCRL.StringFromIssuerSerial(issuerString, serialString)] = revoked
-	}
-
-	if err != nil  {
-		return reportLines, err
 	}
 
 	bugsOfInterest := make([]string, 0)
 
 	for _, entry := range existing.Data {
-		reportLine:= ReportLine{}
+		reportLine := ReportLine{}
 		// grab a CCADB entry:
 		CCADBEntry := revocationInfoToCCADBEntry[oneCRL.StringFromIssuerSerial(entry.IssuerName, entry.SerialNumber)]
 
@@ -96,9 +100,17 @@ func GetReportLines(conf *config.OneCRLConfig, urlPtr *string) ([]ReportLine, er
 			}
 		}
 
-		reportLine.SerialNumber, _ = oneCRL.SerialToString(entry.SerialNumber, false, false)
+		reportLine.SerialNumber, err = oneCRL.SerialToString(entry.SerialNumber, false, false)
 
-		reportLine.IssuerName, _ = oneCRL.DNToRFC4514(entry.IssuerName)
+		if err != nil {
+			return reportLines, err
+		}
+
+		reportLine.IssuerName, err = oneCRL.DNToRFC4514(entry.IssuerName)
+
+		if err != nil {
+			return reportLines, err
+		}
 
 		reportLine.SubjectName = CCADBEntry.CertName
 
@@ -117,29 +129,23 @@ func GetReportLines(conf *config.OneCRLConfig, urlPtr *string) ([]ReportLine, er
 		return reportLines, err
 	}
 
-	bugMap := make(map[string] bugs.BugData)
+	bugMap := make(map[string]bugs.BugData)
 
-	for _, bug := range(searchResponse.Bugs) {
+	for _, bug := range searchResponse.Bugs {
 		bugMap[fmt.Sprintf("%d", bug.Id)] = bug
 	}
 
 	// loop over the report lines and fill in the summary from the bug
-	for idx, reportLine := range(reportLines) {
+	for idx, reportLine := range reportLines {
 		reportLines[idx].Summary = bugMap[reportLine.Bug].Summary
 	}
 
 	return reportLines, nil
 }
 
-func renderToHTML(reportLines []ReportLine, filename string) {
-	f, err := os.Create(filename)
-	if nil != err {
-		panic(err)
-	}
+func renderToHTML(reportLines []ReportLine, file *os.File) {
+	w := bufio.NewWriter(file)
 
-	w := bufio.NewWriter(f)
-
-	defer f.Close()
 	w.WriteString("<html><table>\n")
 	w.WriteString("<tr>")
 	w.WriteString("<td>Created</td>")
@@ -151,8 +157,8 @@ func renderToHTML(reportLines []ReportLine, filename string) {
 	w.WriteString("<td>Subject name</td>")
 	w.WriteString("<td>Not after</td>")
 	w.WriteString("</tr>\n")
-	
-	for _, reportLine := range(reportLines) {
+
+	for _, reportLine := range reportLines {
 		w.WriteString("<tr>")
 		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.Created))
 		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.Why))
@@ -169,7 +175,7 @@ func renderToHTML(reportLines []ReportLine, filename string) {
 		w.WriteString(fmt.Sprintf("<td>%s</td>", reportLine.NotAfter))
 		w.WriteString("</tr>\n")
 	}
-	
+
 	w.WriteString("</table></html>\n")
 
 	w.Flush()
@@ -177,9 +183,9 @@ func renderToHTML(reportLines []ReportLine, filename string) {
 
 func main() {
 	urlPtr := flag.String("url", "https://ccadb-public.secure.force.com/mozilla/PublicIntermediateCertsRevokedWithPEMCSV", "the URL of the salesforce data")
-	typePtr := flag.String("type", "html", "the type of report to generate")
+	typePtr := flag.String("type", "html", "the type of report to generate (options: html)")
 	outFilePtr := flag.String("outfile", "report", "the filename of the report to create")
-	
+
 	config.DefineFlags()
 	flag.Parse()
 	conf := config.GetConfig()
@@ -189,8 +195,17 @@ func main() {
 		panic(err)
 	}
 
+	f, err := os.Create(*outFilePtr)
+	if nil != err {
+		panic(err)
+	}
+
 	// render the report
 	if "HTML" == strings.ToUpper(*typePtr) {
-		renderToHTML(reportLines, *outFilePtr)
+		renderToHTML(reportLines, f)
+	} else {
+		panic(errors.New("Unrecognized report type"))
 	}
+
+	 defer f.Close()
 }

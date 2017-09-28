@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package oneCRL
 
 import (
@@ -30,7 +34,7 @@ type OneCRLUpdate struct {
 }
 
 type Record struct {
-	Id			string `json:"id"`
+	Id           string `json:"id"`
 	IssuerName   string `json:"issuerName"`
 	SerialNumber string `json:"serialNumber"`
 	Subject      string `json:"subject,omitempty"`
@@ -97,7 +101,7 @@ func getDataFromURL(url string, user string, pass string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func FetchExistingRecords(url string) (*Records, error) {
+func FetchExistingRevocations(url string) (*Records, error) {
 	conf := config.GetConfig()
 
 	if len(url) == 0 {
@@ -111,28 +115,15 @@ func FetchExistingRecords(url string) (*Records, error) {
 	user, pass := conf.KintoUser, conf.KintoPassword
 
 	res := new(Records)
-	data, err := getDataFromURL(url, user, pass)
-	if nil != err {
+	if data, err := getDataFromURL(url, user, pass); nil != err {
 		return nil, errors.New(fmt.Sprintf("problem loading existing data from URL %s", err))
+	} else {
+		if err := json.Unmarshal(data, res); nil != err {
+			return nil, err
+		} else {
+			return res, nil
+		}
 	}
-
-	err = json.Unmarshal(data, res)
-	return res, err
-}
-
-func FetchExistingRevocations(url string) ([]string, error) {
-	res, err := FetchExistingRecords(url)
-
-	if nil != err {
-		return nil, err
-	}
-
-	existing := make([]string, len(res.Data))
-	for idx := range res.Data {
-		existing[idx] = StringFromRecord(res.Data[idx])
-	}
-
-	return existing, nil
 }
 
 func ByteArrayEquals(a []byte, b []byte) bool {
@@ -413,12 +404,12 @@ func checkKintoAuth(collectionUrl string) error {
 	return nil
 }
 
-func AddEntries(records *Records, createBug bool) error {
+func AddEntries(records *Records, existing *Records, createBug bool) error {
 	conf := config.GetConfig()
 
 	issuerMap := make(map[string][]string)
 
-	attachment := ""
+	bugStyle := ""
 
 	bugNum := -1
 
@@ -509,7 +500,7 @@ func AddEntries(records *Records, createBug bool) error {
 				fmt.Printf("status code is %d\n", resp.StatusCode)
 				fmt.Printf("record data is %s\n", StringFromRecord(record))
 			}
-			attachment = attachment + StringFromRecord(record) + "\n"
+			bugStyle = bugStyle + StringFromRecord(record) + "\n"
 			defer resp.Body.Close()
 
 			if err != nil {
@@ -551,15 +542,42 @@ func AddEntries(records *Records, createBug bool) error {
 			return err
 		}
 
-		// upload the created entries to bugzilla
-		attachments := make([]bugs.Attachment, 1)
-		data := []byte(attachment)
-		str := base64.StdEncoding.EncodeToString(data)
-		attachments[0] = bugs.Attachment{}
-		attachments[0].ApiKey = conf.BugzillaAPIKey
-		attachments[0].Data = str
+		// Generate Revocations.txt data to attach to the bug
+		rTxt := new (RevocationsTxtData)
+		for _, record := range existing.Data {
+			rTxt.LoadRecord(record)
+		}
+		for _, record := range records.Data {
+			rTxt.LoadRecord(record)
+		}
 
+		revocationsTxtString := rTxt.ToRevocationsTxtString()
+		fmt.Printf("revocations.txt should be %s\n", revocationsTxtString)
+
+		// upload the created entries to bugzilla
+		attachments := make([]bugs.Attachment, 2)
+		bugStyleData := []byte(bugStyle)
+		encodedBugStyleData := base64.StdEncoding.EncodeToString(bugStyleData)
+		attachments[0] = bugs.Attachment{}
+		attachments[0].FileName = "BugData.txt"
+		attachments[0].Summary = "Intermediates to be revoked"
+		attachments[0].ContentType= "text/plain"
+		attachments[0].Comment = "Revocations data for new records"
+		attachments[0].ApiKey = conf.BugzillaAPIKey
+		attachments[0].Data = encodedBugStyleData
 		attachments[0].Flags = make([]bugs.AttachmentFlag, 0, 1)
+
+		revocationsTxtData := []byte(revocationsTxtString)
+		encodedRevocationsTxtData := base64.StdEncoding.EncodeToString(revocationsTxtData)
+		attachments[1] = bugs.Attachment{}
+		attachments[1].FileName = "revocations.txt"
+		attachments[1].Summary = "existing and new revocations in the form of a revocations.txt file"
+		attachments[1].ContentType= "text/plain"
+		attachments[1].Comment = "Revocations data for new and existing records"
+		attachments[1].ApiKey = conf.BugzillaAPIKey
+		attachments[1].Data = encodedRevocationsTxtData
+		attachments[1].Flags = make([]bugs.AttachmentFlag, 0, 1)
+
 		// create flags for the reviewers
 		for _, reviewer := range strings.Split(conf.BugzillaReviewers, ",") {
 			trimmedReviewer := strings.Trim(reviewer, " ")
@@ -570,16 +588,69 @@ func AddEntries(records *Records, createBug bool) error {
 				flag.Requestee = trimmedReviewer
 				flag.New = true
 				attachments[0].Flags = append(attachments[0].Flags, flag)
+				attachments[1].Flags = append(attachments[1].Flags, flag)
 			}
 		}
 
 		err = bugs.AttachToBug(bugNum, conf.BugzillaAPIKey, attachments, conf)
 		if err != nil {
-			fmt.Printf(str)
 			panic(err)
 		}
 	}
 
 	// TODO: put output into the bug
 	return nil
+}
+
+type RevocationsTxtData struct {
+	byIssuerSerialNumber map[string][]string
+	bySubjectPubKeyHash map[string][]string
+}
+
+func (r *RevocationsTxtData) LoadRecord(record Record) {
+	// if there's no issuer name, assume we're revoking by Subject / PubKeyHash
+	// otherwise it's issuer / serial
+	if 0 == len(record.IssuerName) {
+		if nil == r.bySubjectPubKeyHash {
+			r.bySubjectPubKeyHash = make(map[string][]string)
+		}
+		if nil == r.bySubjectPubKeyHash[record.Subject]{
+			pubKeyHashes := make([]string, 1)
+			pubKeyHashes[0] = record.PubKeyHash
+			r.bySubjectPubKeyHash[record.Subject] = pubKeyHashes
+		} else {
+			r.bySubjectPubKeyHash[record.Subject] = append(r.bySubjectPubKeyHash[record.Subject], record.PubKeyHash)
+		}
+	} else {
+		if nil == r.byIssuerSerialNumber {
+			r.byIssuerSerialNumber= make(map[string][]string)
+		}
+		if nil == r.byIssuerSerialNumber[record.IssuerName]{
+			serials := make([]string, 1)
+			serials[0] = record.SerialNumber
+			r.byIssuerSerialNumber[record.IssuerName] = serials
+		} else {
+			r.byIssuerSerialNumber[record.IssuerName] = append(r.byIssuerSerialNumber[record.IssuerName], record.SerialNumber)
+		}
+	}
+}
+
+func (r *RevocationsTxtData) ToRevocationsTxtString() string {
+	RevocationsTxtString := ""
+
+	for issuer, serials := range r.byIssuerSerialNumber {
+		RevocationsTxtString = RevocationsTxtString + fmt.Sprintf("%s\n", issuer)
+		for _, serial := range serials {
+			RevocationsTxtString = RevocationsTxtString + fmt.Sprintf(" %s\n", serial)
+		}
+	}
+	for subject, pubKeyHashes := range r.bySubjectPubKeyHash {
+		RevocationsTxtString = RevocationsTxtString +
+			fmt.Sprintf("%s\n", subject)
+		for _, pubKeyHash := range pubKeyHashes {
+			RevocationsTxtString = RevocationsTxtString +
+				fmt.Sprintf("\t%s\n", pubKeyHash)
+		}
+	}
+	return RevocationsTxtString
 }
