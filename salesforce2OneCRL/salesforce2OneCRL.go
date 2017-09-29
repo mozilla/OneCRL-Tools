@@ -31,7 +31,7 @@ func getDataFromURL(url string) ([]byte, error) {
 
 func recordExists(item oneCRL.Record, records *oneCRL.Records) bool {
 	for _, record := range records.Data {
-		if record == item {
+		if item.EqualsRecord(record) {
 			return true
 		}
 	}
