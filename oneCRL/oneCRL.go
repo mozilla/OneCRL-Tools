@@ -634,17 +634,15 @@ func (r *RevocationsTxtData) ToRevocationsTxtString() string {
 	RevocationsTxtString := ""
 
 	for issuer, serials := range r.byIssuerSerialNumber {
-		RevocationsTxtString = RevocationsTxtString + fmt.Sprintf("%s\n", issuer)
+		RevocationsTxtString = fmt.Sprintf("%s%s\n", RevocationsTxtString, issuer)
 		for _, serial := range serials {
-			RevocationsTxtString = RevocationsTxtString + fmt.Sprintf(" %s\n", serial)
+			RevocationsTxtString = fmt.Sprintf("%s %s\n", RevocationsTxtString, serial)
 		}
 	}
 	for subject, pubKeyHashes := range r.bySubjectPubKeyHash {
-		RevocationsTxtString = RevocationsTxtString +
-			fmt.Sprintf("%s\n", subject)
+		RevocationsTxtString = fmt.Sprintf("%s%s\n", RevocationsTxtString, subject)
 		for _, pubKeyHash := range pubKeyHashes {
-			RevocationsTxtString = RevocationsTxtString +
-				fmt.Sprintf("\t%s\n", pubKeyHash)
+			RevocationsTxtString = fmt.Sprintf("%s\t%s\n", RevocationsTxtString, pubKeyHash)
 		}
 	}
 	return RevocationsTxtString
