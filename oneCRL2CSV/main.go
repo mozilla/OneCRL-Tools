@@ -76,10 +76,8 @@ func main() {
 		switch *fileFormatPtr {
 		case "revocations.txt":
 			oneCRL.LoadRevocationsTxtFromFile(*filePtr, printer)
-			break;
 		case "bug":
 			oneCRL.LoadRevocationsFromBug(*filePtr, printer)
-			break;
 		default:
 			panic(errors.New("Unknown file format"))
 		}
