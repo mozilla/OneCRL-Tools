@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"syscall"
+	"os"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"golang.org/x/crypto/ssh/terminal"
@@ -61,7 +62,7 @@ const DEFAULT_DESCRIPTION string = "Here are some entries: Please ensure that th
 
 
 func (config *OneCRLConfig) loadConfig() error {
-	// TODO: load the config from configuration file
+	// load the config from configuration file
 	loaded :=  OneCRLConfig{}
 
 	filename := config.oneCRLConfig
@@ -91,8 +92,14 @@ func (config *OneCRLConfig) loadConfig() error {
 		config.BugzillaBase = loaded.BugzillaBase
 		fmt.Printf("overridden bugzilla base is %s\n", config.BugzillaBase)
 	}
-	if config.BugzillaAPIKey == DEFAULT_DEFAULT && loaded.BugzillaAPIKey != "" {
-		config.BugzillaAPIKey = loaded.BugzillaAPIKey
+	if config.BugzillaAPIKey == DEFAULT_DEFAULT {
+		// if it's set in config, use that value
+		if loaded.BugzillaAPIKey != "" {
+			config.BugzillaAPIKey = loaded.BugzillaAPIKey
+		} else {
+			// attempt to get a value from environment
+			config.BugzillaAPIKey = os.Getenv("bzapikey")
+		}
 	}
 	if config.BugzillaReviewers == DEFAULT_DEFAULT && loaded.BugzillaReviewers != "" {
 		config.BugzillaReviewers = loaded.BugzillaReviewers
@@ -103,14 +110,26 @@ func (config *OneCRLConfig) loadConfig() error {
 	if config.BugDescription == DEFAULT_DESCRIPTION && loaded.BugDescription!= "" {
 		config.BugDescription= loaded.BugDescription
 	}
-	if config.KintoUser == DEFAULT_DEFAULT && loaded.KintoUser!= "" {
-		config.KintoUser = loaded.KintoUser
+	if config.KintoUser == DEFAULT_DEFAULT {
+		// if it's set in config, use that value
+		if loaded.KintoUser!= "" {
+			config.KintoUser = loaded.KintoUser
+		} else {
+			// attempt to get a value from environment
+			config.KintoUser = os.Getenv("kintouser")
+		}
 	}
 	if config.Preview == DEFAULT_PREVIEW && loaded.Preview != "" {
 		config.Preview = loaded.Preview
 	}
-	if config.KintoPassword == DEFAULT_DEFAULT && loaded.KintoPassword!= "" {
-		config.KintoPassword = loaded.KintoPassword
+	if config.KintoPassword == DEFAULT_DEFAULT {
+		// if it's set in config, use that value
+		if loaded.KintoPassword!= "" {
+			config.KintoPassword = loaded.KintoPassword
+		} else {
+			// attempt to get a value from environment
+			config.KintoPassword = os.Getenv("kintopass")
+		}
 	}
 	if config.KintoCollectionURL == DEFAULT_COLLECTION_URL && loaded.KintoCollectionURL!= "" {
 		config.KintoCollectionURL = loaded.KintoCollectionURL
