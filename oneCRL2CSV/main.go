@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -53,6 +54,7 @@ func (p OneCRLPrinter) LoadRecord(record oneCRL.Record) {
 func main() {
 	// TODO: add flag for custom endpoint (e.g. local kinto)
 	filePtr := flag.String("file", "", "revocations.txt to load entries from")
+	fileFormatPtr := flag.String("format", "revocations.txt", "the format to load data in (options: revocations.txt, bug)")
 	upper := flag.Bool("upper", false, "Should hex values be upper case?")
 	separate := flag.Bool("separate", false, "Should the serial number bytes be colon separated?")
 	config.DefineFlags()
@@ -71,6 +73,13 @@ func main() {
 			panic(err)
 		}
 	} else {
-		oneCRL.LoadRevocationsTxtFromFile(*filePtr, printer)
+		switch *fileFormatPtr {
+		case "revocations.txt":
+			oneCRL.LoadRevocationsTxtFromFile(*filePtr, printer)
+		case "bug":
+			oneCRL.LoadRevocationsFromBug(*filePtr, printer)
+		default:
+			panic(errors.New("Unknown file format"))
+		}
 	}
 }
