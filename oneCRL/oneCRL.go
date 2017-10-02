@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package oneCRL
 
 import (
@@ -30,6 +34,7 @@ type OneCRLUpdate struct {
 }
 
 type Record struct {
+	Id           string `json:"id"`
 	IssuerName   string `json:"issuerName"`
 	SerialNumber string `json:"serialNumber"`
 	Subject      string `json:"subject,omitempty"`
@@ -634,17 +639,15 @@ func (r *RevocationsTxtData) ToRevocationsTxtString() string {
 	RevocationsTxtString := ""
 
 	for issuer, serials := range r.byIssuerSerialNumber {
-		RevocationsTxtString = RevocationsTxtString + fmt.Sprintf("%s\n", issuer)
+		RevocationsTxtString = fmt.Sprintf("%s%s\n", RevocationsTxtString, issuer)
 		for _, serial := range serials {
-			RevocationsTxtString = RevocationsTxtString + fmt.Sprintf(" %s\n", serial)
+			RevocationsTxtString = fmt.Sprintf("%s %s\n", RevocationsTxtString, serial)
 		}
 	}
 	for subject, pubKeyHashes := range r.bySubjectPubKeyHash {
-		RevocationsTxtString = RevocationsTxtString +
-			fmt.Sprintf("%s\n", subject)
+		RevocationsTxtString = fmt.Sprintf("%s%s\n", RevocationsTxtString, subject)
 		for _, pubKeyHash := range pubKeyHashes {
-			RevocationsTxtString = RevocationsTxtString +
-				fmt.Sprintf("\t%s\n", pubKeyHash)
+			RevocationsTxtString = fmt.Sprintf("%s\t%s\n", RevocationsTxtString, pubKeyHash)
 		}
 	}
 	return RevocationsTxtString
