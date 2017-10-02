@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	constraintsx509  "github.com/jcjones/constraintcrypto/x509"
 	"encoding/asn1"
 	"encoding/base64"
 	"encoding/hex"
@@ -11,14 +10,15 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	constraintsx509 "github.com/jcjones/constraintcrypto/x509"
+	"github.com/mozilla/OneCRL-Tools/config"
+	"github.com/mozilla/OneCRL-Tools/oneCRL"
+	"github.com/mozilla/OneCRL-Tools/salesforce"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"github.com/mozilla/OneCRL-Tools/config"
-	"github.com/mozilla/OneCRL-Tools/oneCRL"
 	"os"
 	"strings"
-	"github.com/mozilla/OneCRL-Tools/salesforce"
 	"time"
 )
 
@@ -31,7 +31,7 @@ func getDataFromURL(url string) ([]byte, error) {
 
 func recordExists(item oneCRL.Record, records *oneCRL.Records) bool {
 	for _, record := range records.Data {
-		if record == item {
+		if item.EqualsRecord(record) {
 			return true
 		}
 	}
@@ -55,11 +55,11 @@ func LoadExceptions(location string, existing *oneCRL.Records, records *oneCRL.R
 			return errors.New("Cowardly refusing to load exceptions from a non HTTPS location")
 		}
 		if resp, err := http.Get(location); nil != err {
-			return err;
+			return err
 		} else {
 			defer resp.Body.Close()
 			if urlData, err := ioutil.ReadAll(resp.Body); nil != err {
-				return err;
+				return err
 			} else {
 				data = urlData
 			}
@@ -90,7 +90,7 @@ func main() {
 	config.DefineFlags()
 
 	flag.Parse()
-	
+
 	conf := config.GetConfig()
 
 	var stream io.ReadCloser
@@ -122,8 +122,8 @@ func main() {
 		stream = r.Body
 	}
 
-	existing, err:= oneCRL.FetchExistingRevocations(conf.KintoCollectionURL + "/records")
-	if nil != err{
+	existing, err := oneCRL.FetchExistingRevocations(conf.KintoCollectionURL + "/records")
+	if nil != err {
 		fmt.Printf("%s\n", err)
 	}
 
@@ -132,7 +132,7 @@ func main() {
 			panic(err)
 		}
 	}
-	
+
 	row := 1
 	revoked := salesforce.FetchRevokedCertInfo(stream)
 
@@ -140,7 +140,7 @@ func main() {
 		row++
 
 		if each.Status == "Ready to Add" {
-			certData, err:= salesforce.CertDataFromSalesforcePEM(each.PEM)
+			certData, err := salesforce.CertDataFromSalesforcePEM(each.PEM)
 			if err != nil {
 				fmt.Printf("(%d, %s, %s) can't decode PEM %s\n", row, each.CSN, each.CertName, each.PEM)
 			}
@@ -167,13 +167,12 @@ func main() {
 				continue
 			}
 
-
 			matchFound := false
-		    lineErrors := ""
+			lineErrors := ""
 			lineWarnings := ""
 			for _, CRLLocation := range each.CRLs {
 				if 0 != strings.Index(strings.Trim(CRLLocation, " "), "http") {
-					if (len(strings.Trim(CRLLocation, " ")) > 0) {
+					if len(strings.Trim(CRLLocation, " ")) > 0 {
 						lineErrors += fmt.Sprintf("Ignoring CRL at %s because it doesn't look like an HTTP url\n", CRLLocation)
 					}
 					continue
@@ -204,7 +203,7 @@ func main() {
 				crl, err := constraintsx509.ParseCRL(crlData)
 				if err != nil {
 					lineErrors += fmt.Sprintf("Could not parse the CRL at \"%s\" %v\n",
-											  CRLLocation, err)
+						CRLLocation, err)
 					continue
 				}
 
@@ -226,20 +225,20 @@ func main() {
 					continue
 				}
 
-				if ! (oneCRL.ByteArrayEquals(cert.RawIssuer, crlIssuerBytes)) {
-					if ! oneCRL.NamesDataMatches(cert.RawIssuer, crlIssuerBytes) {
+				if !(oneCRL.ByteArrayEquals(cert.RawIssuer, crlIssuerBytes)) {
+					if !oneCRL.NamesDataMatches(cert.RawIssuer, crlIssuerBytes) {
 						lineErrors += fmt.Sprintf("CRL issuer from CRL at %s does not match issuer\n%s !=\n%s\nCRL issuer:  %s\nCert issuer: %s\n", CRLLocation,
-						hex.EncodeToString(crlIssuerBytes),
-						hex.EncodeToString(cert.RawIssuer),
-						oneCRL.RFC4514ish(crl.TBSCertList.Issuer),
-						readibleCertIssuer)
+							hex.EncodeToString(crlIssuerBytes),
+							hex.EncodeToString(cert.RawIssuer),
+							oneCRL.RFC4514ish(crl.TBSCertList.Issuer),
+							readibleCertIssuer)
 						continue
 					} else {
 						lineWarnings += fmt.Sprintf("Warning: CRL issuer from CRL at %s does not match issuer\n%s !=\n%s\nCRL issuer:  %s\nCert issuer: %s\n", CRLLocation,
-						hex.EncodeToString(crlIssuerBytes),
-						hex.EncodeToString(cert.RawIssuer),
-						oneCRL.RFC4514ish(crl.TBSCertList.Issuer),
-						readibleCertIssuer)
+							hex.EncodeToString(crlIssuerBytes),
+							hex.EncodeToString(cert.RawIssuer),
+							oneCRL.RFC4514ish(crl.TBSCertList.Issuer),
+							readibleCertIssuer)
 					}
 				}
 
@@ -254,7 +253,7 @@ func main() {
 			if !matchFound {
 				if lineErrors == "" {
 					lineErrors = "\n"
-			    }
+				}
 				fmt.Printf("(%d, %s, %s) no match found in CRL: %s", row, each.CSN, each.CertName, lineErrors)
 				continue
 			}
@@ -274,7 +273,6 @@ func main() {
 			additions.Data = append(additions.Data, rec)
 		}
 	}
-	
 
 	err = oneCRL.AddEntries(additions, existing, true)
 	if nil != err {
