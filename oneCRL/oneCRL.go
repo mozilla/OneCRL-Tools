@@ -543,7 +543,7 @@ func AddEntries(records *Records, existing *Records, createBug bool) error {
 		}
 
 		// Generate Revocations.txt data to attach to the bug
-		rTxt := new (RevocationsTxtData)
+		rTxt := new(RevocationsTxtData)
 		for _, record := range existing.Data {
 			rTxt.LoadRecord(record)
 		}
@@ -561,7 +561,7 @@ func AddEntries(records *Records, existing *Records, createBug bool) error {
 		attachments[0] = bugs.Attachment{}
 		attachments[0].FileName = "BugData.txt"
 		attachments[0].Summary = "Intermediates to be revoked"
-		attachments[0].ContentType= "text/plain"
+		attachments[0].ContentType = "text/plain"
 		attachments[0].Comment = "Revocations data for new records"
 		attachments[0].ApiKey = conf.BugzillaAPIKey
 		attachments[0].Data = encodedBugStyleData
@@ -572,7 +572,7 @@ func AddEntries(records *Records, existing *Records, createBug bool) error {
 		attachments[1] = bugs.Attachment{}
 		attachments[1].FileName = "revocations.txt"
 		attachments[1].Summary = "existing and new revocations in the form of a revocations.txt file"
-		attachments[1].ContentType= "text/plain"
+		attachments[1].ContentType = "text/plain"
 		attachments[1].Comment = "Revocations data for new and existing records"
 		attachments[1].ApiKey = conf.BugzillaAPIKey
 		attachments[1].Data = encodedRevocationsTxtData
@@ -604,7 +604,7 @@ func AddEntries(records *Records, existing *Records, createBug bool) error {
 
 type RevocationsTxtData struct {
 	byIssuerSerialNumber map[string][]string
-	bySubjectPubKeyHash map[string][]string
+	bySubjectPubKeyHash  map[string][]string
 }
 
 func (r *RevocationsTxtData) LoadRecord(record Record) {
@@ -614,7 +614,7 @@ func (r *RevocationsTxtData) LoadRecord(record Record) {
 		if nil == r.bySubjectPubKeyHash {
 			r.bySubjectPubKeyHash = make(map[string][]string)
 		}
-		if nil == r.bySubjectPubKeyHash[record.Subject]{
+		if nil == r.bySubjectPubKeyHash[record.Subject] {
 			pubKeyHashes := make([]string, 1)
 			pubKeyHashes[0] = record.PubKeyHash
 			r.bySubjectPubKeyHash[record.Subject] = pubKeyHashes
@@ -623,9 +623,9 @@ func (r *RevocationsTxtData) LoadRecord(record Record) {
 		}
 	} else {
 		if nil == r.byIssuerSerialNumber {
-			r.byIssuerSerialNumber= make(map[string][]string)
+			r.byIssuerSerialNumber = make(map[string][]string)
 		}
-		if nil == r.byIssuerSerialNumber[record.IssuerName]{
+		if nil == r.byIssuerSerialNumber[record.IssuerName] {
 			serials := make([]string, 1)
 			serials[0] = record.SerialNumber
 			r.byIssuerSerialNumber[record.IssuerName] = serials

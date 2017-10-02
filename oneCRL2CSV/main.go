@@ -5,10 +5,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
-	"net/http"
 	"github.com/mozilla/OneCRL-Tools/config"
 	"github.com/mozilla/OneCRL-Tools/oneCRL"
+	"log"
+	"net/http"
 )
 
 func getJSON(url string, target interface{}) error {
@@ -29,14 +29,14 @@ type Results struct {
 
 type OneCRLPrinter struct {
 	separate bool
-	upper bool
+	upper    bool
 }
 
 func (p OneCRLPrinter) LoadRecord(record oneCRL.Record) {
 	var (
 		issuer string
 		serial string
-		err error
+		err    error
 	)
 	issuer, err = oneCRL.DNToRFC4514(record.IssuerName)
 	if nil != err {
@@ -46,10 +46,9 @@ func (p OneCRLPrinter) LoadRecord(record oneCRL.Record) {
 	serial, err = oneCRL.SerialToString(record.SerialNumber, p.separate, p.upper)
 	if nil != err {
 		log.Print(err)
-	}	
+	}
 	fmt.Printf("\"%s\",\"%s\"\n", issuer, serial)
 }
-
 
 func main() {
 	// TODO: add flag for custom endpoint (e.g. local kinto)
@@ -60,7 +59,7 @@ func main() {
 	config.DefineFlags()
 	flag.Parse()
 
-	printer := OneCRLPrinter{separate:*separate, upper:*upper}
+	printer := OneCRLPrinter{separate: *separate, upper: *upper}
 
 	config := config.GetConfig()
 

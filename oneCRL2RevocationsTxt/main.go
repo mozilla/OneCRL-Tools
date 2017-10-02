@@ -3,16 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/mozilla/OneCRL-Tools/oneCRL"	
-	"github.com/mozilla/OneCRL-Tools/config"	
+	"github.com/mozilla/OneCRL-Tools/config"
+	"github.com/mozilla/OneCRL-Tools/oneCRL"
 )
 
 func main() {
 	config.DefineFlags()
 	flag.Parse()
 
-	rev := new (oneCRL.RevocationsTxtData)
-	
+	rev := new(oneCRL.RevocationsTxtData)
+
 	config := config.GetConfig()
 
 	err, url := config.GetRecordURL()

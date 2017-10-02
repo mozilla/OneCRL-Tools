@@ -207,5 +207,5 @@ func main() {
 		panic(errors.New("Unrecognized report type"))
 	}
 
-	 defer f.Close()
+	defer f.Close()
 }

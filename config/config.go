@@ -4,11 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"syscall"
-	"os"
+	"golang.org/x/crypto/ssh/terminal"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"golang.org/x/crypto/ssh/terminal"
+	"os"
+	"syscall"
 )
 
 const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
@@ -20,19 +20,19 @@ const PREFIX_BUGZILLA_PROD string = "https://bugzilla.mozilla.org"
 const PREFIX_BUGZILLA_STAGE string = "https://bugzilla.allizom.org"
 
 type OneCRLConfig struct {
-	oneCRLConfig		string
-	oneCRLEnvString		string `yaml:"onecrlenv"`
-	oneCRLBucketString	string `yaml:"onecrlbucket"`
-	OneCRLVerbose		string `yaml:"onecrlverbose"`
-	BugzillaBase		string `yaml:"bugzilla"`
-	BugzillaAPIKey		string `yaml:"bzapikey"`
-	BugzillaReviewers	string `yaml:"reviewers"`
-	BugzillaBlockee		string `yaml:"blockee"`
-	BugDescription		string `yaml:"bugdescription"`
-	Preview				string `yaml:"preview"`
-	KintoUser			string `yaml:"kintouser"`
-	KintoPassword		string `yaml:"kintopass"`
-	KintoCollectionURL	string `yaml:"collectionurl"`
+	oneCRLConfig       string
+	oneCRLEnvString    string `yaml:"onecrlenv"`
+	oneCRLBucketString string `yaml:"onecrlbucket"`
+	OneCRLVerbose      string `yaml:"onecrlverbose"`
+	BugzillaBase       string `yaml:"bugzilla"`
+	BugzillaAPIKey     string `yaml:"bzapikey"`
+	BugzillaReviewers  string `yaml:"reviewers"`
+	BugzillaBlockee    string `yaml:"blockee"`
+	BugDescription     string `yaml:"bugdescription"`
+	Preview            string `yaml:"preview"`
+	KintoUser          string `yaml:"kintouser"`
+	KintoPassword      string `yaml:"kintopass"`
+	KintoCollectionURL string `yaml:"collectionurl"`
 }
 
 func (config OneCRLConfig) GetRecordURLForEnv(environment string) (error, string) {
@@ -60,10 +60,9 @@ const DEFAULT_DEFAULT string = ""
 const DEFAULT_PREVIEW string = "no"
 const DEFAULT_DESCRIPTION string = "Here are some entries: Please ensure that the entries are correct."
 
-
 func (config *OneCRLConfig) loadConfig() error {
 	// load the config from configuration file
-	loaded :=  OneCRLConfig{}
+	loaded := OneCRLConfig{}
 
 	filename := config.oneCRLConfig
 	if len(filename) == 0 {
@@ -107,12 +106,12 @@ func (config *OneCRLConfig) loadConfig() error {
 	if config.BugzillaBlockee == DEFAULT_DEFAULT && loaded.BugzillaBlockee != "" {
 		config.BugzillaBlockee = loaded.BugzillaBlockee
 	}
-	if config.BugDescription == DEFAULT_DESCRIPTION && loaded.BugDescription!= "" {
-		config.BugDescription= loaded.BugDescription
+	if config.BugDescription == DEFAULT_DESCRIPTION && loaded.BugDescription != "" {
+		config.BugDescription = loaded.BugDescription
 	}
 	if config.KintoUser == DEFAULT_DEFAULT {
 		// if it's set in config, use that value
-		if loaded.KintoUser!= "" {
+		if loaded.KintoUser != "" {
 			config.KintoUser = loaded.KintoUser
 		} else {
 			// attempt to get a value from environment
@@ -124,14 +123,14 @@ func (config *OneCRLConfig) loadConfig() error {
 	}
 	if config.KintoPassword == DEFAULT_DEFAULT {
 		// if it's set in config, use that value
-		if loaded.KintoPassword!= "" {
+		if loaded.KintoPassword != "" {
 			config.KintoPassword = loaded.KintoPassword
 		} else {
 			// attempt to get a value from environment
 			config.KintoPassword = os.Getenv("kintopass")
 		}
 	}
-	if config.KintoCollectionURL == DEFAULT_COLLECTION_URL && loaded.KintoCollectionURL!= "" {
+	if config.KintoCollectionURL == DEFAULT_COLLECTION_URL && loaded.KintoCollectionURL != "" {
 		config.KintoCollectionURL = loaded.KintoCollectionURL
 	}
 
@@ -147,7 +146,7 @@ func (config *OneCRLConfig) loadConfig() error {
 	return nil
 }
 
-var conf = OneCRLConfig {}
+var conf = OneCRLConfig{}
 
 func GetConfig() *OneCRLConfig {
 	conf.loadConfig()
