@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"strings"
 	"github.com/mozilla/OneCRL-Tools/config"
 	"github.com/mozilla/OneCRL-Tools/oneCRL"
+	"log"
+	"strings"
 )
 
 type OneCRLSet struct {
@@ -18,17 +18,17 @@ func (set *OneCRLSet) LoadRecord(record oneCRL.Record) {
 }
 
 func (set *OneCRLSet) FetchData(location string, config *config.OneCRLConfig) error {
-	if 0 == strings.Index(strings.ToLower(location),"http://") ||
-	   0 == strings.Index(strings.ToLower(location),"https://") {
-	   return oneCRL.LoadJSONFromURL(location, set)
-   } else {
-	   err, url := config.GetRecordURLForEnv(location)
-	   if nil == err {
-		   return oneCRL.LoadJSONFromURL(url, set)
-	   } else {
-		   return oneCRL.LoadRevocationsTxtFromFile(location, set)
-	   }
-   }
+	if 0 == strings.Index(strings.ToLower(location), "http://") ||
+		0 == strings.Index(strings.ToLower(location), "https://") {
+		return oneCRL.LoadJSONFromURL(location, set)
+	} else {
+		err, url := config.GetRecordURLForEnv(location)
+		if nil == err {
+			return oneCRL.LoadJSONFromURL(url, set)
+		} else {
+			return oneCRL.LoadRevocationsTxtFromFile(location, set)
+		}
+	}
 }
 
 func main() {
@@ -37,7 +37,7 @@ func main() {
 
 	config.DefineFlags()
 	flag.Parse()
-	
+
 	config := config.GetConfig()
 
 	args := flag.Args()
@@ -62,8 +62,8 @@ func main() {
 		set2.FetchData(args[1], config)
 	}
 
-	fmt.Printf("set1 has %d entries\n",len((*set1).records.Data))
-	fmt.Printf("set2 has %d entries\n",len((*set2).records.Data))
+	fmt.Printf("set1 has %d entries\n", len((*set1).records.Data))
+	fmt.Printf("set2 has %d entries\n", len((*set2).records.Data))
 
 	fmt.Println("Removals")
 	changes := false
