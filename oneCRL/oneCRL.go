@@ -34,7 +34,7 @@ type OneCRLUpdate struct {
 }
 
 type Record struct {
-	Id           string `json:"id"`
+	Id           string `json:"id,omitempty"`
 	IssuerName   string `json:"issuerName"`
 	SerialNumber string `json:"serialNumber"`
 	Subject      string `json:"subject,omitempty"`
@@ -358,6 +358,9 @@ func LoadRevocationsFromBug(filename string, loader OneCRLLoader) error {
 
 func checkResponseStatus(resp *http.Response, message string) error {
 	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
+		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		bodyString := string(bodyBytes)
+		fmt.Printf("Error: server response is %s\n", bodyString)
 		return errors.New(fmt.Sprintf("%s: %d", message, resp.StatusCode))
 	}
 	return nil
