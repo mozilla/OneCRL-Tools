@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package main
 
 import (
@@ -21,7 +25,7 @@ func check(e error) {
 }
 
 func main() {
-	certPtr := flag.String("cert", "", "a certificate file")
+	certPtr := flag.String("cert", "", "a DER or PEM encoded certificate file")
 	revocationTypePtr := flag.String("type", "issuer-serial", "What type of revocation you want (options: issuer-serial, subject-pubkey)")
 	flag.Parse()
 
