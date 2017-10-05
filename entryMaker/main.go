@@ -38,7 +38,7 @@ func main() {
 		// We only care about the first block for now
 		block, _ := pem.Decode(certData)
 		if nil == block {
-			panic(errors.New ("There was a problem decoding the certificate"))
+			panic(errors.New("There was a problem decoding the certificate"))
 		}
 		certData = block.Bytes
 
