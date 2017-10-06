@@ -35,8 +35,8 @@ type OneCRLUpdate struct {
 
 type Record struct {
 	Id           string `json:"id,omitempty"`
-	IssuerName   string `json:"issuerName"`
-	SerialNumber string `json:"serialNumber"`
+	IssuerName   string `json:"issuerName,omitempty"`
+	SerialNumber string `json:"serialNumber,omitempty"`
 	Subject      string `json:"subject,omitempty"`
 	PubKeyHash   string `json:"pubKeyHash,omitempty"`
 	Enabled      bool   `json:"enabled"`
