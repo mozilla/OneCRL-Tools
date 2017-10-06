@@ -31,7 +31,7 @@ def ccadb_import(event, context):
         lambda_task_root = os.environ['LAMBDA_TASK_ROOT']
 
     if 'PROTECTED_KINTO_USER' in os.environ:
-        kinto_user = str(kms_decrypt_env("PROTECTED_KINTO-USER"))
+        kinto_user = str(kms_decrypt_env("PROTECTED_KINTO_USER"))
         env['kintouser'] = kinto_user
 
     if 'PROTECTED_KINTO_PASS' in os.environ:
