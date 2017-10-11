@@ -99,6 +99,8 @@ func main() {
 
 	var stream io.ReadCloser
 
+	comment := ""
+
 	// make a slice of additions
 	additions := new(oneCRL.Records)
 
@@ -258,8 +260,12 @@ func main() {
 				if lineErrors == "" {
 					lineErrors = "\n"
 				}
-				fmt.Printf("(%d, %s, %s) no match found in CRL: %s", row, each.CSN, each.CertName, lineErrors)
-				continue
+				errorLine := fmt.Sprintf("(%d, %s, %s) no match found in CRL: %s\n", row, each.CSN, each.CertName, lineErrors)
+				fmt.Printf(errorLine)
+				comment = comment + errorLine
+				if "yes" == conf.EnforceCRLChecks {
+					continue
+				}
 			}
 
 			if len(lineWarnings) != 0 {
@@ -278,7 +284,7 @@ func main() {
 		}
 	}
 
-	err = oneCRL.AddEntries(additions, existing, true)
+	err = oneCRL.AddEntries(additions, existing, true, comment)
 	if nil != err {
 		panic(err)
 	}
