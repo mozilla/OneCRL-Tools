@@ -86,7 +86,7 @@ func LoadExceptions(location string, existing *oneCRL.Records, records *oneCRL.R
 func main() {
 	filePtr := flag.String("file", "", "The file to read data from")
 	exceptionsPtr := flag.String("exceptions", "exceptions.json", "A JSON document containing exceptional additions")
-	urlPtr := flag.String("url", "https://ccadb-public.secure.force.com/mozilla/PublicIntermediateCertsRevokedWithPEMCSV", "the URL of the salesforce data")
+	urlPtr := flag.String("url", "https://ccadb-public.secure.force.com/mozilla/PublicInterCertsReadyToAddToOneCRLPEMCSV", "the URL of the salesforce data")
 	bugPtr := flag.String("bug", "", "the URL of the bug relating to this change")
 	whoPtr := flag.String("who", "", "who made this change")
 	whyPtr := flag.String("why", "", "why is this change happening")
