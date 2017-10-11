@@ -34,6 +34,7 @@ type OneCRLConfig struct {
 	BugzillaBlockee    string `yaml:"blockee"`
 	BugDescription     string `yaml:"bugdescription"`
 	Preview            string `yaml:"preview"`
+	EnforceCRLChecks   string `yaml:"enforcecrlchecks"`
 	KintoUser          string `yaml:"kintouser"`
 	KintoPassword      string `yaml:"kintopass"`
 	KintoCollectionURL string `yaml:"collectionurl"`
@@ -62,6 +63,7 @@ const DEFAULT_ONECRLVERBOSE string = "no"
 const DEFAULT_COLLECTION_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates"
 const DEFAULT_DEFAULT string = ""
 const DEFAULT_PREVIEW string = "no"
+const DEFAULT_ENFORCE_CRL_CHECKS string = "yes"
 const DEFAULT_DESCRIPTION string = "Here are some entries: Please ensure that the entries are correct."
 
 func (config *OneCRLConfig) loadConfig() error {
@@ -125,6 +127,9 @@ func (config *OneCRLConfig) loadConfig() error {
 	if config.Preview == DEFAULT_PREVIEW && loaded.Preview != "" {
 		config.Preview = loaded.Preview
 	}
+	if config.EnforceCRLChecks == DEFAULT_ENFORCE_CRL_CHECKS && loaded.EnforceCRLChecks != "" {
+		config.EnforceCRLChecks = loaded.EnforceCRLChecks
+	}
 	if config.KintoPassword == DEFAULT_DEFAULT {
 		// if it's set in config, use that value
 		if loaded.KintoPassword != "" {
@@ -168,6 +173,7 @@ func DefineFlags() {
 	flag.StringVar(&conf.BugzillaBlockee, "blockee", DEFAULT_DEFAULT, "What bugzilla bug should this bug block")
 	flag.StringVar(&conf.BugDescription, "bugdescription", DEFAULT_DESCRIPTION, "The bugzilla comment to put in the bug")
 	flag.StringVar(&conf.Preview, "preview", DEFAULT_PREVIEW, "Preview (don't write changes)")
+	flag.StringVar(&conf.EnforceCRLChecks, "enforcecrlchecks", DEFAULT_ENFORCE_CRL_CHECKS, "Enforce CRL checks (options: yes, no)")
 	flag.StringVar(&conf.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
 	flag.StringVar(&conf.KintoPassword, "kintopass", DEFAULT_DEFAULT, "The kinto user's pasword")
 	flag.StringVar(&conf.KintoCollectionURL, "collectionurl", DEFAULT_COLLECTION_URL, "The kinto collection URL")

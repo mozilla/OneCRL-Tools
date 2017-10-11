@@ -86,7 +86,7 @@ func LoadExceptions(location string, existing *oneCRL.Records, records *oneCRL.R
 func main() {
 	filePtr := flag.String("file", "", "The file to read data from")
 	exceptionsPtr := flag.String("exceptions", "exceptions.json", "A JSON document containing exceptional additions")
-	urlPtr := flag.String("url", "https://ccadb-public.secure.force.com/mozilla/PublicIntermediateCertsRevokedWithPEMCSV", "the URL of the salesforce data")
+	urlPtr := flag.String("url", "https://ccadb-public.secure.force.com/mozilla/PublicInterCertsReadyToAddToOneCRLPEMCSV", "the URL of the salesforce data")
 	bugPtr := flag.String("bug", "", "the URL of the bug relating to this change")
 	whoPtr := flag.String("who", "", "who made this change")
 	whyPtr := flag.String("why", "", "why is this change happening")
@@ -98,6 +98,8 @@ func main() {
 	conf := config.GetConfig()
 
 	var stream io.ReadCloser
+
+	comment := ""
 
 	// make a slice of additions
 	additions := new(oneCRL.Records)
@@ -258,8 +260,12 @@ func main() {
 				if lineErrors == "" {
 					lineErrors = "\n"
 				}
-				fmt.Printf("(%d, %s, %s) no match found in CRL: %s", row, each.CSN, each.CertName, lineErrors)
-				continue
+				errorLine := fmt.Sprintf("(%d, %s, %s) no match found in CRL: %s\n", row, each.CSN, each.CertName, lineErrors)
+				fmt.Printf(errorLine)
+				comment = comment + errorLine
+				if "yes" == conf.EnforceCRLChecks {
+					continue
+				}
 			}
 
 			if len(lineWarnings) != 0 {
@@ -278,7 +284,7 @@ func main() {
 		}
 	}
 
-	err = oneCRL.AddEntries(additions, existing, true)
+	err = oneCRL.AddEntries(additions, existing, true, comment)
 	if nil != err {
 		panic(err)
 	}

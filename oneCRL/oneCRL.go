@@ -407,7 +407,7 @@ func checkKintoAuth(collectionUrl string) error {
 	return nil
 }
 
-func AddEntries(records *Records, existing *Records, createBug bool) error {
+func AddEntries(records *Records, existing *Records, createBug bool, comment string) error {
 	conf := config.GetConfig()
 
 	issuerMap := make(map[string][]string)
@@ -595,13 +595,15 @@ func AddEntries(records *Records, existing *Records, createBug bool) error {
 			}
 		}
 
-		err = bugs.AttachToBug(bugNum, conf.BugzillaAPIKey, attachments, conf)
-		if err != nil {
+		if err = bugs.AttachToBug(bugNum, conf.BugzillaAPIKey, attachments, conf);  err != nil {
+			panic(err)
+		}
+
+		if err = bugs.AddCommentToBug(bugNum, conf, comment); err != nil {
 			panic(err)
 		}
 	}
 
-	// TODO: put output into the bug
 	return nil
 }
 

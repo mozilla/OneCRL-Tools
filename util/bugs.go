@@ -51,6 +51,15 @@ type BugResponse struct {
 	Id int `json:"id"`
 }
 
+type Comment struct {
+	ApiKey	string	`json:"api_key"`
+	Comment struct {
+		Body       string `json:"body"`
+		IsPrivate  bool   `json:"is_private"`
+		IsMarkdown bool   `json:"is_markdown"`
+	} `json:"comment"`
+}
+
 const getBugDataIncludeFields string = "id,summary"
 
 type SearchResponse struct {
@@ -102,7 +111,7 @@ func CreateBug(bug Bug, conf *config.OneCRLConfig) (int, error) {
 func AttachToBug(bugNum int, apiKey string, attachments []Attachment, conf *config.OneCRLConfig) error {
 	// loop over the attachments, add each to the bug
 	for _, attachment := range attachments {
-		attUrl := fmt.Sprintf(conf.BugzillaBase+"/rest/bug/%d/attachment", bugNum)
+		attUrl := fmt.Sprintf("%s/rest/bug/%d/attachment", conf.BugzillaBase, bugNum)
 		attachment.Ids = []int{bugNum}
 		attachment.ApiKey = apiKey
 		attachment.BugId = bugNum
@@ -123,6 +132,36 @@ func AttachToBug(bugNum int, apiKey string, attachments []Attachment, conf *conf
 		if "yes" == conf.OneCRLVerbose {
 			fmt.Printf("att response %s\n", attResp)
 		}
+	}
+	return nil
+}
+
+func AddCommentToBug(bugNum int, conf *config.OneCRLConfig, comment string) error {
+	commentUrl := fmt.Sprintf("%s/rest/bug/%d", conf.BugzillaBase, bugNum)
+	commentObject := Comment{}
+	commentObject.ApiKey = conf.BugzillaAPIKey
+	commentObject.Comment.Body = comment
+	commentObject.Comment.IsPrivate = false
+	commentObject.Comment.IsMarkdown = false
+
+	if "yes" == conf.OneCRLVerbose {
+		fmt.Printf("Attempting to marshal %v\n", commentObject)
+	}
+
+	commentMarshalled, err := json.Marshal(commentObject)
+	if "yes" == conf.OneCRLVerbose {
+		fmt.Printf("PUTing %s to %s\n", commentMarshalled, commentUrl)
+	}
+
+	commentReq, err := http.NewRequest("PUT", commentUrl, bytes.NewBuffer(commentMarshalled))
+	commentReq.Header.Set("Content-Type", "application/json")
+	commentClient := &http.Client{}
+	commentResp, err := commentClient.Do(commentReq)
+	if err != nil {
+		return err
+	}
+	if "yes" == conf.OneCRLVerbose {
+		fmt.Printf("comment response %s\n", commentResp)
 	}
 	return nil
 }
