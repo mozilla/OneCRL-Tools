@@ -216,5 +216,16 @@
       "why": "."
     },
     "issuerName": "MFoxCzAJBgNVBAYTAkZSMRMwEQYDVQQKEwpDZXJ0aW5vbWlzMRcwFQYDVQQLEw4wMDAyIDQzMzk5ODkwMzEdMBsGA1UEAxMUQ2VydGlub21pcyAtIFJvb3QgQ0E="
-   }
+   },
+   {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "AxPlMqxkByCn3XNuYMhYNMcp",
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-02T22:09:46Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "cert misissuance",
+      "why": "cert misissuance"
+    }
+  }
 ]}
