@@ -220,12 +220,469 @@
    {
     "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
     "serialNumber": "AxPlMqxkByCn3XNuYMhYNMcp",
+    "enabled": true,
     "details": {
       "who": "jc@mozilla.com",
       "created": "2017-11-02T22:09:46Z",
       "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
-      "name": "cert misissuance",
-      "why": "cert misissuance"
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "AwBGo0Zmp6KRryAguuMvXATI",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723168Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "AxPlMqxkByCn3XNuYMhYNMcp",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723311Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "AxW0+uDsfyCSfhECdsGGpVD8",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723315Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "Ax6Jm7ajV49tqHgf9nYnzRCI",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723318Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "AyYMguSo1my449OZq51C3s3Z",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723321Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "AyjNQ4dnGD3FD6WL5gYrYru7",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723324Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "AzL4tLuklekJ8lSh6VnRMSrk",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723327Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A0BOaf9UbJxzqBudSyes/cEM",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723329Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A1V4dX0tTb1rdTZxdWcuZ7YR",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723332Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A3TWA5Aylxw0x8bVvrmUSNJd",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723335Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A3UNTBOHUkbq+k999nJeSJdF",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723337Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A3WVy2V+2VFkWtMvA6HFwnhq",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723340Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A3ZQibPGSZ8nPVbuccaCvUfa",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723342Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A5oET6WBWx72ColKf0txoWyR",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723345Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A7GX+szdK8/7Kf0xUuarfyIN",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723348Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A7RCxMe1S9Hb7ENzRxl0mxGP",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723350Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A7T0V6o47rgCKl3oUb7jF2Ph",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723353Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A7uy+rmTav6tDH4dRrsnvXGH",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723356Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A8LV4zckxcwdttbQSk0EPnoA",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723358Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A8aDg1/IA4O8gjMPZHVqPI+w",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723361Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A8wZnhfuY6VIV1SwGsTGNR7L",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723363Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A9BRwOwbXRRhCe+kcmglgW3z",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723366Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A+RCQYwhofmXM+/hxdyoUzkI",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723368Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A+ly3y1rVP59k/MKfcE3DoEq",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723371Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A/7DHCczBnP5qUVh0jF2pvwB",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723373Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "A/99bZCzSpexYL5y6dSryDn3",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723376Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BDV89QWZE9MJYlCpFQUv5Y2W",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723382Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BHT6CK6B569m/dd5dEluBOEd",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723385Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BJDHnthjoDRutxFRJPFnixbU",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723387Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BKobzjrOxa/6kCR0ImKoqaQW",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723390Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BKrxi2/1iFxHEFzyZvegxq5C",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723392Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BLlQHJ611eOZuedFrFgVAfAs",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723395Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BOIIipysxAz5xHIMmFRvYchY",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723398Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BONHqLIx/ibQE08IQIyoGaXg",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723402Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BOPwjyn5eqfeoxs7Z0y3vqNN",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723405Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BOc11keA9WJ9R20XQY8hO7yi",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723407Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BOncXh7IZp1SNydhtUdyh2O2",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723410Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
+    }
+  },
+  {
+    "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
+    "serialNumber": "BPVqx4UbKVAbJSFTKwrcFryU",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-11-03T20:43:04.723413Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
+      "name": "registry problems - remove in Feb 2018",
+      "why": "."
     }
   }
 ]}
