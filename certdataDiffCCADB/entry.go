@@ -56,7 +56,7 @@ func (e *Entry) NormalizedSerial() string {
 
 // NewEntry constructs a new Entry with a normalized PEM.
 func NewEntry(org, orgUnit, commonName, serial, pem, fingerprint string, trustWeb, trustEmail bool, line int, origin string) *Entry {
-	return &Entry{org, orgUnit, commonName, serial, normalizePEM(pem), fingerprint, trustWeb, trustEmail, line, origin}
+	return &Entry{org, orgUnit, commonName, serial, NormalizePEM(pem), fingerprint, trustWeb, trustEmail, line, origin}
 }
 
 // normalizePEM ignores any formatting or string artifacts that the PEM may have had
@@ -66,7 +66,7 @@ func NewEntry(org, orgUnit, commonName, serial, pem, fingerprint string, trustWe
 // PEMS had no formatting nor BEGIN/END fields. This is simply avoiding any surprises
 // in individual formatting choices by forcing both to strip all formatting and conform
 // to the one, chosen, way.
-func normalizePEM(pem string) string {
+func NormalizePEM(pem string) string {
 	if len(pem) == 0 {
 		return ""
 	}
