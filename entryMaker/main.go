@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"github.com/mozilla/OneCRL-Tools/oneCRL"
 	"io/ioutil"
+	"time"
 )
 
 func check(e error) {
@@ -27,6 +28,7 @@ func check(e error) {
 func main() {
 	certPtr := flag.String("cert", "", "a DER or PEM encoded certificate file")
 	revocationTypePtr := flag.String("type", "issuer-serial", "What type of revocation you want (options: issuer-serial, subject-pubkey)")
+	checkValidityPtr := flag.String("checkvalidity", "no", "should validity be checked? (yes / no)")
 	flag.Parse()
 
 	var certData []byte
@@ -48,6 +50,15 @@ func main() {
 
 		cert, err := x509.ParseCertificate(certData)
 		check(err)
+
+		// Check to see if the cert is still valid (if it's not, we don't want
+		// an entry
+		if "yes" == *checkValidityPtr {
+			if time.Now().After(cert.NotAfter) {
+				panic(errors.New(fmt.Sprintf("Cert is no longer valid (NotAfter %v)", cert.NotAfter)))
+			}
+		}
+
 
 		var record oneCRL.Record
 		switch *revocationTypePtr {
