@@ -216,8 +216,8 @@
       "why": "."
     },
     "issuerName": "MFoxCzAJBgNVBAYTAkZSMRMwEQYDVQQKEwpDZXJ0aW5vbWlzMRcwFQYDVQQLEw4wMDAyIDQzMzk5ODkwMzEdMBsGA1UEAxMUQ2VydGlub21pcyAtIFJvb3QgQ0E="
-   },
-   {
+  },
+  {
     "issuerName": "MEoxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MSMwIQYDVQQDExpMZXQncyBFbmNyeXB0IEF1dGhvcml0eSBYMw==",
     "serialNumber": "AxPlMqxkByCn3XNuYMhYNMcp",
     "enabled": true,
@@ -683,6 +683,30 @@
       "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1414039",
       "name": "registry problems - remove in Feb 2018",
       "why": "."
+    }
+  },
+  {
+    "issuerName": "MIGLMQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMRUwEwYDVQQLEwxNaWNyb3NvZnQgSVQxHjAcBgNVBAMTFU1pY3Jvc29mdCBJVCBTU0wgU0hBMg==",
+    "serialNumber": "WgAFElcDxFjoswSzjAABAAUSVw==",
+    "enabled": false,
+    "details": {
+      "who": "mgoodwin",
+      "created": "2017-12-06T16:51:03Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1423400",
+      "name": "Microsoft IT SSL SHA2 revocation 1",
+      "why": "Added per CA request"
+    }
+  },
+  {
+    "issuerName": "MIGLMQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMRUwEwYDVQQLEwxNaWNyb3NvZnQgSVQxHjAcBgNVBAMTFU1pY3Jvc29mdCBJVCBTU0wgU0hBMg==",
+    "serialNumber": "WgAFElbyxxPA8BdM4gABAAUSVg==",
+    "enabled": false,
+    "details": {
+      "who": "mgoodwin",
+      "created": "2017-12-06T16:51:03Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1423400",
+      "name": "Microsoft IT SSL SHA2 revocation 2",
+      "why": "Added per CA request"
     }
   }
 ]}
