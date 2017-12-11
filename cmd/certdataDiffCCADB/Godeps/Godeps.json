@@ -1,0 +1,22 @@
+{
+	"ImportPath": "github.com/christopher-henderson/OneCRL-Tools/cmd/certdataDiffCCADB",
+	"GoVersion": "go1.9",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/mozilla/OneCRL-Tools/ccadb",
+			"Comment": "stable-41-gab5f27a",
+			"Rev": "ab5f27a61690218a54c4f58bd4a4f275e8022365"
+		},
+		{
+			"ImportPath": "github.com/mozilla/OneCRL-Tools/certdata",
+			"Comment": "stable-41-gab5f27a",
+			"Rev": "ab5f27a61690218a54c4f58bd4a4f275e8022365"
+		},
+		{
+			"ImportPath": "github.com/mozilla/OneCRL-Tools/certdataDiffCCADB",
+			"Comment": "stable-41-gab5f27a",
+			"Rev": "ab5f27a61690218a54c4f58bd4a4f275e8022365"
+		}
+	]
+}
