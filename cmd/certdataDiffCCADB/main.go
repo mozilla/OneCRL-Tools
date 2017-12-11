@@ -108,7 +108,12 @@ func CertdataReader() io.ReadCloser {
 }
 
 func getFromURL(url string) (io.ReadCloser, error) {
-	r, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("X-Automated-Tool", `https://github.com/mozilla/OneCRL-Tools certdataDiffCCADB"`)
+	r, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +162,6 @@ type SimpleEntry struct {
 
 // ListCertdata returns to the client a JSON array of SimpleEntry
 func ListCertdata(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("X-Automated-Tool", "https://github.com/mozilla/OneCRL-Tools certdataDiffCCADB")
 	defer func() {
 		if err := recover(); err != nil {
 			w.WriteHeader(http.StatusBadGateway)
