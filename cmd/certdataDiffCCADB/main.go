@@ -18,6 +18,8 @@ import (
 	"github.com/mozilla/OneCRL-Tools/ccadb"
 	"github.com/mozilla/OneCRL-Tools/certdata"
 	"github.com/mozilla/OneCRL-Tools/certdataDiffCCADB"
+	"github.com/throttled/throttled"
+	"github.com/throttled/throttled/store/memstore"
 )
 
 // Hard coded output filenames.
@@ -155,6 +157,7 @@ type SimpleEntry struct {
 
 // ListCertdata returns to the client a JSON array of SimpleEntry
 func ListCertdata(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("X-Automated-Tool", "https://github.com/mozilla/OneCRL-Tools certdataDiffCCADB")
 	defer func() {
 		if err := recover(); err != nil {
 			w.WriteHeader(http.StatusBadGateway)
@@ -169,17 +172,17 @@ func ListCertdata(w http.ResponseWriter, req *http.Request) {
 	log.Printf("ListCertdata, IP: %v, certdata.txt URL: %v\n", req.RemoteAddr, url)
 	stream, err := getFromURL(url)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintln(err.Error())))
 		log.Printf("ListCertdata, IP: %v, Error: %v\n", req.RemoteAddr, err)
-		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	defer stream.Close()
 	c, err := certdata.ParseToNormalizedForm(stream)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintln(err.Error())))
 		log.Printf("ListCertdata, IP: %v, Error: %v\n", req.RemoteAddr, err)
-		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	resp := make([]SimpleEntry, len(c))
@@ -187,19 +190,35 @@ func ListCertdata(w http.ResponseWriter, req *http.Request) {
 		resp = append(resp, SimpleEntry{e.PEM, e.Fingerprint, e.TrustEmail, e.TrustWeb})
 	}
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintln(err.Error())))
 		log.Printf("ListCertdata, IP: %v, Error: %v\n", req.RemoteAddr, err)
-		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 }
 
 // Runner function for starting the server.
 func serve() {
+	// Setup rate limiting.
+	store, err := memstore.New(65536)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// 20 per minute, with a burst of 5.
+	quota := throttled.RateQuota{throttled.PerMin(20), 5}
+	rateLimiter, err := throttled.NewGCRARateLimiter(store, quota)
+	if err != nil {
+		log.Fatal(err)
+	}
+	httpRateLimiter := throttled.HTTPRateLimiter{
+		RateLimiter: rateLimiter,
+		VaryBy:      &throttled.VaryBy{Path: true},
+	}
+	rateLimitedHandler := httpRateLimiter.RateLimit(http.HandlerFunc(ListCertdata))
+
+	// Setup server and launch.
+	http.Handle("/certdata", rateLimitedHandler)
 	log.Println("Starting in server mode.")
-	// Add handlers.
-	http.HandleFunc("/certdata", ListCertdata)
-	// Start up the server.
 	port := fmt.Sprintf(":%v", os.Getenv("PORT"))
 	log.Printf("Listening on port %v\n", port)
 	log.Fatal(http.ListenAndServe(port, nil))
