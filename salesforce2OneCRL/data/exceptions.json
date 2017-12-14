@@ -708,5 +708,17 @@
       "name": "Microsoft IT SSL SHA2 revocation 2",
       "why": "Added per CA request"
     }
+  },
+  {
+    "issuerName": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
+    "serialNumber": "AOfHzdPzlvw5",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2017-12-14T17:17:08.723413Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1425166",
+      "name": "key compromise",
+      "why": "."
+    }
   }
 ]}
