@@ -720,5 +720,29 @@
       "name": "key compromise",
       "why": "."
     }
+  },
+  {
+    "issuerName": "MHMxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJDQTEUMBIGA1UEBxMLU2FudGEgQ2xhcmExGjAYBgNVBAoTEUludGVsIENvcnBvcmF0aW9uMSUwIwYDVQQDExxJbnRlbCBFeHRlcm5hbCBJc3N1aW5nIENBIDZC",
+    "serialNumber": "HwAABsvzDP+DIzUG6QAAAAAGyw==",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2018-01-12T16:07:30.989396006Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1429636",
+      "name": "key compromise",
+      "why": ""
+    }
+  },
+  {
+    "issuerName": "MH4xCzAJBgNVBAYTAlVTMR0wGwYDVQQKExRTeW1hbnRlYyBDb3Jwb3JhdGlvbjEfMB0GA1UECxMWU3ltYW50ZWMgVHJ1c3QgTmV0d29yazEvMC0GA1UEAxMmU3ltYW50ZWMgQ2xhc3MgMyBTZWN1cmUgU2VydmVyIENBIC0gRzQ=",
+    "serialNumber": "UDE/uwr4z5V8eZI4+1gkAw==",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2018-01-12T16:10:12.532698105Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1425376",
+      "name": "key compromise",
+      "why": ""
+    }
   }
 ]}
