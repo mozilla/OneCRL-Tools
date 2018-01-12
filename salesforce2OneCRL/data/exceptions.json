@@ -744,5 +744,17 @@
       "name": "key compromise",
       "why": ""
     }
+  },
+  {
+    "issuerName": "MIGSMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDE4MDYGA1UEAxMvQ09NT0RPIFJTQSBFeHRlbmRlZCBWYWxpZGF0aW9uIFNlY3VyZSBTZXJ2ZXIgQ0E=",
+    "serialNumber": "TasC8Zd8BT8kXEE67cFQmA==",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2018-01-12T16:24:38.732932137Z",
+      "bug": "",
+      "name": "key compromise",
+      "why": ""
+    }
   }
 ]}
