@@ -765,7 +765,19 @@
       "who": "jc@mozilla.com",
       "created": "2018-01-16T14:26:03.648712626Z",
       "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1430498",
-      "name": "registry problem - remove after Feb 2018",
+      "name": "registry problem",
+      "why": ""
+    }
+  },
+  {
+    "issuerName": "MHIxCzAJBgNVBAYTAlVTMQswCQYDVQQIEwJUWDEQMA4GA1UEBxMHSG91c3RvbjEVMBMGA1UEChMMY1BhbmVsLCBJbmMuMS0wKwYDVQQDEyRjUGFuZWwsIEluYy4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHk=",
+    "serialNumber": "AJk3QFH13eHUHHVnsvwS0Vo=",
+    "enabled": true,
+    "details": {
+      "who": "jc@mozilla.com",
+      "created": "2018-01-17T00:30:37.551668672Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1430498",
+      "name": "registry problem",
       "why": ""
     }
   }
