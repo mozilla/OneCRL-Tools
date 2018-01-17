@@ -780,5 +780,17 @@
       "name": "registry problem",
       "why": ""
     }
+  },
+  {
+    "issuerName": "MHAxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xLzAtBgNVBAMTJkRpZ2lDZXJ0IFNIQTIgSGlnaCBBc3N1cmFuY2UgU2VydmVyIENB",
+    "serialNumber": "Cn+uUpLudsH09lYYIPTK5A==",
+    "enabled": true,
+    "details": {
+      "who": "mgoodwin@mozilla.com",
+      "created": "2018-01-17T13:03:45.551668672Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1427034",
+      "name": "key compromise",
+      "why": ""
+    }
   }
 ]}
