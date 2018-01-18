@@ -154,10 +154,12 @@ func parse(src func() io.ReadCloser, parser func(io.Reader) ([]*certdataDiffCCAD
 // SimpleEntry is a subset of the certdataDiffCCADB.Entry use to provide a simpler
 // view of the certdata file while in server mode.
 type SimpleEntry struct {
-	PEM         string `json:"PEM"`
-	Fingerprint string `json:"sha256"`
-	TrustWeb    bool   `json:"trustWeb"`
-	TrustEmail  bool   `json:"trustEmail"`
+	PEM          string `json:"PEM"`
+	Fingerprint  string `json:"sha256"`
+	SerialNumber string `json:"serialNumber"`
+	Issuer       string `json:"issuer"`
+	TrustWeb     bool   `json:"trustWeb"`
+	TrustEmail   bool   `json:"trustEmail"`
 }
 
 // ListCertdata returns to the client a JSON array of SimpleEntry
@@ -190,8 +192,8 @@ func ListCertdata(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	resp := make([]SimpleEntry, len(c))
-	for _, e := range c {
-		resp = append(resp, SimpleEntry{e.PEM, e.Fingerprint, e.TrustEmail, e.TrustWeb})
+	for i, e := range c {
+		resp[i] = SimpleEntry{e.PEM, e.Fingerprint, e.SerialNumber, e.DistinguishedName(), e.TrustEmail, e.TrustWeb}
 	}
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
