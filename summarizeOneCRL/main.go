@@ -12,10 +12,10 @@ import (
 	"flag"
 	"fmt"
 	constraintsx509 "github.com/jcjones/constraintcrypto/x509"
+	"github.com/mozilla/OneCRL-Tools/bugs"
 	"github.com/mozilla/OneCRL-Tools/config"
 	"github.com/mozilla/OneCRL-Tools/oneCRL"
 	"github.com/mozilla/OneCRL-Tools/salesforce"
-	"github.com/mozilla/OneCRL-Tools/util"
 	"os"
 	"strings"
 )
