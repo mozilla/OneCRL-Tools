@@ -57,7 +57,7 @@ func (record Record) EqualsRecord(otherRecord Record) bool {
 }
 
 type Records struct {
-	Data []Record
+	Data []Record `json:"data"`
 }
 
 // the subset of stuff we actually care about from Kinto metadata

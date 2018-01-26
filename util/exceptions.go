@@ -70,3 +70,16 @@ func LoadExceptions(location string, existing *oneCRL.Records, records *oneCRL.R
   }
   return nil
 }
+
+func StoreExceptions(location string, records *oneCRL.Records) error {
+  if 0 == strings.Index(strings.ToUpper(location), "HTTP") {
+    return fmt.Errorf("Cannot store to a network URL")
+  }
+
+  formattedJson, err := json.MarshalIndent(records, " ", " ")
+  if nil != err {
+    return err
+  }
+
+  return ioutil.WriteFile(location, formattedJson, 0666)
+}

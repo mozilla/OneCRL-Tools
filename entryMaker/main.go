@@ -15,6 +15,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mozilla/OneCRL-Tools/oneCRL"
+	"github.com/mozilla/OneCRL-Tools/util"
 	"io/ioutil"
 	"time"
 )
@@ -27,9 +28,25 @@ func check(e error) {
 
 func main() {
 	certPtr := flag.String("cert", "", "a DER or PEM encoded certificate file")
+	exceptionsPtr := flag.String("exceptions", "", "A JSON document containing exceptional additions")
 	revocationTypePtr := flag.String("type", "issuer-serial", "What type of revocation you want (options: issuer-serial, subject-pubkey)")
 	checkValidityPtr := flag.String("checkvalidity", "no", "should validity be checked? (yes / no)")
+
+	whoPtr := flag.String("who", "", "email of revoking party")
+	whyPtr := flag.String("why", "", "reason for revocation")
+	namePtr := flag.String("name", "", "name of this revocation")
+	bugPtr := flag.String("bug", "", "bug URL for this revocation")
+	overwritePtr := flag.Bool("overwrite", false, "Overwrite the exceptions file?")
+
 	flag.Parse()
+
+	// Optionally load the exceptions list to make the addition to
+	exceptionsList := new(oneCRL.Records)
+	if len(*exceptionsPtr) != 0 {
+		if err := util.LoadExceptions(*exceptionsPtr, &oneCRL.Records{}, exceptionsList); nil != err {
+			panic(err)
+		}
+	}
 
 	var certData []byte
 	if nil != certPtr && len(*certPtr) > 0 {
@@ -39,6 +56,7 @@ func main() {
 		check(err)
 	}
 
+	var record oneCRL.Record
 	if len(certData) > 0 {
 		// Maybe it's PEM; try to parse as PEM, if that fails, just use the bytes
 		// We only care about the first block for now
@@ -60,7 +78,6 @@ func main() {
 		}
 
 
-		var record oneCRL.Record
 		switch *revocationTypePtr {
 		case "issuer-serial":
 			issuerString := base64.StdEncoding.EncodeToString(cert.RawIssuer)
@@ -79,12 +96,36 @@ func main() {
 				record = oneCRL.Record{Subject: subjectString, PubKeyHash: base64EncodedHash}
 			}
 		default:
+			panic("Unexpected revocation type")
 		}
+	}
 
-		if recordJson, err := json.MarshalIndent(record, "  ", "  "); nil == err {
-			fmt.Printf("%s\n", recordJson)
-		} else {
+	// Set the values on the new record
+	record.Enabled = true
+	record.Details.Who = *whoPtr
+	record.Details.Why = *whyPtr
+	record.Details.Name = *namePtr
+	record.Details.Bug = *bugPtr
+	record.Details.Created = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+
+	var toPrint interface{}
+
+	if len(exceptionsList.Data) > 0 {
+		exceptionsList.Data = append(exceptionsList.Data, record)
+		toPrint = exceptionsList
+	} else {
+		toPrint = record
+	}
+
+	if *overwritePtr && len(exceptionsList.Data) > 0 {
+		if err := util.StoreExceptions(*exceptionsPtr, exceptionsList); nil != err {
 			panic(err)
 		}
+	} else {
+		formattedJson, err := json.MarshalIndent(toPrint, "  ", "  ")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s\n", formattedJson)
 	}
 }
