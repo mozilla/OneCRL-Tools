@@ -14,8 +14,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mozilla/OneCRL-Tools/bugs"
 	"github.com/mozilla/OneCRL-Tools/config"
-	"github.com/mozilla/OneCRL-Tools/util"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -57,7 +57,7 @@ func (record Record) EqualsRecord(otherRecord Record) bool {
 }
 
 type Records struct {
-	Data []Record
+	Data []Record `json:"data"`
 }
 
 // the subset of stuff we actually care about from Kinto metadata
