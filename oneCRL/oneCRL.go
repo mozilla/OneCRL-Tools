@@ -366,6 +366,41 @@ func checkResponseStatus(resp *http.Response, message string) error {
 	return nil
 }
 
+func AddKintoObject(url string, obj interface{}) error {
+	conf := config.GetConfig()
+	marshalled, _ := json.Marshal(obj)
+
+	if conf.Preview != "yes" {
+		if "yes" == conf.OneCRLVerbose {
+			fmt.Printf("Will POST to \"%s\" with \"%s\"\n", url+"/records", marshalled)
+		}
+		req, err := http.NewRequest("POST", url+"/records", bytes.NewBuffer(marshalled))
+
+		if len(conf.KintoUser) > 0 {
+			req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+
+		if nil != err {
+			panic(err)
+		}
+
+		err = checkResponseStatus(resp, "There was a problem adding a record")
+
+		defer resp.Body.Close()
+
+		if nil != err {
+			return err
+		}
+	} else {
+		fmt.Printf("Would POST to \"%s\" with \"%s\"\n", url+"/records", marshalled)
+	}
+	return nil
+}
+
 func checkKintoAuth(collectionUrl string) error {
 	conf := config.GetConfig()
 	kintoBase := strings.SplitAfter(collectionUrl, "/v1/")[0]
@@ -471,46 +506,23 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 
 		update := new(OneCRLUpdate)
 		update.Data = record
-		marshalled, _ := json.Marshal(update)
+
+		err := AddKintoObject(conf.KintoCollectionURL, update)
+
+		if nil != err {
+			panic(err)
+		}
 
 		// Upload the created entry to Kinto
 		// TODO: Batch these, don't send single requests
 		if conf.Preview != "yes" {
 			if "yes" == conf.OneCRLVerbose {
-				fmt.Printf("Will POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL+"/records", marshalled)
-			}
-			req, err := http.NewRequest("POST", conf.KintoCollectionURL+"/records", bytes.NewBuffer(marshalled))
-
-			if len(conf.KintoUser) > 0 {
-				req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
-			}
-			req.Header.Set("Content-Type", "application/json")
-
-			client := &http.Client{}
-			resp, err := client.Do(req)
-
-			if nil != err {
-				panic(err)
-			}
-
-			err = checkResponseStatus(resp, "There was a problem adding a record")
-
-			if nil != err {
-				return err
-			}
-
-			if "yes" == conf.OneCRLVerbose {
-				fmt.Printf("status code is %d\n", resp.StatusCode)
 				fmt.Printf("record data is %s\n", StringFromRecord(record))
 			}
 			bugStyle = bugStyle + StringFromRecord(record) + "\n"
-			defer resp.Body.Close()
-
 			if err != nil {
 				panic(err)
 			}
-		} else {
-			fmt.Printf("Would POST to \"%s\" with \"%s\"\n", conf.KintoCollectionURL+"/records", marshalled)
 		}
 	}
 

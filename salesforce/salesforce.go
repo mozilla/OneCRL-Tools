@@ -32,6 +32,11 @@ type RevokedCertInfo struct {
 	ValidTo      string
 }
 
+type PublicIntermediateInfo struct {
+	PEM          string
+	DecodedCert  []byte
+}
+
 func FetchSalesforceCSV(stream io.ReadCloser) SalesforceCSV {
 	records := SalesforceCSV{}
 
@@ -58,22 +63,21 @@ func FetchSalesforceCSV(stream io.ReadCloser) SalesforceCSV {
 	return records
 }
 
-func FetchRevokedCertInfoFrom(location string) ([]RevokedCertInfo, error) {
+func GetStreamFromLocation(location string) (io.ReadCloser, error) {
 	var stream io.ReadCloser
 
 	if 0 == strings.Index(strings.ToUpper(location), "HTTP") {
 		if 0 != strings.Index(strings.ToUpper(location), "HTTPS") {
 			// cowardly refuse to get cert info from a non-https URL
-			return make([]RevokedCertInfo, 0), errors.New("Cowardly refusing to load data from a non-HTTPS URL")
+			return stream, errors.New("Cowardly refusing to load data from a non-HTTPS URL")
 		}
 		fmt.Printf("loading salesforce data from %s\n", location)
 
 		// get the stream from URL
 		r, err := http.Get(location)
 		if err != nil {
-			return make([]RevokedCertInfo, 0), errors.New(fmt.Sprintf("problem fetching salesforce data from URL %s\n", err))
+			return stream, errors.New(fmt.Sprintf("problem fetching salesforce data from URL %s\n", err))
 		}
-		defer r.Body.Close()
 
 		stream = r.Body
 	} else {
@@ -81,13 +85,21 @@ func FetchRevokedCertInfoFrom(location string) ([]RevokedCertInfo, error) {
 		// get the stream from a file
 		csvfile, err := os.Open(location)
 		if err != nil {
-			return make([]RevokedCertInfo, 0), errors.New(fmt.Sprintf("problem loading salesforce data from file %s\n", err))
+			return stream, errors.New(fmt.Sprintf("problem loading salesforce data from file %s\n", err))
 		}
 
 		stream = io.ReadCloser(csvfile)
 	}
+	return stream, nil
+}
 
-	return FetchRevokedCertInfo(stream), nil
+func FetchRevokedCertInfoFrom(location string) ([]RevokedCertInfo, error) {
+	if stream, err := GetStreamFromLocation(location); nil == err {
+		defer stream.Close()
+		return FetchRevokedCertInfo(stream), nil
+	} else {
+		return nil, err
+	}
 }
 
 func FetchRevokedCertInfo(stream io.ReadCloser) []RevokedCertInfo {
@@ -115,6 +127,30 @@ func FetchRevokedCertInfo(stream io.ReadCloser) []RevokedCertInfo {
 	}
 
 	return certs
+}
+
+func FetchPublicIntermediatesFrom(location string) ([]PublicIntermediateInfo, error) {
+	if stream, err := GetStreamFromLocation(location); nil == err {
+		defer stream.Close()
+		return FetchPublicIntermediates(stream), nil
+	} else {
+		return nil, err
+	}
+}
+
+func FetchPublicIntermediates(stream io.ReadCloser) []PublicIntermediateInfo {
+	records := FetchSalesforceCSV(stream)
+	intermediates := make([]PublicIntermediateInfo, 0)
+
+	for _, each := range records.Rows {
+		intInfo := PublicIntermediateInfo{}
+		intInfo.PEM = each[records.ColumnNames["PEM Info"]]
+		intInfo.DecodedCert, _ = CertDataFromSalesforcePEM(intInfo.PEM)
+
+		intermediates = append(intermediates, intInfo)
+	}
+
+	return intermediates;
 }
 
 func CertDataFromSalesforcePEM(PEM string) ([]byte, error) {
