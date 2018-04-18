@@ -8,17 +8,22 @@ import (
 
 // BuildReportSite makes a system to call to the Hugo static
 // site generator to build a copy of the report site.
-func BuildReportSite(path, contentDir string) {
+func BuildReportSite(contentDir, destination string) error {
 	p := exec.Command("which", "hugo")
 	err := p.Run()
 	if err != nil {
-		fmt.Println("Missing requirement, Hugo\nPlease visit https://gohugo.io/getting-started/installing/")
-		return
+		return fmt.Errorf("Missing requirement, Hugo\nPlease visit https://gohugo.io/getting-started/installing/")
 	}
-	os.Chdir(path)
-	p = exec.Command("hugo", "--buildDrafts", "--destination", contentDir)
+	pwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	os.Chdir(contentDir)
+	defer os.Chdir(pwd)
+	p = exec.Command("hugo", "--buildDrafts", "--destination", destination)
 	err = p.Run()
 	if err != nil {
 		fmt.Println(err)
 	}
+	return nil
 }
