@@ -8,7 +8,7 @@ import (
 	"github.com/mozilla/OneCRL-Tools/obsDiffCCADB/cmd"
 )
 
-const defaultLibraryDir = "../../obsDiffCCADB"
+const defaultLibraryDir = "../../../obsDiffCCADB"
 
 var libraryDir string
 var generatedContentDir string // generated
@@ -16,6 +16,7 @@ var port int
 var tls bool
 var cert string
 var privKey string
+var help bool
 
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -24,10 +25,16 @@ func init() {
 	flag.BoolVar(&tls, "tls", false, "Whether or not to serve content over TLS.")
 	flag.StringVar(&cert, "cert", "", "Path to the cert to use when using TLS.")
 	flag.StringVar(&privKey, "key", "", "Path to the private key to use when using TLS.")
+	flag.BoolVar(&help, "help", false, "Print usage.")
 	generatedContentDir = path.Join(libraryDir, "generated")
 }
 
 func main() {
+	flag.Parse()
+	if help {
+		flag.Usage()
+		return
+	}
 	if tls {
 		log.Println("Serving report over TLS...")
 		cmd.ServeReportSiteTLS(generatedContentDir, cert, privKey, port)
