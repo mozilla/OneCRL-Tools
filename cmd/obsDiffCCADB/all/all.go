@@ -28,14 +28,13 @@ func init() {
 	flag.StringVar(&cert, "cert", "", "Path to the cert to use when using TLS.")
 	flag.StringVar(&privKey, "key", "", "Path to the private key to use when using TLS.")
 	flag.BoolVar(&help, "help", false, "Print usage.")
-
-	generatedContentDir = path.Join(libraryDir, "generated")
-	recommendationDir = path.Join(libraryDir, "recommendation")
-	staticContentDir = path.Join(generatedContentDir, "public")
 }
 
 func main() {
 	flag.Parse()
+	generatedContentDir = path.Join(libraryDir, "generated")
+	recommendationDir = path.Join(libraryDir, "recommendation")
+	staticContentDir = path.Join(generatedContentDir, "public")
 	if help {
 		flag.Usage()
 		return

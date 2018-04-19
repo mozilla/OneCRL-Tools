@@ -22,6 +22,10 @@ func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	flag.StringVar(&libraryDir, "library", defaultLibraryDir, "Path to the obsDiffCCADB library.")
 	flag.BoolVar(&help, "help", false, "Print usage.")
+}
+
+func main() {
+	flag.Parse()
 	generatedContentDir = path.Join(libraryDir, "generated")
 	var err error
 	recommendationDir, err = filepath.Abs(path.Join(libraryDir, "recommendation"))
@@ -32,10 +36,6 @@ func init() {
 	if err != nil {
 		log.Panicln(err)
 	}
-}
-
-func main() {
-	flag.Parse()
 	if help {
 		flag.Usage()
 		return
