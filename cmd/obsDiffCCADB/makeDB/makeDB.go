@@ -18,11 +18,11 @@ func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	flag.StringVar(&libraryDir, "library", defaultLibraryDir, "Path to the obsDiffCCADB library.")
 	flag.BoolVar(&help, "help", false, "Print usage.")
-	generatedContentDir = path.Join(libraryDir, "generated")
 }
 
 func main() {
 	flag.Parse()
+	generatedContentDir = path.Join(libraryDir, "generated")
 	if help {
 		flag.Usage()
 		return
