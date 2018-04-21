@@ -33,6 +33,7 @@ I recommend that,
 		* This will correct [issue 281](https://github.com/mozilla/tls-observatory/issues/281) in the TLS Observatory.
 	    * This will correct [issue 283](https://github.com/mozilla/tls-observatory/issues/283) in the TLS Observatory.
     * Make an addition to the TLS Observatory output called `ExtendedKeyUsageOID` which is to be a []oid.
+        * This will correct [issue 338](https://github.com/mozilla/tls-observatory/issues/338)
     * Implement the fix proposed in [issue 291](https://github.com/mozilla/tls-observatory/issues/291) to fix the issue wherein [the TLS Observatory is missing leading zeroes from some certificates](#certificate-serial-number-intermediate-fname-certificateserialnumber)
     * Implement the fix proposed in [issue 289](https://github.com/mozilla/tls-observatory/issues/289) to fix the issue wherein [the TLS Observatory is missing EKUs for some certificates](#extended-key-usage-intermediate-fname-extendedkeyusage)
 
