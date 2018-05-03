@@ -401,10 +401,13 @@ The following are reports of the symmetric differences of all columns of the int
 	- No delimeters
 
 ### Semantics
-- No known differences
+- The CCADB uses the `hash(Subject + SPKI)`.
+- The TLS Observatory uses the `hash(SPKI)`.
+- This difference leads to the CCADB being more restrictive here, which is not desired as this field is used to find similar certificates.
+- Specifically, the TLS Observatory matches 58 more intermediates and 1 more root than the CCADB does.
 
 ### Work to be Done
-- The CCADB should adopt the TLS Observatory's formatting choices.
+- The CCADB should adopt the TLS Observatory's formatting and semantic choices.
 
 ## [Certificate Issuer Common Name](intermediate/?fname=CertificateIssuerCommonName)
 ### Formatting
@@ -750,7 +753,10 @@ The following are reports of the symmetric differences of all columns of the int
 	- No delimeters
 
 ### Semantics
-- No known differences
+- The CCADB uses the `hash(Subject + SPKI)`.
+- The TLS Observatory uses the `hash(SPKI)`.
+- This difference leads to the CCADB being more restrictive here, which is not desired as this field is used to find similar certificates.
+- Specifically, the TLS Observatory matches 58 more intermediates and 1 more root than the CCADB does.
 
 ## [Certificate Issuer Common Name](root/?fname=CertificateIssuerCommonName)
 ### Formatting
