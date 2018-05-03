@@ -20,6 +20,10 @@ func BuildReportSite(contentDir, destination string) error {
 	}
 	os.Chdir(contentDir)
 	defer os.Chdir(pwd)
+	err := os.MkdirAll(destination)
+	if err != nil {
+		return err
+	}
 	p = exec.Command("hugo", "--buildDrafts", "--destination", destination)
 	err = p.Run()
 	if err != nil {
