@@ -20,7 +20,7 @@ func BuildReportSite(contentDir, destination string) error {
 	}
 	os.Chdir(contentDir)
 	defer os.Chdir(pwd)
-	err := os.MkdirAll(destination)
+	err = os.MkdirAll(destination, 0755)
 	if err != nil {
 		return err
 	}
