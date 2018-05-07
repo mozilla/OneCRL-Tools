@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/christopher-henderson/OneCRL-Tools/cmd/certdataDiffCCADB",
+	"ImportPath": "github.com/mozilla/OneCRL-Tools/cmd/certdataDiffCCADB",
 	"GoVersion": "go1.9",
 	"GodepVersion": "v79",
 	"Deps": [

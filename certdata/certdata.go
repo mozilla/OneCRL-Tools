@@ -29,19 +29,19 @@ const (
 	StartCertificate = "CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE" // Declaration of start of Certificate object.
 	StartTrust       = "CKA_CLASS CK_OBJECT_CLASS CKO_NSS_TRUST"   // Declaration of start of a Distrust object.
 
-	WebDistrust = "CKA_TRUST_SERVER_AUTH CK_TRUST CKT_NSS_NOT_TRUSTED"
-	WebTrust    = "CKA_TRUST_SERVER_AUTH CK_TRUST (CKT_NSS_MUST_VERIFY_TRUST|CKT_NSS_TRUSTED_DELEGATOR)"
+	WebDistrust = "CKA_TRUST_SERVER_AUTH CK_TRUST (CKT_NSS_MUST_VERIFY_TRUST|CKT_NSS_NOT_TRUSTED)"
+	WebTrust    = "CKA_TRUST_SERVER_AUTH CK_TRUST CKT_NSS_TRUSTED_DELEGATOR"
 
-	EmailDistrust = "CKA_TRUST_EMAIL_PROTECTION CK_TRUST CKT_NSS_NOT_TRUSTED"
-	EmailTrust    = "CKA_TRUST_EMAIL_PROTECTION CK_TRUST (CKT_NSS_MUST_VERIFY_TRUST|CKT_NSS_TRUSTED_DELEGATOR)"
+	EmailDistrust = "CKA_TRUST_EMAIL_PROTECTION CK_TRUST (CKT_NSS_MUST_VERIFY_TRUST|CKT_NSS_NOT_TRUSTED)"
+	EmailTrust    = "CKA_TRUST_EMAIL_PROTECTION CK_TRUST CKT_NSS_TRUSTED_DELEGATOR"
 
 	IssuerPrefix       = "CKA_ISSUER MULTILINE_OCTAL"        // Declaration of start of a CKA_ISSUER block
 	SerialNumberPrefix = "CKA_SERIAL_NUMBER MULTILINE_OCTAL" // Declaration of start of a CKA_SERIAL_NUMBER block.
 	PEMPrefix          = "CKA_VALUE MULTILINE_OCTAL"         // Declaration of start a CKA_VALUE (PEM) block.
 )
 
-var trustWebRegex *regexp.Regexp
-var trustEmailRegex *regexp.Regexp
+var distrustWebRegex *regexp.Regexp
+var distrustEmailRegex *regexp.Regexp
 
 var countryName asn1.ObjectIdentifier
 var organization asn1.ObjectIdentifier
@@ -53,8 +53,8 @@ var email asn1.ObjectIdentifier
 var serial asn1.ObjectIdentifier
 
 func init() {
-	trustWebRegex = regexp.MustCompile(WebTrust)
-	trustEmailRegex = regexp.MustCompile(EmailTrust)
+	distrustWebRegex = regexp.MustCompile(WebDistrust)
+	distrustEmailRegex = regexp.MustCompile(EmailDistrust)
 
 	countryName = asn1.ObjectIdentifier{2, 5, 4, 6}
 	organization = asn1.ObjectIdentifier{2, 5, 4, 10}
@@ -163,16 +163,16 @@ func Extract(b *bufio.Reader, start int, distrust bool, fname string) (*certdata
 			if pem, hash, err = DecodeDER(oct); err != nil {
 				return nil, lineNum, err
 			}
-		case trustWebRegex.MatchString(l):
+		case strings.HasPrefix(l, WebTrust):
 			webTrust = true
 			webTrustFound = true
-		case strings.HasPrefix(l, WebDistrust):
+		case distrustWebRegex.MatchString(l):
 			webTrust = false
 			webTrustFound = true
-		case trustEmailRegex.MatchString(l):
+		case strings.HasPrefix(l, EmailTrust):
 			emailTrust = true
 			emailTrustFound = true
-		case strings.HasPrefix(l, EmailDistrust):
+		case distrustEmailRegex.MatchString(l):
 			emailTrust = false
 			emailTrustFound = true
 		}
