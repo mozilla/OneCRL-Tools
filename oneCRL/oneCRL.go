@@ -16,8 +16,10 @@ import (
 	"fmt"
 	"github.com/mozilla/OneCRL-Tools/bugs"
 	"github.com/mozilla/OneCRL-Tools/config"
+	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
@@ -31,6 +33,13 @@ const SerialPrefix string = "serial: "
 // TODO: this looks unecessary - maybe remove
 type OneCRLUpdate struct {
 	Data Record `json:"data"`
+}
+
+type KintoAddition struct {
+	Data struct {
+		Id	string	`json:"id"`
+		LastModified  uint64 `json:"last_modified"`
+	} `json:"data"`
 }
 
 type Record struct {
@@ -366,7 +375,7 @@ func checkResponseStatus(resp *http.Response, message string) error {
 	return nil
 }
 
-func AddKintoObject(url string, obj interface{}) error {
+func AddKintoObject(url string, obj interface{}) (string) {
 	conf := config.GetConfig()
 	marshalled, _ := json.Marshal(obj)
 
@@ -390,14 +399,54 @@ func AddKintoObject(url string, obj interface{}) error {
 
 		err = checkResponseStatus(resp, "There was a problem adding a record")
 
-		defer resp.Body.Close()
+		addition := new(KintoAddition)
 
+		defer resp.Body.Close()
+		err = json.NewDecoder(resp.Body).Decode(addition)
 		if nil != err {
-			return err
+			panic(err)
 		}
+
+		return addition.Data.Id
+
 	} else {
 		fmt.Printf("Would POST to \"%s\" with \"%s\"\n", url+"/records", marshalled)
 	}
+	return ""
+}
+
+func AddKintoAttachment(url string, body io.Reader, filename string, gzip bool) error {
+	conf := config.GetConfig()
+
+	// Be explicit about whether to gzip the data
+	url = url + fmt.Sprintf("?gzipped=%t", gzip)
+
+	// Create request data for the attachment
+	buffer := bytes.NewBuffer(nil)
+	formWriter := multipart.NewWriter(buffer)
+
+	if formFile, err := formWriter.CreateFormFile("attachment", filename);
+	nil != err { return err } else {
+		if _, err := io.Copy(formFile, body); err != nil { return err }
+	}
+
+	formWriter.Close()
+
+	// Create a request with the multipart encoded data, send it
+	if req, err := http.NewRequest("POST", url, buffer);
+	nil != err { return err } else {
+		if len(conf.KintoUser) > 0 {
+			req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
+		}
+		req.Header.Set("Content-Type", formWriter.FormDataContentType())
+
+		client := &http.Client{}
+		if resp, err := client.Do(req); nil != err { return err } else {
+			defer resp.Body.Close()
+			return checkResponseStatus(resp, "Error adding an attachment")
+		}
+	}
+
 	return nil
 }
 
@@ -507,11 +556,7 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 		update := new(OneCRLUpdate)
 		update.Data = record
 
-		err := AddKintoObject(conf.KintoCollectionURL, update)
-
-		if nil != err {
-			panic(err)
-		}
+		AddKintoObject(conf.KintoCollectionURL, update)
 
 		// Upload the created entry to Kinto
 		// TODO: Batch these, don't send single requests
@@ -520,9 +565,6 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 				fmt.Printf("record data is %s\n", StringFromRecord(record))
 			}
 			bugStyle = bugStyle + StringFromRecord(record) + "\n"
-			if err != nil {
-				panic(err)
-			}
 		}
 	}
 
