@@ -1,6 +1,7 @@
 build:
 	chmod +x scheduler.py
-	go install github.com/mozilla/OneCRL-Tools/salesforce2OneCRL
+	# will need to set $GOPATH and $GOBIN for below "go get" to work
+	go get ../../salesforce2OneCRL
 	zip -jr ccadb_scheduler.zip scheduler.py .config.yml $(GOPATH)/bin/salesforce2OneCRL
 clean:
 	rm ccadb_scheduler.zip
