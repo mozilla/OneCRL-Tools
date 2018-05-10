@@ -50,7 +50,6 @@ func init() {
 	flag.StringVar(&ccadbURL, "ccadburl", ccadb.URL, "URL to CCADB report file.")
 	flag.StringVar(&outDir, "o", "", "Path to the output directory.")
 	flag.BoolVar(&serverMode, "serve", false, "Start in server mode.")
-	flag.Parse()
 
 	matchedPath = path.Join(outDir, matched)
 	unmatchedTrustPath = path.Join(outDir, unmatchedTrusted)
@@ -193,7 +192,12 @@ func ListCertdata(w http.ResponseWriter, req *http.Request) {
 	}
 	resp := make([]SimpleEntry, len(c))
 	for i, e := range c {
-		resp[i] = SimpleEntry{e.PEM, e.Fingerprint, e.SerialNumber, e.DistinguishedName(), e.TrustEmail, e.TrustWeb}
+		resp[i] = SimpleEntry{PEM: e.PEM,
+			Fingerprint:  e.Fingerprint,
+			SerialNumber: e.SerialNumber,
+			Issuer:       e.DistinguishedName(),
+			TrustWeb:     e.TrustWeb,
+			TrustEmail:   e.TrustEmail}
 	}
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -251,6 +255,7 @@ func singleRun() {
 }
 
 func main() {
+	flag.Parse()
 	if serverMode {
 		serve()
 	} else {
