@@ -476,7 +476,7 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 			}
 		}
 		bug.Product = "Toolkit"
-		bug.Component = "Blocklisting"
+		bug.Component = "Blocklist Policy Requests"
 		bug.Version = "unspecified"
 		bug.Summary = fmt.Sprintf("CCADB entries generated %s", nowString)
 		bug.Description = conf.BugDescription
