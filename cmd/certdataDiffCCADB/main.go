@@ -215,7 +215,7 @@ func serve() {
 		log.Fatal(err)
 	}
 	// 20 per minute, with a burst of 5.
-	quota := throttled.RateQuota{throttled.PerMin(20), 5}
+	quota := throttled.RateQuota{MaxRate: throttled.PerMin(20), MaxBurst: 5}
 	rateLimiter, err := throttled.NewGCRARateLimiter(store, quota)
 	if err != nil {
 		log.Fatal(err)
