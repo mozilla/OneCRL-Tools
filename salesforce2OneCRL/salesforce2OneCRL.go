@@ -135,7 +135,7 @@ func main() {
 				buf := new(bytes.Buffer)
 				_, err = buf.ReadFrom(res.Body)
 				if err != nil {
-					fmt.Println("Problem reading the CRL data at %s\n", CRLLocation)
+					fmt.Printf("Problem reading the CRL data at %s\n", CRLLocation)
 					continue
 				}
 				crlData := buf.Bytes()
