@@ -31,7 +31,7 @@ type Certificate struct {
     Raw                string
     CA                 bool      `json:"ca"`
     CiscoUmbrellaRank  int       `json:"ciscoUmbrellaRank"`
-    firstSeenTimestamp time.Time `json:"firstSeenTimestamp"`
+    FirstSeenTimestamp time.Time `json:"firstSeenTimestamp"`
     Hashes             struct {
         PinSHA256         string `json:"pin-sha256"`
         SHA1              string `json:"sha1"`
@@ -73,7 +73,7 @@ type Certificate struct {
 // Organization represents an issuer/subject object.
 type Organization struct {
     C  []string `json:"c"`
-    CN string   `json:cn`
+    CN string   `json:"cn"`
     O  []string `json:"o"`
     OU []string `json:"ou"`
 }
