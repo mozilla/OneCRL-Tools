@@ -68,7 +68,7 @@ func CCADBReader() io.ReadCloser {
 		// get the stream from a file
 		stream, err := os.Open(ccadbPath)
 		if err != nil {
-			log.Fatal("Problem loading CCADB data from file %s\n", err)
+			log.Fatalf("Problem loading CCADB data from file %s\n", err)
 		}
 		return stream
 	} else {
@@ -76,7 +76,7 @@ func CCADBReader() io.ReadCloser {
 		// get the stream from URL
 		r, err := getFromURL(ccadbURL)
 		if err != nil {
-			log.Fatal("Problem fetching CCADB data from URL %s\n", err)
+			log.Fatalf("Problem fetching CCADB data from URL %s\n", err)
 		}
 		return r
 	}
@@ -92,7 +92,7 @@ func CertdataReader() io.ReadCloser {
 		// get the stream from a file
 		stream, err := os.Open(certdataPath)
 		if err != nil {
-			log.Fatal("Problem loading certdata.txt data from file %s\n", err)
+			log.Fatalf("Problem loading certdata.txt data from file %s\n", err)
 		}
 		return stream
 	} else {
@@ -100,7 +100,7 @@ func CertdataReader() io.ReadCloser {
 		r, err := getFromURL(certdataURL)
 		// get the stream from URL
 		if err != nil {
-			log.Fatal("Problem fetching certdata.txt data from URL %s\n", err)
+			log.Fatalf("Problem fetching certdata.txt data from URL %s\n", err)
 		}
 		return r
 	}
