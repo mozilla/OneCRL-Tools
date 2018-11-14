@@ -130,7 +130,7 @@ func AttachToBug(bugNum int, apiKey string, attachments []Attachment, conf *conf
 			return err
 		}
 		if "yes" == conf.OneCRLVerbose {
-			fmt.Printf("att response %s\n", attResp)
+			fmt.Printf("att response %v\n", attResp)
 		}
 	}
 	return nil
@@ -161,7 +161,7 @@ func AddCommentToBug(bugNum int, conf *config.OneCRLConfig, comment string) erro
 		return err
 	}
 	if "yes" == conf.OneCRLVerbose {
-		fmt.Printf("comment response %s\n", commentResp)
+		fmt.Printf("comment response %v\n", commentResp)
 	}
 	return nil
 }

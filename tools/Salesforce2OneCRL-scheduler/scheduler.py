@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 from base64 import b64decode
+import boto3
 import os, sys
 import subprocess
-
 
 EXCEPTIONS_URL = 'https://raw.githubusercontent.com/mozilla/OneCRL-Tools/master/salesforce2OneCRL/data/exceptions.json'
 

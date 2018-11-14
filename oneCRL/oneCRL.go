@@ -92,11 +92,13 @@ func StringFromIssuerSerial(issuer string, serial string) string {
 	return fmt.Sprintf("issuer: %s serial: %s", issuer, serial)
 }
 
-func getDataFromURL(url string, user string, pass string) ([]byte, error) {
+func getDataFromURL(url string, conf *config.OneCRLConfig) ([]byte, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
-	if len(user) > 0 {
-		req.SetBasicAuth(user, pass)
+	if len(conf.KintoToken) > 0 {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", conf.KintoToken))
+	} else if len(conf.KintoUser) > 0 {
+		req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
 	}
 
 	client := &http.Client{}
@@ -121,10 +123,8 @@ func FetchExistingRevocations(url string) (*Records, error) {
 		fmt.Printf("Got URL data\n")
 	}
 
-	user, pass := conf.KintoUser, conf.KintoPassword
-
 	res := new(Records)
-	if data, err := getDataFromURL(url, user, pass); nil != err {
+	if data, err := getDataFromURL(url, conf); nil != err {
 		return nil, errors.New(fmt.Sprintf("problem loading existing data from URL %s", err))
 	} else {
 		if err := json.Unmarshal(data, res); nil != err {
@@ -385,7 +385,9 @@ func AddKintoObject(url string, obj interface{}) (string) {
 		}
 		req, err := http.NewRequest("POST", url+"/records", bytes.NewBuffer(marshalled))
 
-		if len(conf.KintoUser) > 0 {
+		if len(conf.KintoToken) > 0 {
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", conf.KintoToken))
+		} else if len(conf.KintoUser) > 0 {
 			req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
 		}
 		req.Header.Set("Content-Type", "application/json")
@@ -456,7 +458,9 @@ func checkKintoAuth(collectionUrl string) error {
 
 	req, err := http.NewRequest("GET", kintoBase, nil)
 
-	if len(conf.KintoUser) > 0 {
+	if len(conf.KintoToken) > 0 {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", conf.KintoToken))
+	} else if len(conf.KintoUser) > 0 {
 		req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -525,7 +529,7 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 			}
 		}
 		bug.Product = "Toolkit"
-		bug.Component = "Blocklisting"
+		bug.Component = "Blocklist Policy Requests"
 		bug.Version = "unspecified"
 		bug.Summary = fmt.Sprintf("CCADB entries generated %s", nowString)
 		bug.Description = conf.BugDescription
@@ -575,7 +579,9 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 		// PATCH the object to set the status to to-review
 		req, err := http.NewRequest("PATCH", conf.KintoCollectionURL, bytes.NewBuffer([]byte(reviewJSON)))
 
-		if len(conf.KintoUser) > 0 {
+		if len(conf.KintoToken) > 0 {
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", conf.KintoToken))
+		} else if len(conf.KintoUser) > 0 {
 			req.SetBasicAuth(conf.KintoUser, conf.KintoPassword)
 		}
 		req.Header.Set("Content-Type", "application/json")
