@@ -44,6 +44,7 @@ type OneCRLConfig struct {
 	AdditionalConfig   map[string]string
 }
 
+// GetRecordURLForEnv returns the the URL (as a string) for a given OneCRL Environment ("stage" or "production")
 func (config OneCRLConfig) GetRecordURLForEnv(environment string) (error, string) {
 	var RecordsPath string = RecordsPathPrefix + config.oneCRLBucketString + RecordsPathSuffix
 
@@ -71,18 +72,14 @@ const DEFAULT_ENFORCE_CRL_CHECKS string = "yes"
 const DEFAULT_DESCRIPTION string = "Here are some entries: Please ensure that the entries are correct."
 
 func (config *OneCRLConfig) loadConfig() error {
-	config_map := map[string]string{}
-
 	// load the config from configuration file
-	loaded := OneCRLConfig{}
-
 	filename := config.oneCRLConfig
 	fmt.Printf("config file was: %v\n", filename)
 	if filename == DEFAULT_ONECRLCONFIG {
-		env_filename := os.Getenv("onecrlconfig")
-		fmt.Printf("Looking for config file in environment: %v\n", env_filename)
-		if 0 != len(env_filename) {
-			filename = env_filename
+		envFilename := os.Getenv("onecrlconfig")
+		fmt.Printf("Looking for config file in environment: %v\n", envFilename)
+		if 0 != len(envFilename) {
+			filename = envFilename
 		}
 	}
 	if len(filename) == 0 {
@@ -92,25 +89,29 @@ func (config *OneCRLConfig) loadConfig() error {
 	if nil != err {
 		return err
 	}
-	//yaml.Unmarshal(data, &loaded)
-	yaml.Unmarshal(data, &config_map)
 
+	// Load the yaml into a map first - so we capture additional config options
+	configMap := map[string]string{}
+	yaml.Unmarshal(data, &configMap)
+
+	// Transfer entries from the map that we recognise
+	loaded := OneCRLConfig{}
 	var md mapstructure.Metadata
-	decoder_config := &mapstructure.DecoderConfig{
+	decoderConfig := &mapstructure.DecoderConfig{
 		Metadata: &md,
 		Result:   &loaded,
 	}
 
-	decoder, err := mapstructure.NewDecoder(decoder_config)
+	decoder, err := mapstructure.NewDecoder(decoderConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := decoder.Decode(config_map); err != nil {
+	if err := decoder.Decode(configMap); err != nil {
 		panic(err)
 	}
 
-	// Loop over the unused keys, add them to extra config
+	// Loop over the unused keys, add them to additional config
 	if len(md.Unused) > 0 {
 		if nil == config.AdditionalConfig {
 			config.AdditionalConfig = make(map[string]string)
@@ -118,7 +119,7 @@ func (config *OneCRLConfig) loadConfig() error {
 
 		for _, key := range md.Unused {
 			fmt.Printf("Key is %v\n", key)
-			config.AdditionalConfig[key] = config_map[key]
+			config.AdditionalConfig[key] = configMap[key]
 		}
 	}
 
@@ -207,11 +208,13 @@ func (config *OneCRLConfig) loadConfig() error {
 
 var conf = OneCRLConfig{}
 
+// GetConfig obtains the system-wide default config including entries loaded from configuration and the environment.
 func GetConfig() *OneCRLConfig {
 	conf.loadConfig()
 	return &conf
 }
 
+// DefineFlags defines the command line flags common to different OneCRL tools.
 func DefineFlags() {
 	flag.StringVar(&conf.oneCRLConfig, "onecrlconfig", DEFAULT_ONECRLCONFIG, "The OneCRL config file")
 	flag.StringVar(&conf.oneCRLEnvString, "onecrlenv", DEFAULT_ONECRLENV, "The OneCRL Environment to use by default - values other than 'stage' will result in the production instance being used")
