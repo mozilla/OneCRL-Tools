@@ -267,13 +267,13 @@ func BenchmarkCertdata(b *testing.B) {
 	b.StopTimer()
 	r, err := http.Get(URL)
 	if err != nil || r.StatusCode != http.StatusOK {
-		b.Log("Problem fetching certdata.txt data from %s, status code %s, error %s\n", URL, r.StatusCode, err)
+		b.Logf("Problem fetching certdata.txt data from %s, status code %d, error %s\n", URL, r.StatusCode, err)
 		b.FailNow()
 	}
 	c, err := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 	if err != nil {
-		b.Log("Problem reading from the response body. Got %v, error %v", c, err)
+		b.Logf("Problem reading from the response body. Got %v, error %v", c, err)
 		b.FailNow()
 	}
 	b.StartTimer()

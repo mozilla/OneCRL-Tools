@@ -39,6 +39,7 @@ type OneCRLConfig struct {
 	EnforceCRLChecks   string `mapstructure:"enforcecrlchecks"`
 	KintoUser          string `mapstructure:"kintouser"`
 	KintoPassword      string `mapstructure:"kintopass"`
+	KintoToken         string `mapstructure:"kintotoken"`
 	KintoCollectionURL string `mapstructure:"collectionurl"`
 	AdditionalConfig   map[string]string
 }
@@ -179,11 +180,20 @@ func (config *OneCRLConfig) loadConfig() error {
 			config.KintoPassword = os.Getenv("kintopass")
 		}
 	}
+	if config.KintoToken == DEFAULT_DEFAULT {
+		// if it's set in config, use that value
+		if loaded.KintoToken != "" {
+			config.KintoToken = loaded.KintoToken
+		} else {
+			// attempt to get a value from environment
+			config.KintoToken = os.Getenv("kintotoken")
+		}
+	}
 	if config.KintoCollectionURL == DEFAULT_COLLECTION_URL && loaded.KintoCollectionURL != "" {
 		config.KintoCollectionURL = loaded.KintoCollectionURL
 	}
 
-	if len(config.KintoUser) > 0 && len(config.KintoPassword) == 0 {
+	if len(config.KintoToken) == 0 && len(config.KintoUser) > 0 && len(config.KintoPassword) == 0 {
 		fmt.Printf("Please enter the password for user %s\n", config.KintoUser)
 		bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 		if nil != err {
