@@ -40,6 +40,7 @@ type OneCRLConfig struct {
 	KintoUser          string `mapstructure:"kintouser"`
 	KintoPassword      string `mapstructure:"kintopass"`
 	KintoCollectionURL string `mapstructure:"collectionurl"`
+	AdditionalConfig   map[string]string
 }
 
 func (config OneCRLConfig) GetRecordURLForEnv(environment string) (error, string) {
@@ -109,10 +110,15 @@ func (config *OneCRLConfig) loadConfig() error {
 	}
 
 	// Loop over the unused keys, add them to extra config
-
-	fmt.Printf("The unmarshalled config is %v\n\n", loaded)
 	if len(md.Unused) > 0 {
-		fmt.Printf("***Some items were left in the map: %v\n\n\n", md.Unused)
+		if nil == config.AdditionalConfig {
+			config.AdditionalConfig = make(map[string]string)
+		}
+
+		for _, key := range md.Unused {
+			fmt.Printf("Key is %v\n", key)
+			config.AdditionalConfig[key] = config_map[key]
+		}
 	}
 
 	// Check the config values to see if any are already overridden
