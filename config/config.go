@@ -8,11 +8,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"golang.org/x/crypto/ssh/terminal"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"syscall"
+
+	"github.com/mitchellh/mapstructure"
+	"golang.org/x/crypto/ssh/terminal"
+	"gopkg.in/yaml.v2"
 )
 
 const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
@@ -25,19 +27,19 @@ const PREFIX_BUGZILLA_STAGE string = "https://bugzilla.allizom.org"
 
 type OneCRLConfig struct {
 	oneCRLConfig       string
-	oneCRLEnvString    string `yaml:"onecrlenv"`
-	oneCRLBucketString string `yaml:"onecrlbucket"`
-	OneCRLVerbose      string `yaml:"onecrlverbose"`
-	BugzillaBase       string `yaml:"bugzilla"`
-	BugzillaAPIKey     string `yaml:"bzapikey"`
-	BugzillaReviewers  string `yaml:"reviewers"`
-	BugzillaBlockee    string `yaml:"blockee"`
-	BugDescription     string `yaml:"bugdescription"`
-	Preview            string `yaml:"preview"`
-	EnforceCRLChecks   string `yaml:"enforcecrlchecks"`
-	KintoUser          string `yaml:"kintouser"`
-	KintoPassword      string `yaml:"kintopass"`
-	KintoCollectionURL string `yaml:"collectionurl"`
+	oneCRLEnvString    string `mapstructure:"onecrlenv"`
+	oneCRLBucketString string `mapstructure:"onecrlbucket"`
+	OneCRLVerbose      string `mapstructure:"onecrlverbose"`
+	BugzillaBase       string `mapstructure:"bugzilla"`
+	BugzillaAPIKey     string `mapstructure:"bzapikey"`
+	BugzillaReviewers  string `mapstructure:"reviewers"`
+	BugzillaBlockee    string `mapstructure:"blockee"`
+	BugDescription     string `mapstructure:"bugdescription"`
+	Preview            string `mapstructure:"preview"`
+	EnforceCRLChecks   string `mapstructure:"enforcecrlchecks"`
+	KintoUser          string `mapstructure:"kintouser"`
+	KintoPassword      string `mapstructure:"kintopass"`
+	KintoCollectionURL string `mapstructure:"collectionurl"`
 }
 
 func (config OneCRLConfig) GetRecordURLForEnv(environment string) (error, string) {
@@ -67,10 +69,20 @@ const DEFAULT_ENFORCE_CRL_CHECKS string = "yes"
 const DEFAULT_DESCRIPTION string = "Here are some entries: Please ensure that the entries are correct."
 
 func (config *OneCRLConfig) loadConfig() error {
+	config_map := map[string]string{}
+
 	// load the config from configuration file
 	loaded := OneCRLConfig{}
 
 	filename := config.oneCRLConfig
+	fmt.Printf("config file was: %v\n", filename)
+	if filename == DEFAULT_ONECRLCONFIG {
+		env_filename := os.Getenv("onecrlconfig")
+		fmt.Printf("Looking for config file in environment: %v\n", env_filename)
+		if 0 != len(env_filename) {
+			filename = env_filename
+		}
+	}
 	if len(filename) == 0 {
 		filename = DEFAULT_ONECRLCONFIG
 	}
@@ -78,8 +90,30 @@ func (config *OneCRLConfig) loadConfig() error {
 	if nil != err {
 		return err
 	}
-	yaml.Unmarshal(data, &loaded)
-	fmt.Printf("The unmarshalled config is %v\n", loaded)
+	//yaml.Unmarshal(data, &loaded)
+	yaml.Unmarshal(data, &config_map)
+
+	var md mapstructure.Metadata
+	decoder_config := &mapstructure.DecoderConfig{
+		Metadata: &md,
+		Result:   &loaded,
+	}
+
+	decoder, err := mapstructure.NewDecoder(decoder_config)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := decoder.Decode(config_map); err != nil {
+		panic(err)
+	}
+
+	// Loop over the unused keys, add them to extra config
+
+	fmt.Printf("The unmarshalled config is %v\n\n", loaded)
+	if len(md.Unused) > 0 {
+		fmt.Printf("***Some items were left in the map: %v\n\n\n", md.Unused)
+	}
 
 	// Check the config values to see if any are already overridden
 	// for each value, if it's unset, copy the config file's value (if present)
