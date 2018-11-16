@@ -12,21 +12,26 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	constraintsx509 "github.com/jcjones/constraintcrypto/x509"
-	"github.com/mozilla/OneCRL-Tools/config"
-	"github.com/mozilla/OneCRL-Tools/oneCRL"
-	"github.com/mozilla/OneCRL-Tools/salesforce"
-	"github.com/mozilla/OneCRL-Tools/util"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	constraintsx509 "github.com/jcjones/constraintcrypto/x509"
+	"github.com/mozilla/OneCRL-Tools/config"
+	"github.com/mozilla/OneCRL-Tools/oneCRL"
+	"github.com/mozilla/OneCRL-Tools/salesforce"
+	"github.com/mozilla/OneCRL-Tools/util"
 )
 
+const DEFAULT_EXCEPTIONS string = "exceptions.json"
+
 func main() {
+	exceptionsLocation := ""
+
 	filePtr := flag.String("file", "", "The file to read data from")
-	exceptionsPtr := flag.String("exceptions", "exceptions.json", "A JSON document containing exceptional additions")
+	flag.StringVar(&exceptionsLocation, "exceptions", DEFAULT_EXCEPTIONS, "A JSON document containing exceptional additions")
 	urlPtr := flag.String("url", "https://ccadb-public.secure.force.com/mozilla/PublicInterCertsReadyToAddToOneCRLPEMCSV", "the URL of the salesforce data")
 	bugPtr := flag.String("bug", "", "the URL of the bug relating to this change")
 	whoPtr := flag.String("who", "", "who made this change")
@@ -37,6 +42,19 @@ func main() {
 	flag.Parse()
 
 	conf := config.GetConfig()
+
+	// If default, try to fetch exceptions location from config or environment
+	if DEFAULT_EXCEPTIONS == exceptionsLocation {
+		envExceptions, confPresent := conf.AdditionalConfig["exceptions"]
+		if confPresent {
+			exceptionsLocation = envExceptions
+		} else {
+			newLocation, envPresent := os.LookupEnv("exceptions")
+			if envPresent {
+				exceptionsLocation = newLocation
+			}
+		}
+	}
 
 	var stream io.ReadCloser
 
@@ -74,8 +92,8 @@ func main() {
 		fmt.Printf("%s\n", err)
 	}
 
-	if len(*exceptionsPtr) != 0 {
-		if err := util.LoadExceptions(*exceptionsPtr, existing, additions); nil != err {
+	if len(exceptionsLocation) != 0 {
+		if err := util.LoadExceptions(exceptionsLocation, existing, additions); nil != err {
 			panic(err)
 		}
 	}
