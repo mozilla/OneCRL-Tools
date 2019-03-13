@@ -612,7 +612,7 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 		}
 
 		if !conf.SkipBugzilla {
-			if err = bugs.AttachToBug(bugNum, conf.BugzillaAPIKey, attachments, conf);  err != nil {
+			if err = bugs.AttachToBug(bugNum, conf.BugzillaAPIKey, attachments, conf); err != nil {
 				panic(err)
 			}
 
@@ -627,7 +627,7 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 			panic(err)
 		}
 		if _, err = bugDataFile.Write(bugStyleData); err != nil {
-			panic(err);
+			panic(err)
 		}
 		fmt.Printf("BugData.txt written to %s\n", bugDataFile.Name())
 
@@ -636,7 +636,7 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 			panic(err)
 		}
 		if _, err = revocationsFile.Write(revocationsTxtData); err != nil {
-			panic(err);
+			panic(err)
 		}
 		fmt.Printf("revocations.txt written to %s\n", revocationsFile.Name())
 	}
