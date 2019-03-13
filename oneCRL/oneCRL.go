@@ -508,12 +508,13 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 			record.Details.Created = nowString
 		}
 
+		bugStyle = bugStyle + StringFromRecord(record) + "\n"
+
 		// TODO: Batch these, don't send single requests
 		if conf.Preview != "yes" {
 			if "yes" == conf.OneCRLVerbose {
 				fmt.Printf("record data is %s\n", StringFromRecord(record))
 			}
-			bugStyle = bugStyle + StringFromRecord(record) + "\n"
 		}
 	}
 
