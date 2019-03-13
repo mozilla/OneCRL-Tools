@@ -41,6 +41,7 @@ type OneCRLConfig struct {
 	KintoPassword      string `mapstructure:"kintopass"`
 	KintoToken         string `mapstructure:"kintotoken"`
 	KintoCollectionURL string `mapstructure:"collectionurl"`
+	SkipBugzilla       bool   // Must be set by CLI flags
 	AdditionalConfig   map[string]string
 }
 
@@ -230,4 +231,5 @@ func DefineFlags() {
 	flag.StringVar(&conf.KintoUser, "kintouser", DEFAULT_DEFAULT, "The kinto user")
 	flag.StringVar(&conf.KintoPassword, "kintopass", DEFAULT_DEFAULT, "The kinto user's pasword")
 	flag.StringVar(&conf.KintoCollectionURL, "collectionurl", DEFAULT_COLLECTION_URL, "The kinto collection URL")
+	flag.BoolVar(&conf.SkipBugzilla, "skipbugzilla", false, "Skip updating Bugzilla")
 }

@@ -470,7 +470,7 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 	}
 
 	// File a bugzilla bug - so we've got a bug URL to add to the kinto entries
-	if shouldWrite {
+	if shouldWrite && !conf.SkipBugzilla {
 		bug := bugs.Bug{}
 		bug.ApiKey = conf.BugzillaAPIKey
 		blocks, err := strconv.Atoi(conf.BugzillaBlockee)
@@ -613,12 +613,14 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 			}
 		}
 
-		if err = bugs.AttachToBug(bugNum, conf.BugzillaAPIKey, attachments, conf);  err != nil {
-			panic(err)
-		}
+		if !conf.SkipBugzilla {
+			if err = bugs.AttachToBug(bugNum, conf.BugzillaAPIKey, attachments, conf);  err != nil {
+				panic(err)
+			}
 
-		if err = bugs.AddCommentToBug(bugNum, conf, comment); err != nil {
-			panic(err)
+			if err = bugs.AddCommentToBug(bugNum, conf, comment); err != nil {
+				panic(err)
+			}
 		}
 	}
 
