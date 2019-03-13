@@ -508,33 +508,44 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 			record.Details.Created = nowString
 		}
 
-		update := new(OneCRLUpdate)
-		update.Data = record
-
-		err := AddKintoObject(conf.KintoCollectionURL, update)
-
-		if nil != err {
-			panic(err)
-		}
-
-		// Upload the created entry to Kinto
 		// TODO: Batch these, don't send single requests
 		if conf.Preview != "yes" {
 			if "yes" == conf.OneCRLVerbose {
 				fmt.Printf("record data is %s\n", StringFromRecord(record))
 			}
 			bugStyle = bugStyle + StringFromRecord(record) + "\n"
-			if err != nil {
-				panic(err)
-			}
 		}
 	}
 
-	if shouldWrite {
-		// TODO: Factor out the request stuff...
-		reviewJSON := "{\"data\": {\"status\": \"to-review\"}}"
+	// Generate the data to attach to the bug
+	bugStyleData := []byte(bugStyle)
 
-		// PATCH the object to set the status to to-review
+	rTxt := new(RevocationsTxtData)
+	for _, record := range existing.Data {
+		rTxt.LoadRecord(record)
+	}
+	for _, record := range records.Data {
+		rTxt.LoadRecord(record)
+	}
+
+	revocationsTxtString := rTxt.ToRevocationsTxtString()
+	revocationsTxtData := []byte(revocationsTxtString)
+
+	if shouldWrite {
+		// Update Kinto records
+		for _, record := range records.Data {
+			update := new(OneCRLUpdate)
+			update.Data = record
+
+			// Upload the created entry to Kinto
+			err := AddKintoObject(conf.KintoCollectionURL, update)
+			if nil != err {
+				panic(err)
+			}
+		}
+
+		// Request review
+		reviewJSON := "{\"data\": {\"status\": \"to-review\"}}"
 		req, err := http.NewRequest("PATCH", conf.KintoCollectionURL, bytes.NewBuffer([]byte(reviewJSON)))
 
 		if len(conf.KintoToken) > 0 {
@@ -563,21 +574,8 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 			return err
 		}
 
-		// Generate Revocations.txt data to attach to the bug
-		rTxt := new(RevocationsTxtData)
-		for _, record := range existing.Data {
-			rTxt.LoadRecord(record)
-		}
-		for _, record := range records.Data {
-			rTxt.LoadRecord(record)
-		}
-
-		revocationsTxtString := rTxt.ToRevocationsTxtString()
-		fmt.Printf("revocations.txt should be %s\n", revocationsTxtString)
-
 		// upload the created entries to bugzilla
 		attachments := make([]bugs.Attachment, 2)
-		bugStyleData := []byte(bugStyle)
 		encodedBugStyleData := base64.StdEncoding.EncodeToString(bugStyleData)
 		attachments[0] = bugs.Attachment{}
 		attachments[0].FileName = "BugData.txt"
@@ -588,7 +586,6 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 		attachments[0].Data = encodedBugStyleData
 		attachments[0].Flags = make([]bugs.AttachmentFlag, 0, 1)
 
-		revocationsTxtData := []byte(revocationsTxtString)
 		encodedRevocationsTxtData := base64.StdEncoding.EncodeToString(revocationsTxtData)
 		attachments[1] = bugs.Attachment{}
 		attachments[1].FileName = "revocations.txt"
@@ -622,6 +619,25 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 				panic(err)
 			}
 		}
+	} else {
+		// If we aren't supposed to write, save locally
+		bugDataFile, err := ioutil.TempFile("", "BugData.txt")
+		if err != nil {
+			panic(err)
+		}
+		if _, err = bugDataFile.Write(bugStyleData); err != nil {
+			panic(err);
+		}
+		fmt.Printf("BugData.txt written to %s\n", bugDataFile.Name())
+
+		revocationsFile, err := ioutil.TempFile("", "revocations.txt")
+		if err != nil {
+			panic(err)
+		}
+		if _, err = revocationsFile.Write(revocationsTxtData); err != nil {
+			panic(err);
+		}
+		fmt.Printf("revocations.txt written to %s\n", revocationsFile.Name())
 	}
 
 	return nil
