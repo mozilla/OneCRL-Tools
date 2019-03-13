@@ -20,7 +20,7 @@ import (
 const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
 const StagePrefix string = "https://settings.stage.mozaws.net"
 const RecordsPathPrefix string = "/v1/buckets/"
-const RecordsPathSuffix string = "/collections/certificates/records"
+const RecordsPathSuffix string = "/collections/onecrl/records"
 
 const PREFIX_BUGZILLA_PROD string = "https://bugzilla.mozilla.org"
 const PREFIX_BUGZILLA_STAGE string = "https://bugzilla.allizom.org"
@@ -64,9 +64,9 @@ func (config OneCRLConfig) GetRecordURL() (error, string) {
 
 const DEFAULT_ONECRLCONFIG string = ".config.yml"
 const DEFAULT_ONECRLENV string = "production"
-const DEFAULT_ONECRLBUCKET string = "blocklists"
+const DEFAULT_ONECRLBUCKET string = "security-state"
 const DEFAULT_ONECRLVERBOSE string = "no"
-const DEFAULT_COLLECTION_URL string = "https://kinto-writer.stage.mozaws.net/v1/buckets/staging/collections/certificates"
+const DEFAULT_COLLECTION_URL string = "https://settings-writer.stage.mozaws.net/v1/buckets/ecurity-state-staging/collections/onecrl"
 const DEFAULT_DEFAULT string = ""
 const DEFAULT_PREVIEW string = "no"
 const DEFAULT_ENFORCE_CRL_CHECKS string = "yes"
