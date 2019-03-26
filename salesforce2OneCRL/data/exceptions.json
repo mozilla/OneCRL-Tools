@@ -887,6 +887,18 @@
      "name": "",
      "why": "key compromise"
     }
+   },
+   {
+    "issuerName": "MHUxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xNDAyBgNVBAMTK0RpZ2lDZXJ0IFNIQTIgRXh0ZW5kZWQgVmFsaWRhdGlvbiBTZXJ2ZXIgQ0E=",
+    "serialNumber": "BFXgjf2ribj8GNKFDT/8+g==",
+    "enabled": true,
+    "details": {
+     "who": "wthayer@mozilla.com",
+     "created": "2019-03-26T04:37:00Z",
+     "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1539007",
+     "name": "",
+     "why": "key compromise"
+    }
    }
   ]
  }
