@@ -50,7 +50,6 @@ func init() {
 	flag.StringVar(&ccadbURL, "ccadburl", ccadb.URL, "URL to CCADB report file.")
 	flag.StringVar(&outDir, "o", "", "Path to the output directory.")
 	flag.BoolVar(&serverMode, "serve", false, "Start in server mode.")
-	flag.Parse()
 
 	matchedPath = path.Join(outDir, matched)
 	unmatchedTrustPath = path.Join(outDir, unmatchedTrusted)
@@ -69,7 +68,7 @@ func CCADBReader() io.ReadCloser {
 		// get the stream from a file
 		stream, err := os.Open(ccadbPath)
 		if err != nil {
-			log.Fatal("Problem loading CCADB data from file %s\n", err)
+			log.Fatalf("Problem loading CCADB data from file %s\n", err)
 		}
 		return stream
 	} else {
@@ -77,7 +76,7 @@ func CCADBReader() io.ReadCloser {
 		// get the stream from URL
 		r, err := getFromURL(ccadbURL)
 		if err != nil {
-			log.Fatal("Problem fetching CCADB data from URL %s\n", err)
+			log.Fatalf("Problem fetching CCADB data from URL %s\n", err)
 		}
 		return r
 	}
@@ -93,7 +92,7 @@ func CertdataReader() io.ReadCloser {
 		// get the stream from a file
 		stream, err := os.Open(certdataPath)
 		if err != nil {
-			log.Fatal("Problem loading certdata.txt data from file %s\n", err)
+			log.Fatalf("Problem loading certdata.txt data from file %s\n", err)
 		}
 		return stream
 	} else {
@@ -101,7 +100,7 @@ func CertdataReader() io.ReadCloser {
 		r, err := getFromURL(certdataURL)
 		// get the stream from URL
 		if err != nil {
-			log.Fatal("Problem fetching certdata.txt data from URL %s\n", err)
+			log.Fatalf("Problem fetching certdata.txt data from URL %s\n", err)
 		}
 		return r
 	}
@@ -193,7 +192,12 @@ func ListCertdata(w http.ResponseWriter, req *http.Request) {
 	}
 	resp := make([]SimpleEntry, len(c))
 	for i, e := range c {
-		resp[i] = SimpleEntry{e.PEM, e.Fingerprint, e.SerialNumber, e.DistinguishedName(), e.TrustEmail, e.TrustWeb}
+		resp[i] = SimpleEntry{PEM: e.PEM,
+			Fingerprint:  e.Fingerprint,
+			SerialNumber: e.SerialNumber,
+			Issuer:       e.DistinguishedName(),
+			TrustWeb:     e.TrustWeb,
+			TrustEmail:   e.TrustEmail}
 	}
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -211,7 +215,7 @@ func serve() {
 		log.Fatal(err)
 	}
 	// 20 per minute, with a burst of 5.
-	quota := throttled.RateQuota{throttled.PerMin(20), 5}
+	quota := throttled.RateQuota{MaxRate: throttled.PerMin(20), MaxBurst: 5}
 	rateLimiter, err := throttled.NewGCRARateLimiter(store, quota)
 	if err != nil {
 		log.Fatal(err)
@@ -251,6 +255,7 @@ func singleRun() {
 }
 
 func main() {
+	flag.Parse()
 	if serverMode {
 		serve()
 	} else {
