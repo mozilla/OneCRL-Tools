@@ -62,6 +62,8 @@ type Comment struct {
 
 const getBugDataIncludeFields string = "id,summary"
 
+const userAgent string = "github.com/mozilla/OneCRL-Tools automated bug creation"
+
 type SearchResponse struct {
 	Bugs []BugData `json:"bugs"`
 }
@@ -81,6 +83,7 @@ func CreateBug(bug Bug, conf *config.OneCRLConfig) (int, error) {
 	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(marshalled))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", userAgent)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -124,13 +127,14 @@ func AttachToBug(bugNum int, apiKey string, attachments []Attachment, conf *conf
 		}
 		attReq, err := http.NewRequest("POST", attUrl, bytes.NewBuffer(attMarshalled))
 		attReq.Header.Set("Content-Type", "application/json")
+		attReq.Header.Set("User-Agent", userAgent)
 		attClient := &http.Client{}
 		attResp, err := attClient.Do(attReq)
 		if err != nil {
 			return err
 		}
 		if "yes" == conf.OneCRLVerbose {
-			fmt.Printf("att response %s\n", attResp)
+			fmt.Printf("att response %v\n", attResp)
 		}
 	}
 	return nil
@@ -155,13 +159,14 @@ func AddCommentToBug(bugNum int, conf *config.OneCRLConfig, comment string) erro
 
 	commentReq, err := http.NewRequest("PUT", commentUrl, bytes.NewBuffer(commentMarshalled))
 	commentReq.Header.Set("Content-Type", "application/json")
+	commentReq.Header.Set("User-Agent", userAgent)
 	commentClient := &http.Client{}
 	commentResp, err := commentClient.Do(commentReq)
 	if err != nil {
 		return err
 	}
 	if "yes" == conf.OneCRLVerbose {
-		fmt.Printf("comment response %s\n", commentResp)
+		fmt.Printf("comment response %v\n", commentResp)
 	}
 	return nil
 }
@@ -181,6 +186,7 @@ func GetBugData(bugNumStrings []string, conf *config.OneCRLConfig) (SearchRespon
 		url.QueryEscape(bugNumString), url.QueryEscape(getBugDataIncludeFields))
 
 	getReq, err := http.NewRequest("GET", getUrl, nil)
+	getReq.Header.Set("User-Agent", userAgent)
 
 	client := &http.Client{}
 	resp, err := client.Do(getReq)

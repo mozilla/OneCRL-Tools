@@ -839,6 +839,54 @@
      "name": "",
      "why": "key compromise"
     }
+   },
+   {
+    "issuerName": "MIGWMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDE8MDoGA1UEAxMzQ09NT0RPIFJTQSBPcmdhbml6YXRpb24gVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENB",
+    "serialNumber": "AMN6iHtOgy68QBu3kXiaFc8=",
+    "enabled": true,
+    "details": {
+     "who": "wthayer@mozilla.com",
+     "created": "2018-08-29T17:32:10Z",
+     "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1480853",
+     "name": "",
+     "why": "key compromise"
+    }
+   },
+   {
+    "issuerName": "MEIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMRswGQYDVQQDExJSYXBpZFNTTCBTSEEyNTYgQ0E=",
+    "serialNumber": "L41amoCH4B2agSUpD8Wd2A==",
+    "enabled": true,
+    "details": {
+     "who": "wthayer@mozilla.com",
+     "created": "2018-08-29T17:33:12Z",
+     "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1480853",
+     "name": "",
+     "why": "key compromise"
+    }
+   },
+   {
+    "issuerName": "ME0xCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxJzAlBgNVBAMTHkRpZ2lDZXJ0IFNIQTIgU2VjdXJlIFNlcnZlciBDQQ==",
+    "serialNumber": "CR8HWlsGr6Sdlw/mzOv8gA==",
+    "enabled": true,
+    "details": {
+     "who": "wthayer@mozilla.com",
+     "created": "2018-08-29T17:35:07Z",
+     "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1484798",
+     "name": "",
+     "why": "key compromise"
+    }
+   },
+   {
+    "issuerName": "MGYxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTwwOgYDVQQDEzNHbG9iYWxTaWduIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIENBIC0gU0hBMjU2IC0gRzI=",
+    "serialNumber": "CpI/GtuuSFspBu4E",
+    "enabled": true,
+    "details": {
+     "who": "wthayer@mozilla.com",
+     "created": "2018-12-14T18:02:57Z",
+     "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1513609",
+     "name": "",
+     "why": "key compromise"
+    }
    }
   ]
  }
