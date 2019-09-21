@@ -461,6 +461,7 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 	nowString := now.Format("2006-01-02T15:04:05Z")
 
 	// Check that we're correctly authenticated to Kinto
+	/*
 	if shouldWrite {
 		err := checkKintoAuth(conf.KintoCollectionURL)
 
@@ -468,6 +469,7 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 			return err
 		}
 	}
+	*/
 
 	// File a bugzilla bug - so we've got a bug URL to add to the kinto entries
 	if shouldWrite && !conf.SkipBugzilla {
