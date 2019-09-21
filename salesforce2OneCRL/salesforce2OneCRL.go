@@ -248,7 +248,13 @@ func main() {
 	for _, addition := range additions.Data {
 		fmt.Printf("Mocking addition of entry to OneCRL.\n")
 		fmt.Printf("%s\n", addition)
-		fmt.Printf("Only need to do one. Exiting..\n")
+
+		err = oneCRL.AddEntries(additions, existing, true, comment)
+		if nil != err {
+			panic(err)
+		}
+
+		fmt.Printf("salesforce2OneCRL: Only adding one entry. Exiting..\n")
 		os.Exit(0)
 	}
 
