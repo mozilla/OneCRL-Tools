@@ -22,7 +22,7 @@ import (
 	"github.com/mozilla/OneCRL-Tools/config"
 	"github.com/mozilla/OneCRL-Tools/oneCRL"
 	"github.com/mozilla/OneCRL-Tools/salesforce"
-	//"github.com/mozilla/OneCRL-Tools/util"
+	"github.com/mozilla/OneCRL-Tools/util"
 )
 
 const DEFAULT_EXCEPTIONS string = "exceptions.json"
@@ -87,7 +87,7 @@ func main() {
 		stream = r.Body
 	}
 
-	/*
+	///*
 	existing, err := oneCRL.FetchExistingRevocations(conf.KintoCollectionURL + "/records")
 	if nil != err {
 		fmt.Printf("%s\n", err)
@@ -98,7 +98,7 @@ func main() {
 			panic(err)
 		}
 	}
-	*/
+	//*/
 
 	row := 1
 	revoked := salesforce.FetchRevokedCertInfo(stream)
@@ -128,13 +128,11 @@ func main() {
 
 			serialString := base64.StdEncoding.EncodeToString(serialBytes[2:])
 
-			/*
 			record := oneCRL.Record{IssuerName: issuerString, SerialNumber: serialString}
 			if util.RecordExists(record, existing) {
 				fmt.Printf("(%d, %s, %s) revocation already in OneCRL\n", row, each.CSN, each.CertName)
 				continue
 			}
-			*/
 
 			matchFound := false
 			lineErrors := ""
@@ -245,6 +243,13 @@ func main() {
 			rec.Enabled = true
 			additions.Data = append(additions.Data, rec)
 		}
+	}
+
+	for _, addition := range additions.Data {
+		fmt.Printf("Mocking addition of entry to OneCRL.\n")
+		fmt.Printf("%s\n", addition)
+		fmt.Printf("Only need to do one. Exiting..\n")
+		os.Exit(0)
 	}
 
 	/*
