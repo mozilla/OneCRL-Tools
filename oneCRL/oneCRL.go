@@ -473,6 +473,7 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 
 	// File a bugzilla bug - so we've got a bug URL to add to the kinto entries
 	if shouldWrite && !conf.SkipBugzilla {
+		fmt.Printf("Adding buzilla record!\n")
 		bug := bugs.Bug{}
 		bug.ApiKey = conf.BugzillaAPIKey
 		blocks, err := strconv.Atoi(conf.BugzillaBlockee)
