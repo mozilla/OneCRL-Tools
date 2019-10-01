@@ -41,6 +41,7 @@ type Bug struct {
 	Product     string `json:"product"`
 	Component   string `json:"component"`
 	Version     string `json:"version"`
+	Type        string `json:"type"`
 	Summary     string `json:"summary"`
 	Comment     string `json:"comment"`
 	Description string `json:"description"`

@@ -482,16 +482,19 @@ func AddEntries(records *Records, existing *Records, createBug bool, comment str
 				bug.Blocks = append(bug.Blocks, blocks)
 			}
 		}
-		bug.Product = "Toolkit"
-		bug.Component = "Blocklist Policy Requests"
-		bug.Version = "unspecified"
+		//bug.Component = "Blocklist Policy Requests"
+		bug.Product = conf.BugProduct
+		bug.Component = conf.BugComponent
+		bug.Version = conf.BugVersion
 		bug.Summary = fmt.Sprintf("CCADB entries generated %s", nowString)
 		bug.Description = conf.BugDescription
+		bug.Type = "task"
 
 		bugNum, err = bugs.CreateBug(bug, conf)
 		if err != nil {
 			panic(err)
 		}
+		fmt.Printf("Added bug: %d\n", bugNum)
 	}
 
 	for _, record := range records.Data {

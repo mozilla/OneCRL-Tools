@@ -25,6 +25,10 @@ const RecordsPathSuffix string = "/collections/onecrl/records"
 const PREFIX_BUGZILLA_PROD string = "https://bugzilla.mozilla.org"
 const PREFIX_BUGZILLA_STAGE string = "https://bugzilla.allizom.org"
 
+const DEFAULT_BUG_PRODUCT string = "Toolkit"
+const DEFAULT_BUG_COMPONENT string = "Blacklisting"
+const DEFAULT_BUG_VERSION string = "unspecified"
+
 type OneCRLConfig struct {
 	oneCRLConfig       string
 	oneCRLEnvString    string `mapstructure:"onecrlenv"`
@@ -33,6 +37,9 @@ type OneCRLConfig struct {
 	BugzillaBase       string `mapstructure:"bugzilla"`
 	BugzillaAPIKey     string `mapstructure:"bzapikey"`
 	BugzillaReviewers  string `mapstructure:"reviewers"`
+	BugProduct         string `mapstructure:"bugproduct"`
+	BugComponent       string `mapstructure:"bugcomponent"`
+	BugVersion         string `mapstructure:"bugversion"`
 	BugzillaBlockee    string `mapstructure:"blockee"`
 	BugDescription     string `mapstructure:"bugdescription"`
 	Preview            string `mapstructure:"preview"`
@@ -149,6 +156,18 @@ func (config *OneCRLConfig) loadConfig() error {
 			config.BugzillaAPIKey = os.Getenv("bzapikey")
 		}
 	}
+	
+	//Bug report settings
+	if config.BugProduct == DEFAULT_BUG_PRODUCT && loaded.BugProduct != "" {
+		config.BugProduct = loaded.BugProduct
+	}
+	if config.BugComponent == DEFAULT_BUG_COMPONENT && loaded.BugComponent != "" {
+		config.BugComponent = loaded.BugComponent
+	}
+	if config.BugVersion == DEFAULT_BUG_VERSION && loaded.BugVersion != "" {
+		config.BugVersion = loaded.BugVersion
+	}
+
 	if config.BugzillaReviewers == DEFAULT_DEFAULT && loaded.BugzillaReviewers != "" {
 		config.BugzillaReviewers = loaded.BugzillaReviewers
 	}
@@ -223,6 +242,9 @@ func DefineFlags() {
 	flag.StringVar(&conf.OneCRLVerbose, "onecrlverbose", DEFAULT_ONECRLVERBOSE, "Be verbose about OneCRL stuff")
 	flag.StringVar(&conf.BugzillaBase, "bugzilla", PREFIX_BUGZILLA_PROD, "The bugzilla instance to use by default")
 	flag.StringVar(&conf.BugzillaAPIKey, "bzapikey", DEFAULT_DEFAULT, "The bugzilla API key")
+	flag.StringVar(&conf.BugProduct, "bugproduct", DEFAULT_BUG_PRODUCT, "The defualt product of the bug")
+	flag.StringVar(&conf.BugComponent, "bugcomponent", DEFAULT_BUG_COMPONENT, "The defualt product component of the bug")
+	flag.StringVar(&conf.BugVersion, "bugversion", DEFAULT_BUG_VERSION, "The defualt component version of the bug")
 	flag.StringVar(&conf.BugzillaReviewers, "reviewers", DEFAULT_DEFAULT, "The reviewers for the buzilla attachmenets")
 	flag.StringVar(&conf.BugzillaBlockee, "blockee", DEFAULT_DEFAULT, "What bugzilla bug should this bug block")
 	flag.StringVar(&conf.BugDescription, "bugdescription", DEFAULT_DESCRIPTION, "The bugzilla comment to put in the bug")
