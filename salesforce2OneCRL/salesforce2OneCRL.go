@@ -87,7 +87,6 @@ func main() {
 		stream = r.Body
 	}
 
-	///*
 	existing, err := oneCRL.FetchExistingRevocations(conf.KintoCollectionURL + "/records")
 	if nil != err {
 		fmt.Printf("%s\n", err)
@@ -98,7 +97,6 @@ func main() {
 			panic(err)
 		}
 	}
-	//*/
 
 	row := 1
 	revoked := salesforce.FetchRevokedCertInfo(stream)
@@ -245,23 +243,8 @@ func main() {
 		}
 	}
 
-	for _, addition := range additions.Data {
-		fmt.Printf("Mocking addition of entry to OneCRL.\n")
-		fmt.Printf("%s\n", addition)
-
-		err = oneCRL.AddEntries(additions, existing, true, comment)
-		if nil != err {
-			panic(err)
-		}
-
-		fmt.Printf("salesforce2OneCRL: Only adding one entry. Exiting..\n")
-		os.Exit(0)
-	}
-
-	/*
 	err = oneCRL.AddEntries(additions, existing, true, comment)
 	if nil != err {
 		panic(err)
 	}
-	*/
 }
