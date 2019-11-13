@@ -29,7 +29,7 @@ impl From<&str> for Environment {
         match value {
             "production" | "prod" => Environment::Production,
             "staging" | "stag" => Environment::Staging,
-            _ => panic!(format!("Programming Error: '{}' is not a valid for a OneCRL environment"))
+            _ => panic!(format!("Programming Error: '{}' is not a valid for a OneCRL environment", value))
         }
     }
 }
