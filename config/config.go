@@ -26,7 +26,7 @@ const PREFIX_BUGZILLA_PROD string = "https://bugzilla.mozilla.org"
 const PREFIX_BUGZILLA_STAGE string = "https://bugzilla.allizom.org"
 
 const DEFAULT_BUG_PRODUCT string = "Toolkit"
-const DEFAULT_BUG_COMPONENT string = "Blocklisting"
+const DEFAULT_BUG_COMPONENT string = "Blocklist Policy Requests"
 const DEFAULT_BUG_VERSION string = "unspecified"
 
 type OneCRLConfig struct {
