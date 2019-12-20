@@ -10,13 +10,15 @@ use std::path::PathBuf;
 
 use crate::errors::*;
 use crate::one_crl::OneCRL;
+use rkv::backend::{BackendEnvironmentBuilder, SafeMode};
 
 pub fn write(db_path: PathBuf, onecrl: OneCRL) -> Result<()> {
-    let mut builder = Rkv::environment_builder();
+    let mut builder = Rkv::environment_builder::<SafeMode>();
     builder.set_max_dbs(2);
-    let env = match Rkv::from_env(&db_path, builder) {
+    builder.set_map_size(16777216);
+    let env = match Rkv::from_builder(&db_path, builder) {
         Ok(env) => env,
-        Err(err) => Err(format!("failed to capture the cert_storage database. Is Firefox running? Err: {}", err.to_string()))?
+        Err(err) => Err(format!("failed to capture the cert_storage database. Is Firefox running? Does the profile exist? Err: {}", err.to_string()))?
     };
     let store = match env.open_single("cert_storage", StoreOptions::create()) {
         Ok(store) => store,

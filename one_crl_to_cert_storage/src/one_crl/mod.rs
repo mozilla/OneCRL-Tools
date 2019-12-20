@@ -19,7 +19,7 @@ pub enum Environment {
 
 impl Environment {
     pub fn valid_values() -> Vec<&'static str> {
-        vec!["prod", "production", "stag", "staging"]
+        vec!["prod", "production", "stage", "staging"]
     }
 }
 
@@ -28,7 +28,7 @@ impl From<&str> for Environment {
     fn from(value: &str) -> Self {
         match value {
             "production" | "prod" => Environment::Production,
-            "staging" | "stag" => Environment::Staging,
+            "staging" | "stage" => Environment::Staging,
             _ => panic!(format!("Programming Error: '{}' is not a valid for a OneCRL environment", value))
         }
     }
