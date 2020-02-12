@@ -899,6 +899,42 @@
      "name": "",
      "why": "key compromise"
     }
+   },
+   {
+    "details" : {
+     "bug" : "1614521",
+     "created" : "2020-02-12T18:20:39Z",
+     "name" : "",
+     "who" : "jc@mozilla.com",
+     "why" : "Migrate NSS-exceptions to OneCRL - Explicitly Distrust DigiNotar Root CA"
+    },
+    "enabled" : true,
+    "pubKeyHash" : "qQOvjAe7kbDZ4/OjDG1TM5/FvUfl1r20dlmIYMBooCQ=",
+    "subject" : "MF8xCzAJBgNVBAYTAk5MMRIwEAYDVQQKEwlEaWdpTm90YXIxGjAYBgNVBAMTEURpZ2lOb3RhciBSb290IENBMSAwHgYJKoZIhvcNAQkBFhFpbmZvQGRpZ2lub3Rhci5ubA=="
+   },
+   {
+    "details" : {
+     "bug" : "1614521",
+     "created" : "2020-02-12T18:21:29Z",
+     "name" : "",
+     "who" : "jc@mozilla.com",
+     "why" : "Migrate NSS-exceptions to OneCRL - Explicitly Distrust TURKTRUST Mis-issued Intermediate CA 1, Bug 825022"
+    },
+    "enabled" : true,
+    "issuerName" : "MIGsMT0wOwYDVQQDDDRUw5xSS1RSVVNUIEVsZWt0cm9uaWsgU3VudWN1IFNlcnRpZmlrYXPEsSBIaXptZXRsZXJpMQswCQYDVQQGEwJUUjFeMFwGA1UECgxVVMOcUktUUlVTVCBCaWxnaSDEsGxldGnFn2ltIHZlIEJpbGnFn2ltIEfDvHZlbmxpxJ9pIEhpem1ldGxlcmkgQS7Fni4gKGMpIEthc8SxbSAgMjAwNQ==",
+    "serialNumber" : "CCc="
+   },
+   {
+    "details" : {
+     "bug" : "1614521",
+     "created" : "2020-02-12T18:21:41Z",
+     "name" : "",
+     "who" : "jc@mozilla.com",
+     "why" : "Migrate NSS-exceptions to OneCRL - Explicitly Distrust TURKTRUST Mis-issued Intermediate CA 2, Bug 825022"
+    },
+    "enabled" : true,
+    "issuerName" : "MIGsMT0wOwYDVQQDDDRUw5xSS1RSVVNUIEVsZWt0cm9uaWsgU3VudWN1IFNlcnRpZmlrYXPEsSBIaXptZXRsZXJpMQswCQYDVQQGEwJUUjFeMFwGA1UECgxVVMOcUktUUlVTVCBCaWxnaSDEsGxldGnFn2ltIHZlIEJpbGnFn2ltIEfDvHZlbmxpxJ9pIEhpem1ldGxlcmkgQS7Fni4gKGMpIEthc8SxbSAgMjAwNQ==",
+    "serialNumber" : "CGQ="
    }
   ]
  }
