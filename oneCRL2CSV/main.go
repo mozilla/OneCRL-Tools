@@ -38,20 +38,33 @@ type OneCRLPrinter struct {
 
 func (p OneCRLPrinter) LoadRecord(record oneCRL.Record) {
 	var (
-		issuer string
-		serial string
-		err    error
+		issuer  string
+		serial  string
+		subject string
+		pubkey  string
+		err     error
 	)
-	issuer, err = oneCRL.DNToRFC4514(record.IssuerName)
-	if nil != err {
-		log.Print(err)
+
+	if record.IssuerName == "" && record.SerialNumber == "" {
+		subject, err = oneCRL.DNToRFC4514(record.Subject)
+		if nil != err {
+			log.Print(err)
+		}
+
+		pubkey = record.PubKeyHash
+	} else {
+		issuer, err = oneCRL.DNToRFC4514(record.IssuerName)
+		if nil != err {
+			log.Print(err)
+		}
+
+		serial, err = oneCRL.SerialToString(record.SerialNumber, p.separate, p.upper)
+		if nil != err {
+			log.Print(err)
+		}
 	}
 
-	serial, err = oneCRL.SerialToString(record.SerialNumber, p.separate, p.upper)
-	if nil != err {
-		log.Print(err)
-	}
-	fmt.Printf("\"%s\",\"%s\"\n", issuer, serial)
+	fmt.Printf("\"%s\",\"%s\",\"%s\",\"%s\"\n", issuer, serial, subject, pubkey)
 }
 
 func main() {
