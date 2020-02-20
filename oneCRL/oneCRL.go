@@ -308,8 +308,12 @@ func LoadRevocationsTxtFromFile(filename string, loader OneCRLLoader) error {
 			continue
 		}
 		if 0 == strings.Index(line, "\t") {
-			log.Fatal("revocations.txt containing subject / pubkey pairs not yet supported")
-			log.Fatal("A public key hash with no subject is not valid. Exiting.")
+			if len(dn) == 0 {
+				log.Fatal("A public key hash with no subject is not valid. Exiting.")
+			}
+			record := Record{Subject: dn, PubKeyHash: strings.Trim(line, "\t")}
+			loader.LoadRecord(record)
+			continue
 		}
 		dn = line
 	}
