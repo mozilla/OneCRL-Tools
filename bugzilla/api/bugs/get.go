@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package bugs
 
 import (
@@ -44,7 +48,8 @@ func (s *Search) AddBugs(bugs ...int) *Search {
 }
 
 func (s *Search) Resource() string {
-	// Encodes the search query as described by the following doc...
+	// Encodes the search query as described by the following doc found at...
+	// https://bugzilla.readthedocs.io/en/latest/api/core/v1/bug.html#get-bug
 	//
 	// You can also use Search Bugs to return more than one bug at a time by specifying bug IDs as the search terms.
 	//
