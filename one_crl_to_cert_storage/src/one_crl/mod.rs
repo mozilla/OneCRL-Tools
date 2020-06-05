@@ -49,19 +49,20 @@ pub struct OneCRL {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct OneCRLEntry {
-    #[serde(default)]
-    #[serde(rename = "issuerName")]
-    pub issuer_name: Option<String>,
-    #[serde(default)]
-    #[serde(rename = "serialNumber")]
-    pub serial_number: Option<String>,
-    #[serde(default)]
-    #[serde(rename = "subject")]
-    pub subject_name: Option<String>,
-    #[serde(default)]
-    #[serde(rename = "pubKeyHash")]
-    pub public_key_hash: Option<String>,
+#[serde(untagged)]
+pub enum OneCRLEntry {
+    Serial {
+        #[serde(rename = "issuerName")]
+        issuer_name: String,
+        #[serde(rename = "serialNumber")]
+        serial_number: String,
+    },
+    KeyHash {
+        #[serde(rename = "subject")]
+        subject_name: String,
+        #[serde(rename = "pubKeyHash")]
+        pub_key_hash: String,
+    },
 }
 
 impl TryFrom<Environment> for OneCRL {
@@ -110,51 +111,43 @@ impl OneCRLEntry {
     pub fn to_cert_storage(&self) -> Option<Vec<u8>> {
         match self {
             // Some entries in staging appear to have white space somewhere in them, hence the trim.
-            OneCRLEntry{issuer_name: Some(issuer), serial_number: Some(serial), subject_name: None, public_key_hash: None} => {
-                let i = match base64::decode(issuer.trim()) {
+            OneCRLEntry::Serial{issuer_name, serial_number} => {
+                let i = match base64::decode(issuer_name.trim()) {
                     Ok(val) => val,
                     Err(err) => {
                         println!("WARNING: the following base64 issuer name failed to decode with \
-                        error: {}\n\t{}", err.to_string(), issuer);
+                        error: {}\n\t{}", err.to_string(), issuer_name);
                         return None;
                     }
                 };
-                let s = match base64::decode(serial.trim()) {
+                let s = match base64::decode(serial_number.trim()) {
                     Ok(val) => val,
                     Err(err) => {
                         println!("WARNING: the following base64 serial failed to decode with \
-                        error: {}\n\t{}", err.to_string(), serial);
+                        error: {}\n\t{}", err.to_string(), serial_number);
                         return None;
                     }
                 };
                 Some(vec![vec![b'i', b's'], i, s].concat())
             },
-            OneCRLEntry{issuer_name: None, serial_number: None, subject_name: Some(sub), public_key_hash: Some(pkh)} => {
-                let s = match base64::decode(sub.trim()) {
+            OneCRLEntry::KeyHash{subject_name, pub_key_hash} => {
+                let s = match base64::decode(subject_name.trim()) {
                     Ok(val) => val,
                     Err(err) => {
                         println!("WARNING: the following base64 subject name failed to decode with \
-                        error: {}\n\t{}", err.to_string(), sub);
+                        error: {}\n\t{}", err.to_string(), subject_name);
                         return None;
                     }
                 };
-                let p = match base64::decode(pkh.trim()) {
+                let p = match base64::decode(pub_key_hash.trim()) {
                     Ok(val) => val,
                     Err(err) => {
                         println!("WARNING: the following base64 public key hash failed to decode with \
-                        error: {}\n\t{}", err.to_string(), pkh);
+                        error: {}\n\t{}", err.to_string(), pub_key_hash);
                         return None;
                     }
                 };
                 Some(vec![vec![b's', b'p', b'k'], s, p].concat())
-            },
-            OneCRLEntry{issuer_name: None, serial_number: None, subject_name: None, public_key_hash: None} => {
-                println!("WARNING: entry has bad data... (None, None, None, None)");
-                return None;
-            }
-            _ => {
-                println!("WARNING: entry appears to have bad data... (neither an issuer / serial number or a subject / public key hash pair");
-                return None;
             }
         }
     }
