@@ -50,10 +50,18 @@ pub struct OneCRL {
 
 #[derive(Deserialize, Debug)]
 pub struct OneCRLEntry {
+    #[serde(default)]
     #[serde(rename = "issuerName")]
-    pub issuer_name: String,
+    pub issuer_name: Option<String>,
+    #[serde(default)]
     #[serde(rename = "serialNumber")]
-    pub serial_number: String,
+    pub serial_number: Option<String>,
+    #[serde(default)]
+    #[serde(rename = "subject")]
+    pub subject_name: Option<String>,
+    #[serde(default)]
+    #[serde(rename = "pubKeyHash")]
+    pub public_key_hash: Option<String>,
 }
 
 impl TryFrom<Environment> for OneCRL {
@@ -100,23 +108,54 @@ impl TryFrom<Url> for OneCRL {
 
 impl OneCRLEntry {
     pub fn to_cert_storage(&self) -> Option<Vec<u8>> {
-        // Some entries in staging appear to have white space somewhere in them, hence the trim.
-        let i = match base64::decode(self.issuer_name.trim()) {
-            Ok(val) => val,
-            Err(err) => {
-                println!("WARNING: the following base64 issuer name failed to decode with \
-                error: {}\n\t{}", err.to_string(), self.issuer_name);
+        match self {
+            // Some entries in staging appear to have white space somewhere in them, hence the trim.
+            OneCRLEntry{issuer_name: Some(issuer), serial_number: Some(serial), subject_name: None, public_key_hash: None} => {
+                let i = match base64::decode(issuer.trim()) {
+                    Ok(val) => val,
+                    Err(err) => {
+                        println!("WARNING: the following base64 issuer name failed to decode with \
+                        error: {}\n\t{}", err.to_string(), issuer);
+                        return None;
+                    }
+                };
+                let s = match base64::decode(serial.trim()) {
+                    Ok(val) => val,
+                    Err(err) => {
+                        println!("WARNING: the following base64 serial failed to decode with \
+                        error: {}\n\t{}", err.to_string(), serial);
+                        return None;
+                    }
+                };
+                Some(vec![vec![b'i', b's'], i, s].concat())
+            },
+            OneCRLEntry{issuer_name: None, serial_number: None, subject_name: Some(sub), public_key_hash: Some(pkh)} => {
+                let s = match base64::decode(sub.trim()) {
+                    Ok(val) => val,
+                    Err(err) => {
+                        println!("WARNING: the following base64 subject name failed to decode with \
+                        error: {}\n\t{}", err.to_string(), sub);
+                        return None;
+                    }
+                };
+                let p = match base64::decode(pkh.trim()) {
+                    Ok(val) => val,
+                    Err(err) => {
+                        println!("WARNING: the following base64 public key hash failed to decode with \
+                        error: {}\n\t{}", err.to_string(), pkh);
+                        return None;
+                    }
+                };
+                Some(vec![vec![b's', b'p', b'k'], s, p].concat())
+            },
+            OneCRLEntry{issuer_name: None, serial_number: None, subject_name: None, public_key_hash: None} => {
+                println!("WARNING: entry has bad data... (None, None, None, None)");
                 return None;
             }
-        };
-        let s = match base64::decode(self.serial_number.trim()) {
-            Ok(val) => val,
-            Err(err) => {
-                println!("WARNING: the following base64 serial failed to decode with \
-                error: {}\n\t{}", err.to_string(), self.issuer_name);
+            _ => {
+                println!("WARNING: entry appears to have bad data... (neither an issuer / serial number or a subject / public key hash pair");
                 return None;
             }
-        };
-        Some(vec![vec![b'i', b's'], i, s].concat())
+        }
     }
 }
