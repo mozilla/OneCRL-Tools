@@ -340,7 +340,7 @@ func TestTransactionsWithErrs(t *testing.T) {
 				return errors.New("Isn't that lovely?")
 			}))
 	if err := txs.Commit(); err == nil {
-		t.Fatal("An error was excepted from the final transaction commit, but got nothing")
+		t.Fatal("An error was expected from the final transaction commit, but got nothing")
 	}
 	if state1 != 1 {
 		t.Errorf("failed to commit tx 1 forwarded: got '%d', want '%d'", state1, 1)
@@ -364,7 +364,7 @@ func TestTransactionsWithErrs(t *testing.T) {
 		t.Errorf("failed to rollback tx 3: got '%d', want '%d'", state3, 2)
 	}
 	if err := txs.Close(); err == nil {
-		t.Fatal("An error was excepted from the final transaction close, but got nothing")
+		t.Fatal("An error was expected from the final transaction close, but got nothing")
 	}
 	if state1 != 2 {
 		t.Errorf("failed to close tx 1: got '%d', want '%d'", state1, 2)
