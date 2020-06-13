@@ -35,3 +35,11 @@ func (r *Record) ID() string {
 type Recorded interface {
 	ID() string
 }
+
+type DeleteResponse struct {
+	Data struct {
+		Deleted      bool   `json:"deleted"`
+		Id           string `json:"id"`
+		LastModified int64  `json:"last_modified"`
+	} `json:"data"`
+}

@@ -8,8 +8,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/mozilla/OneCRL-Tools/bugzilla/api/general"
 
@@ -22,6 +26,7 @@ import (
 )
 
 type Client struct {
+	host          string
 	base          string
 	authenticator auth.Authenticator
 	inner         *http.Client
@@ -35,7 +40,9 @@ type Client struct {
 // WITHOUT any path. The "rest" resource is automatically appended to
 // every constructed client.
 func NewClient(host string) *Client {
+	host = strings.TrimRight(host, "/")
 	return &Client{
+		host:          host,
 		base:          host + "/rest",
 		authenticator: new(auth.Unauthenticated),
 		inner:         new(http.Client),
@@ -82,6 +89,26 @@ func (c *Client) CreateAttachment(attachment *attachments.Create) (*attachments.
 func (c *Client) UpdateBug(bug *bugs.Update) (*bugs.UpdateResponse, error) {
 	resp := new(bugs.UpdateResponse)
 	return resp, c.do(bug, resp)
+}
+
+// ShowBug returns a URL formatted for the configured Bugzilla instance
+// that is of the format <SCHEME>://<HOST>/show_bug.cgi?id=<BUG_ID>
+//
+// This is the GUI web view for the given bug id.
+func (c *Client) ShowBug(id int) string {
+	return fmt.Sprintf("%s/show_bug.cgi?id=%d", c.host, id)
+}
+
+var r = regexp.MustCompile(`.*id=(?P<ID>\d+).*`)
+
+// IDFromShowBug takes in a string that was constructed from Client.ShowBug
+// and returns back the original ID number.
+func (c *Client) IDFromShowBug(url string) (int, error) {
+	matches := r.FindStringSubmatch(url)
+	if len(matches) < 2 {
+		return 0, fmt.Errorf("no matches for a bug ID found in %s", url)
+	}
+	return strconv.Atoi(matches[1])
 }
 
 func (c *Client) do(in api.Endpoint, out interface{}) error {

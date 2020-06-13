@@ -16,7 +16,7 @@ func TestNOOPTransaction(t *testing.T) {
 	if err := tx.Commit(); err != nil {
 		t.Error(err)
 	}
-	if err := tx.Rollback(); err != nil {
+	if err := tx.Rollback(nil); err != nil {
 		t.Error(err)
 	}
 	if err := tx.Close(); err != nil {
@@ -88,7 +88,7 @@ func TestTransactionRollback(t *testing.T) {
 			state += 1
 			return nil
 		}).
-		WithRollback(func() error {
+		WithRollback(func(_ error) error {
 			state -= 1
 			return nil
 		})
@@ -100,7 +100,7 @@ func TestTransactionRollback(t *testing.T) {
 	if got != want {
 		t.Fatalf("The commit function failed to move state forward: got '%d', want '%d", got, want)
 	}
-	if err := tx.Rollback(); err != nil {
+	if err := tx.Rollback(nil); err != nil {
 		t.Fatal(err)
 	}
 	got = state
@@ -117,7 +117,7 @@ func TestTransactionRollbackNOOP(t *testing.T) {
 			state += 1
 			return nil
 		}).
-		WithRollback(func() error {
+		WithRollback(func(_ error) error {
 			state -= 1
 			return nil
 		})
@@ -130,7 +130,7 @@ func TestTransactionRollbackNOOP(t *testing.T) {
 	if got != want {
 		t.Fatalf("The commit function failed to move state forward: got '%d', want '%d", got, want)
 	}
-	if err := tx.Rollback(); err != nil {
+	if err := tx.Rollback(nil); err != nil {
 		t.Fatal(err)
 	}
 	got = state
@@ -147,7 +147,7 @@ func TestTransactionRollbackConsumption(t *testing.T) {
 			state += 1
 			return nil
 		}).
-		WithRollback(func() error {
+		WithRollback(func(_ error) error {
 			state -= 1
 			return nil
 		})
@@ -159,7 +159,7 @@ func TestTransactionRollbackConsumption(t *testing.T) {
 	if got != want {
 		t.Fatalf("The commit function failed to move state forward: got '%d', want '%d", got, want)
 	}
-	if err := tx.Rollback(); err != nil {
+	if err := tx.Rollback(nil); err != nil {
 		t.Fatal(err)
 	}
 	got = state
@@ -168,7 +168,7 @@ func TestTransactionRollbackConsumption(t *testing.T) {
 		t.Fatalf("The rollback function failed to move state back: got '%d', want '%d", got, want)
 	}
 	// Run it again to assert the NOOP.
-	if err := tx.Rollback(); err != nil {
+	if err := tx.Rollback(nil); err != nil {
 		t.Fatal(err)
 	}
 	got = state
@@ -246,7 +246,7 @@ func TestTransactions(t *testing.T) {
 				state1 += 1
 				return nil
 			}).
-			WithRollback(func() error {
+			WithRollback(func(_ error) error {
 				state1 -= 1
 				return nil
 			}).
@@ -259,7 +259,7 @@ func TestTransactions(t *testing.T) {
 				state2 *= 10
 				return nil
 			}).
-			WithRollback(func() error {
+			WithRollback(func(_ error) error {
 				state2 /= 10
 				return nil
 			}).
@@ -276,7 +276,7 @@ func TestTransactions(t *testing.T) {
 	if state2 != 100 {
 		t.Errorf("failed to commit tx 2 forwarded: got '%d', want '%d'", state2, 100)
 	}
-	if err := txs.Rollback(); err != nil {
+	if err := txs.Rollback(nil); err != nil {
 		t.Fatal(err)
 	}
 	if state1 != 0 {
@@ -306,7 +306,7 @@ func TestTransactionsWithErrs(t *testing.T) {
 				state1 += 1
 				return nil
 			}).
-			WithRollback(func() error {
+			WithRollback(func(_ error) error {
 				state1 -= 1
 				return nil
 			}).
@@ -319,7 +319,7 @@ func TestTransactionsWithErrs(t *testing.T) {
 				state2 *= 10
 				return nil
 			}).
-			WithRollback(func() error {
+			WithRollback(func(_ error) error {
 				state2 /= 10
 				return errors.New("...there was supposed to be an Earth shattering KABOOM!")
 			}).
@@ -332,7 +332,7 @@ func TestTransactionsWithErrs(t *testing.T) {
 				state3 <<= 1
 				return errors.New("Where's the kaboom?")
 			}).
-			WithRollback(func() error {
+			WithRollback(func(_ error) error {
 				state3 >>= 1
 				return nil
 			}).
@@ -352,7 +352,7 @@ func TestTransactionsWithErrs(t *testing.T) {
 	if state3 != 4 {
 		t.Errorf("failed to commit tx 3 forwarded: got '%d', want '%d'", state3, 4)
 	}
-	if err := txs.Rollback(); err == nil {
+	if err := txs.Rollback(nil); err == nil {
 		t.Fatal("An error was expected from the final transaction rollback, but got nothing")
 	}
 	if state1 != 0 {
@@ -387,7 +387,7 @@ func TestTransactionsAuto(t *testing.T) {
 				state1 += 1
 				return nil
 			}).
-			WithRollback(func() error {
+			WithRollback(func(_ error) error {
 				state1 -= 1
 				return nil
 			}).
@@ -400,7 +400,7 @@ func TestTransactionsAuto(t *testing.T) {
 				state2 *= 10
 				return errors.New("")
 			}).
-			WithRollback(func() error {
+			WithRollback(func(_ error) error {
 				state2 /= 10
 				return nil
 			}).
@@ -472,7 +472,7 @@ func TestTransactionsAutoErrorAggregation(t *testing.T) {
 	}).WithClose(func() error {
 		state += 2
 		return errors.New("close")
-	}).WithRollback(func() error {
+	}).WithRollback(func(_ error) error {
 		state += 4
 		return errors.New("rollback")
 	})).AutoClose(true).AutoRollbackOnError(true).Commit()
@@ -486,5 +486,69 @@ func TestTransactionsAutoErrorAggregation(t *testing.T) {
 	want := "commit: rollback: close"
 	if got != want {
 		t.Fatalf("expected an aggregation of errors, got: '%s', want '%s", got, want)
+	}
+}
+
+func TestNoRollback(t *testing.T) {
+	state := 0
+	err := Start().Then(NewTransaction().WithCommit(func() error {
+		state += 1
+		return nil
+	}).WithRollback(func(_ error) error {
+		state += 1
+		return nil
+	})).AutoClose(true).AutoRollbackOnError(true).Commit()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if state != 1 {
+		t.Fatalf("got %d, want 1", state)
+	}
+}
+
+func TestCausePropagation(t *testing.T) {
+	state1 := 0
+	state2 := 10
+	txs := Start().
+		Then(NewTransaction().
+			WithCommit(func() error {
+				state1 += 1
+				return nil
+			}).
+			WithRollback(func(cause error) error {
+				state1 -= 1
+				if cause == nil || cause.Error() != "kaboom" {
+					t.Fatalf("unexpected error value %v", cause)
+				}
+				return nil
+			}).
+			WithClose(func() error {
+				state1 += 2
+				return nil
+			})).
+		Then(NewTransaction().
+			WithCommit(func() error {
+				state2 *= 10
+				return errors.New("kaboom")
+			}).
+			WithRollback(func(cause error) error {
+				state2 /= 10
+				if cause == nil || cause.Error() != "kaboom" {
+					t.Fatalf("unexpected error value %v", cause)
+				}
+				return nil
+			}).
+			WithClose(func() error {
+				state2 *= 100
+				return nil
+			})).AutoClose(true).AutoRollbackOnError(true)
+	if err := txs.Commit(); err == nil {
+		t.Fatal("expected an error during commit")
+	}
+	if state1 != 2 {
+		t.Errorf("got '%d', want '%d'", state1, 2)
+	}
+	if state2 != 1000 {
+		t.Errorf("got '%d', want '%d'", state2, 1000)
 	}
 }

@@ -1,0 +1,62 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Base URL for Kinto production [default: "https://firefox.settings.services.mozilla.com/v1"]
+#ONECRL_PRODUCTION="https://firefox.settings.services.mozilla.com/v1"
+
+# User account for Kinto production. Requires OneCRLProductionPassword to be set. Mutually exclusive with OneCRLProductionToken.
+#ONECRL_PRODUCTION_USER=
+
+# User password for Kinto production. Requires OneCRLProductionUser to be set. Mutually exclusive with OneCRLProductionToken.
+#ONECRL_PRODUCTION_PASSWORD=
+
+# Auth token for Kinto production. Mutually exclusive with OneCRLProductionUser and OneCRLProductionPassword.
+ONECRL_PRODUCTION_TOKEN=
+
+# Target production bucket [default: "security-state"]
+# Default is likely what you want as this is mostly configurable for testing purposes.
+#ONECRL_PRODUCTION_BUCKET="security-state"
+
+# Target production collection [default: "onecrl"]
+# Default is likely what you want as this is mostly configurable for testing purposes.
+#ONECRL_PRODUCTION_COLLECTION="onecrl"
+
+# Base URL for Kinto production [default: "https://settings.stage.mozaws.net/v1"]
+#ONECRL_STAGING="https://settings.stage.mozaws.net/v1"
+
+# User account for Kinto staging. Requires OneCRLStagingPassword to be set. Mutually exclusive with OneCRLStagingToken.
+#ONECRL_STAGING_USER=
+
+# User password for Kinto staging. Requires OneCRLStagingUser to be set. Mutually exclusive with OneCRLStagingToken.
+#ONECRL_STAGING_PASSWORD=
+
+# Auth token for Kinto staging. Mutually exclusive with OneCRLStagingUser and OneCRLStagingPassword.
+ONECRL_STAGING_TOKEN=
+
+# Target staging bucket [default: "security-state"].
+# Default is likely what you want as this is mostly configurable for testing purposes.
+# ONECRL_STAGING_BUCKET="security-state"
+
+# Target staging collection [default: "onecrl"]
+# Default is likely what you want as this is mostly configurable for testing purposes.
+# ONECRL_STAGING_COLLECTION="onecrl"
+
+# Base URL for Bugzilla [default: "https://bugzilla.mozilla.org"]
+# BUGZILLA="https://bugzilla.mozilla.org"
+
+# Mandatory API key for posting to Bugzilla. This key MUST have write permissions.
+BUGZILLA_API_KEY=
+
+# Optional. A comma separated list of of email accounts to put on CC for new bugs. If these accounts are not
+# registered with the configured Bugzilla, then a runtime error will occur when creating new bugs.
+# BUGZILLA_CC_ACCOUNTS="alice@secrets.org, eve@legit.ru"
+
+# Target logging level for this tool.
+#   Available: panic, fatal, error, warn, warning info, debug, trace
+#   Default: info
+#LOG_LEVEL="info"
+
+# Target directory for logs [default: stdout/stderr]
+# Each run of the tool will be logged to the timestamp of when it was ran.
+LOG_DIR=/opt/ccadb2onecrl/logs

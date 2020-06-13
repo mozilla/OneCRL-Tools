@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"sync"
 	"time"
@@ -60,6 +61,14 @@ func NewClient(scheme, host, base string) *Client {
 		tool:          "https://github.com/mozilla/OneCRL-Tools/kinto",
 		lock:          sync.Mutex{},
 	}
+}
+
+func NewClientFromStr(u string) (*Client, error) {
+	addr, err := url.Parse(u)
+	if err != nil {
+		return nil, err
+	}
+	return NewClient(addr.Scheme, addr.Host, addr.Path), nil
 }
 
 // WithAuthenticator sets the authentication backend for future requests. The use of this
@@ -224,6 +233,32 @@ func (c *Client) UpdateRecordWithPermissions(collection api.Getter, record api.R
 		return err
 	}
 	return c.do(req, &payload, okOrCreated)
+}
+
+// Delete deletes the given record from the given collection.
+//
+// For details, please see:
+// https://docs.kinto-storage.org/en/stable/api/1.x/records.html#delete-stored-records
+func (c *Client) Delete(collection api.Getter, record api.Recorded) (*api.DeleteResponse, error) {
+	resp := new(api.DeleteResponse)
+	req, err := c.newRequest(http.MethodDelete, collection.Get()+"/"+record.ID(), nil)
+	if err != nil {
+		return resp, err
+	}
+	return resp, c.do(req, resp, ok)
+}
+
+// SignerStatusFor retrieves the Kinto Signer signer status for the given collection.
+//
+// For details on the Kinto Signer plugin, please see:
+// https://github.com/Kinto/kinto-signer
+func (c *Client) SignerStatusFor(collection api.Patcher) (*kintosigner.Status, error) {
+	resp := new(kintosigner.Status)
+	req, err := c.newRequest(http.MethodGet, collection.Patch(), nil)
+	if err != nil {
+		return resp, err
+	}
+	return resp, c.do(req, resp, ok)
 }
 
 // ToReview puts the given collection into the "to-review" state.

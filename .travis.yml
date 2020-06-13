@@ -2,7 +2,6 @@ env:
   global:
     - BUGZILLA_DEV_HOST="https://bugzilla-dev.allizom.org"
     - BUGZILLA_DEV_API_KEY=PcKr3LgH6bL0WDXlPuC0wLhFTUuhT8UJSvPKF0UQ
-    - KINTO_TESTDIR=${TRAVIS_BUILD_DIR}/kinto/local
 matrix:
     include:
         - language: go
@@ -16,7 +15,13 @@ matrix:
                 # Now install dependencies
                - go get -t ./...
           script:
-              - go test -v ./...
+              # Due to both the `kinto` package and the `ccadb2OneCRL` package wanting
+              # to use docker-compose to have a test Kinto instance around we need to
+              # run these tests sequentially or they will clobber each other (hence `-p 1`).
+              # If you know how to easily get two Kintos running at the same time
+              # without stepping over each others names/ports/anything else then please
+              # do so and remove this `-p 1`.
+              - go test -v -p 1 ./...
               - tests/integration.sh
         - language: rust
           rust: 1.39.0
