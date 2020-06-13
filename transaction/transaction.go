@@ -5,6 +5,8 @@
 package transaction // import "github.com/mozilla/OneCRL-Tools/transaction"
 
 import (
+	"sync"
+
 	"github.com/pkg/errors"
 )
 
@@ -33,9 +35,12 @@ type Transactor interface {
 // a struct that contains closures, which have themselves captured the target
 // pointers for state mutation.
 type Transaction struct {
-	commit   Work
-	rollback Work
-	close    Work
+	commit         Work
+	rollback       Work
+	close          Work
+	commitRunner   sync.Once
+	rollbackRunner sync.Once
+	closeRunner    sync.Once
 }
 
 func NewTransaction() *Transaction {
@@ -82,25 +87,31 @@ func (tx *Transaction) WithClose(close Work) *Transaction {
 // Runs the configured commit function.
 // This action effectively "consumes" the
 // inner function by setting it to a NOOP.
-func (tx *Transaction) Commit() error {
-	defer func() { tx.commit = NOOP }()
-	return tx.commit()
+func (tx *Transaction) Commit() (err error) {
+	tx.commitRunner.Do(func() {
+		err = tx.commit()
+	})
+	return err
 }
 
 // Runs the configured rollback function.
 // This action effectively "consumes" the
 // inner function by setting it to a NOOP.
-func (tx *Transaction) Rollback() error {
-	defer func() { tx.rollback = NOOP }()
-	return tx.rollback()
+func (tx *Transaction) Rollback() (err error) {
+	tx.rollbackRunner.Do(func() {
+		err = tx.rollback()
+	})
+	return err
 }
 
 // Runs the configured close function.
 // This action effectively "consumes" the
 // inner function by setting it to a NOOP.
-func (tx *Transaction) Close() error {
-	defer func() { tx.close = NOOP }()
-	return tx.close()
+func (tx *Transaction) Close() (err error) {
+	tx.closeRunner.Do(func() {
+		err = tx.close()
+	})
+	return err
 }
 
 // A Transactions can encapsulate any number of individual
@@ -118,6 +129,8 @@ func (tx *Transaction) Close() error {
 type Transactions struct {
 	txQueue       []Transactor
 	rollbackStack []Transactor
+	autoClose     bool
+	autoRollback  bool
 }
 
 func Start() *Transactions {
@@ -125,6 +138,33 @@ func Start() *Transactions {
 		txQueue:       []Transactor{},
 		rollbackStack: []Transactor{},
 	}
+}
+
+// AutoClose sets a flag that is checked in Commit. If AutoClose is
+// true, then the Transactions.Close function is deferred before
+// any attempts to commit are executed.
+//
+// If AutoRollbackonError is set then this closure will be executed
+// AFTER the rollbacks are attempted (if they are attempted).
+//
+// If any errors occur during closure then they will be wrapped up
+// and reported by the Commit procedure itself.
+func (txs *Transactions) AutoClose(should bool) *Transactions {
+	txs.autoClose = should
+	return txs
+}
+
+// AutoRollbackOnError sets a flag that is checked in Commit. If
+// AutoRollbackOnError is true then a function is deferred that checks
+// the result of Commit. If the returned error is non-nil, then
+// Transactions.Rollback is called. Else, if error is nil then
+// no operations is taken.
+//
+// If any errors occur during rollback then they will be wrapped up
+// and reported by the Commit procedure itself.
+func (txs *Transactions) AutoRollbackOnError(should bool) *Transactions {
+	txs.autoRollback = should
+	return txs
 }
 
 // Then is a fluid interface for building Transactions.
@@ -135,32 +175,47 @@ func Start() *Transactions {
 //			Then(...)
 //	defer txs.Close()
 //	txs.Commit()
-func (t *Transactions) Then(tx Transactor) *Transactions {
-	t.txQueue = append(t.txQueue, tx)
-	return t
+func (txs *Transactions) Then(tx Transactor) *Transactions {
+	txs.txQueue = append(txs.txQueue, tx)
+	return txs
 }
 
 // Commit commits all composited transactors in a FIFO manner.
 // An error is returned immediately upon the failure of a single
 // commit.
-func (t *Transactions) Commit() error {
-	for _, tx := range t.txQueue {
-		t.rollbackStack = append(t.rollbackStack, tx)
-		if err := tx.Commit(); err != nil {
-			return err
+func (txs *Transactions) Commit() (err error) {
+	errors := new(wrappedErrors)
+	defer func() {
+		err = errors.inner
+	}()
+	if txs.autoClose {
+		defer func() {
+			errors.add(txs.Close())
+		}()
+	}
+	if txs.autoRollback {
+		defer func() {
+			errors.add(txs.Rollback())
+		}()
+	}
+	for _, tx := range txs.txQueue {
+		txs.rollbackStack = append(txs.rollbackStack, tx)
+		if e := tx.Commit(); e != nil {
+			errors.add(e)
+			break
 		}
 	}
-	return nil
+	return err
 }
 
 // Rollback rolls back any transactor which had its
 // Commit method called (whether it returned and error or not).
 //
 // This rollback is done in a LIFO manner.
-func (t *Transactions) Rollback() error {
+func (txs *Transactions) Rollback() error {
 	err := wrappedErrors{}
-	for i := len(t.rollbackStack) - 1; i >= 0; i-- {
-		err.add(t.rollbackStack[i].Rollback())
+	for i := len(txs.rollbackStack) - 1; i >= 0; i-- {
+		err.add(txs.rollbackStack[i].Rollback())
 	}
 	return err.inner
 }
@@ -168,12 +223,12 @@ func (t *Transactions) Rollback() error {
 // Close closes out all composited transactors.
 //
 // Closing is done a FIFO manner and is done all
-// composited transactors, regardless if their
-// Commit or Rollback functions were called.
-func (t *Transactions) Close() error {
+// composited transactors if-and-only if their
+// commit function was called.
+func (txs *Transactions) Close() error {
 	err := wrappedErrors{}
-	for _, tx := range t.txQueue {
-		err.add(tx.Close())
+	for i := len(txs.rollbackStack) - 1; i >= 0; i-- {
+		err.add(txs.rollbackStack[i].Close())
 	}
 	return err.inner
 }
