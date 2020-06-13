@@ -2,9 +2,12 @@ env:
   global:
     - BUGZILLA_DEV_HOST="https://bugzilla-dev.allizom.org"
     - BUGZILLA_DEV_API_KEY=PcKr3LgH6bL0WDXlPuC0wLhFTUuhT8UJSvPKF0UQ
+    - KINTO_TESTDIR=${TRAVIS_BUILD_DIR}/kinto/local
 matrix:
     include:
         - language: go
+          services:
+            - docker
           go: stable
           install:
                # Handle forks by copying this checkout to the expected fork directory
@@ -20,5 +23,3 @@ matrix:
           script:
               - cd one_crl_to_cert_storage
               - cargo build --verbose
-
-
