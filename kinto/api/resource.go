@@ -25,3 +25,7 @@ type Poster interface {
 type Patcher interface {
 	Patch() string
 }
+
+type Deleter interface {
+	Delete() string
+}

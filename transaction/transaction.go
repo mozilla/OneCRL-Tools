@@ -15,9 +15,15 @@ import (
 // it is intended to mutate/rollback/close.
 type Work = func() error
 
+type Rollback = func(cause error) error
+
 // NOOP is a convenience function for explicitly declaring that no
 // particular behavior is intended for a specific unit of work.
 func NOOP() error {
+	return nil
+}
+
+func NOOPRollback(_ error) error {
 	return nil
 }
 
@@ -26,7 +32,7 @@ func NOOP() error {
 // destruct any resources it may be holding via the Close function.
 type Transactor interface {
 	Commit() error
-	Rollback() error
+	Rollback(cause error) error
 	Close() error
 }
 
@@ -62,7 +68,7 @@ type Transactor interface {
 //
 type Transaction struct {
 	commit         Work
-	rollback       Work
+	rollback       Rollback
 	close          Work
 	commitRunner   sync.Once
 	rollbackRunner sync.Once
@@ -72,7 +78,7 @@ type Transaction struct {
 func NewTransaction() *Transaction {
 	return &Transaction{
 		commit:   NOOP,
-		rollback: NOOP,
+		rollback: NOOPRollback,
 		close:    NOOP,
 	}
 }
@@ -90,9 +96,9 @@ func (tx *Transaction) WithCommit(commit Work) *Transaction {
 
 // Sets the inner rollback function.
 // A nil input defaults to NOOP.
-func (tx *Transaction) WithRollback(rollback Work) *Transaction {
+func (tx *Transaction) WithRollback(rollback Rollback) *Transaction {
 	if rollback == nil {
-		tx.rollback = NOOP
+		tx.rollback = NOOPRollback
 	} else {
 		tx.rollback = rollback
 	}
@@ -123,9 +129,9 @@ func (tx *Transaction) Commit() (err error) {
 // Runs the configured rollback function.
 // This action effectively "consumes" the
 // inner function.
-func (tx *Transaction) Rollback() (err error) {
+func (tx *Transaction) Rollback(cause error) (err error) {
 	tx.rollbackRunner.Do(func() {
-		err = tx.rollback()
+		err = tx.rollback(cause)
 	})
 	return err
 }
@@ -221,7 +227,10 @@ func (txs *Transactions) Commit() (err error) {
 	}
 	if txs.autoRollback {
 		defer func() {
-			errors.add(txs.Rollback())
+			if errors.inner != nil {
+				cause := errors.inner
+				errors.add(txs.Rollback(cause))
+			}
 		}()
 	}
 	for _, tx := range txs.txQueue {
@@ -238,10 +247,10 @@ func (txs *Transactions) Commit() (err error) {
 // Commit method called (whether it returned and error or not).
 //
 // This rollback is done in a LIFO manner.
-func (txs *Transactions) Rollback() error {
+func (txs *Transactions) Rollback(cause error) error {
 	err := wrappedErrors{}
 	for i := len(txs.rollbackStack) - 1; i >= 0; i-- {
-		err.add(txs.rollbackStack[i].Rollback())
+		err.add(txs.rollbackStack[i].Rollback(cause))
 	}
 	return err.inner
 }

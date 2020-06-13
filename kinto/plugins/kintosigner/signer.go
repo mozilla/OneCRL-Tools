@@ -12,6 +12,10 @@ type KintoStatus struct {
 	Status string `json:"status"`
 }
 
+func (s *Status) InReview() bool {
+	return s.Data.Status == "to-review"
+}
+
 func WIP() Status {
 	return Status{Data: KintoStatus{Status: "work-in-progress"}}
 }

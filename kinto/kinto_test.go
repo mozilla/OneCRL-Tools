@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -72,10 +73,11 @@ var devRW = &authz.Permissions{
 }
 
 func TestMain(m *testing.M) {
-	dir := os.Getenv("KINTO_TESTDIR")
-	if dir == "" {
-		os.Exit(m.Run())
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
 	}
+	dir := filepath.Join(cwd, "local")
 	down := exec.Command("docker-compose", "down")
 	down.Dir = dir
 	out, err := down.CombinedOutput()
@@ -186,9 +188,20 @@ func TestKintoSigner(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	status, err := local.SignerStatusFor(onecrl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status.InReview() {
+		t.Fatal("collection is unexpectedly in review")
+	}
 	err = local.ToReview(onecrl)
 	if err != nil {
 		t.Fatal(err)
+	}
+	status, err = local.SignerStatusFor(onecrl)
+	if !status.InReview() {
+		t.Fatal("collection is unexpectedly not in review")
 	}
 	err = local.ToSign(onecrl)
 	if err != nil {
@@ -207,6 +220,33 @@ func TestNewRecord(t *testing.T) {
 	err := local.NewRecord(NewOneCRL(), record)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestDeleteRecord(t *testing.T) {
+	o := NewOneCRL()
+	record := &OneCRLRecord{
+		IssuerName: "honest achmed's",
+	}
+	err := local.NewRecord(o, record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := local.Delete(o, record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !resp.Data.Deleted {
+		t.Fatalf("kinto deletion response says that '%s' was not deleted", record.ID())
+	}
+	err = local.AllRecords(o)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, r := range o.Data {
+		if r.ID() == record.ID() {
+			t.Fatalf("expected '%s' to be deleted but it was not", r.ID())
+		}
 	}
 }
 

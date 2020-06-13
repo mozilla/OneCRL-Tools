@@ -92,3 +92,23 @@ func TestAttachment(t *testing.T) {
 		t.Log(err)
 	}
 }
+
+func TestClient_IDFromShowBug(t *testing.T) {
+	c := bugzillaDev()
+	got, err := c.IDFromShowBug("https://bugzilla-dev.allizom.org/show_bug.cgi?id=1629069")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := 1629069
+	if got != want {
+		t.Errorf("unexpected bug ID, got %d want %d", got, want)
+	}
+}
+
+func TestClient_IDFromShowBugErr(t *testing.T) {
+	c := bugzillaDev()
+	got, err := c.IDFromShowBug("https://bugzilla-dev.allizom.org/show_bug.cgi?ids=1629069")
+	if err == nil {
+		t.Fatalf("expected an empty match error, got the id %d", got)
+	}
+}

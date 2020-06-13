@@ -34,8 +34,8 @@ type Token struct {
 	Token string
 }
 
-func (t *Token) Authenticate(header http.Header) {
-	header.Set("Authorization", "Bearer "+t.Token)
+func (t *Token) Authenticate(r *http.Request) {
+	r.Header.Set("Authorization", "Bearer "+t.Token)
 }
 
 type Unauthenticated struct{}
