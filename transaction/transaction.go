@@ -34,6 +34,32 @@ type Transactor interface {
 // change in state (to the best of your ability). Idiomatically, this is usually
 // a struct that contains closures, which have themselves captured the target
 // pointers for state mutation.
+//
+// A Transaction object ITSELF is not thread safe (the setters are not in away locked).
+// However, you may wish to lock your own data that is being captured by a given transaction.
+// In this case, a common pattern is to build a Transaction whose Commit is the capture
+// of a lock and whose Close is the release of said lock. This may then be given as a
+// step in a particular Transactions object. For example...
+//
+//	l := sync.Mutex{}
+//	state := 0
+//	err := Start().
+//		Then(NewTransaction().
+//			WithCommit(func() error {
+//				l.Lock()
+//				return nil
+//			}).
+//			WithClose(func() error {
+//				l.Unlock()
+//				return nil
+//			})).
+//		Then(NewTransaction().
+//			WithCommit(func() error {
+//				state += 1
+//				return nil
+//			})).
+//		AutoClose(true).Commit()
+//
 type Transaction struct {
 	commit         Work
 	rollback       Work
