@@ -321,7 +321,7 @@ func TestTransactionsWithErrs(t *testing.T) {
 			}).
 			WithRollback(func() error {
 				state2 /= 10
-				return errors.New("...there was suppose to be an Earth shattering KABOOM!")
+				return errors.New("...there was supposed to be an Earth shattering KABOOM!")
 			}).
 			WithClose(func() error {
 				state2 *= 100
@@ -341,7 +341,7 @@ func TestTransactionsWithErrs(t *testing.T) {
 				return errors.New("Isn't that lovely?")
 			}))
 	if err := txs.Commit(); err == nil {
-		t.Fatal("An error was excepted from the final transaction commit, but got nothing")
+		t.Fatal("An error was expected from the final transaction commit, but got nothing")
 	}
 	if state1 != 1 {
 		t.Errorf("failed to commit tx 1 forwarded: got '%d', want '%d'", state1, 1)
@@ -353,7 +353,7 @@ func TestTransactionsWithErrs(t *testing.T) {
 		t.Errorf("failed to commit tx 3 forwarded: got '%d', want '%d'", state3, 4)
 	}
 	if err := txs.Rollback(); err == nil {
-		t.Fatal("An error was excepted from the final transaction rollback, but got nothing")
+		t.Fatal("An error was expected from the final transaction rollback, but got nothing")
 	}
 	if state1 != 0 {
 		t.Errorf("failed to rollback tx 1: got '%d', want '%d'", state1, 0)
@@ -365,7 +365,7 @@ func TestTransactionsWithErrs(t *testing.T) {
 		t.Errorf("failed to rollback tx 3: got '%d', want '%d'", state3, 2)
 	}
 	if err := txs.Close(); err == nil {
-		t.Fatal("An error was excepted from the final transaction close, but got nothing")
+		t.Fatal("An error was expected from the final transaction close, but got nothing")
 	}
 	if state1 != 2 {
 		t.Errorf("failed to close tx 1: got '%d', want '%d'", state1, 2)
