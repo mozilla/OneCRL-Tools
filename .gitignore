@@ -1,5 +1,5 @@
 **.idea
 **/target
-*.yml
-*.yml*
+*config-example.yml
+*config-sample.yml
 obsDiffCCADB/generated
