@@ -5,6 +5,7 @@
 package transaction
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -374,5 +375,116 @@ func TestTransactionsWithErrs(t *testing.T) {
 	}
 	if state3 != 8 {
 		t.Errorf("failed to close tx 3: got '%d', want '%d'", state3, 8)
+	}
+}
+
+func TestTransactionsAuto(t *testing.T) {
+	state1 := 0
+	state2 := 10
+	txs := Start().
+		Then(NewTransaction().
+			WithCommit(func() error {
+				state1 += 1
+				return nil
+			}).
+			WithRollback(func() error {
+				state1 -= 1
+				return nil
+			}).
+			WithClose(func() error {
+				state1 += 2
+				return nil
+			})).
+		Then(NewTransaction().
+			WithCommit(func() error {
+				state2 *= 10
+				return errors.New("")
+			}).
+			WithRollback(func() error {
+				state2 /= 10
+				return nil
+			}).
+			WithClose(func() error {
+				state2 *= 100
+				return nil
+			})).AutoClose(true).AutoRollbackOnError(true)
+	if err := txs.Commit(); err == nil {
+		t.Fatal("expected an error during commit")
+	}
+	if state1 != 2 {
+		t.Errorf("got '%d', want '%d'", state1, 2)
+	}
+	if state2 != 1000 {
+		t.Errorf("got '%d', want '%d'", state2, 1000)
+	}
+}
+
+// NOTE: please run this with `go test -race .` in order
+// to get an accurate read on this test.
+func TestUserLocks(t *testing.T) {
+	l := sync.Mutex{}
+	wg := sync.WaitGroup{}
+	state := 0
+	wg.Add(2)
+	tx1 := Start().
+		Then(NewTransaction().
+			WithCommit(func() error {
+				l.Lock()
+				return nil
+			}).
+			WithClose(func() error {
+				wg.Done()
+				l.Unlock()
+				return nil
+			})).
+		Then(NewTransaction().WithCommit(func() error {
+			state += 1
+			return nil
+		})).AutoClose(true)
+	tx2 := Start().
+		Then(NewTransaction().
+			WithCommit(func() error {
+				l.Lock()
+				return nil
+			}).
+			WithClose(func() error {
+				wg.Done()
+				l.Unlock()
+				return nil
+			})).
+		Then(NewTransaction().WithCommit(func() error {
+			state += 2
+			return nil
+		})).AutoClose(true)
+	go tx1.Commit()
+	go tx2.Commit()
+	wg.Wait()
+	if state != 3 {
+		t.Fatalf("got '%d', want '%d'", state, 3)
+	}
+}
+
+func TestTransactionsAutoErrorAggregation(t *testing.T) {
+	state := 0
+	err := Start().Then(NewTransaction().WithCommit(func() error {
+		state += 1
+		return errors.New("commit")
+	}).WithClose(func() error {
+		state += 2
+		return errors.New("close")
+	}).WithRollback(func() error {
+		state += 4
+		return errors.New("rollback")
+	})).AutoClose(true).AutoRollbackOnError(true).Commit()
+	if err == nil {
+		t.Fatal("expected an error, got nothing")
+	}
+	if state != 7 {
+		t.Errorf("got '%d', want '%d'", state, 7)
+	}
+	got := err.Error()
+	want := "commit: rollback: close"
+	if got != want {
+		t.Fatalf("expected an aggregation of errors, got: '%s', want '%s", got, want)
 	}
 }
