@@ -112,7 +112,7 @@ func (tx *Transaction) WithClose(close Work) *Transaction {
 
 // Runs the configured commit function.
 // This action effectively "consumes" the
-// inner function by setting it to a NOOP.
+// inner function.
 func (tx *Transaction) Commit() (err error) {
 	tx.commitRunner.Do(func() {
 		err = tx.commit()
