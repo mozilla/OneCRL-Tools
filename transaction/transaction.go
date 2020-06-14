@@ -122,7 +122,7 @@ func (tx *Transaction) Commit() (err error) {
 
 // Runs the configured rollback function.
 // This action effectively "consumes" the
-// inner function by setting it to a NOOP.
+// inner function.
 func (tx *Transaction) Rollback() (err error) {
 	tx.rollbackRunner.Do(func() {
 		err = tx.rollback()
