@@ -132,7 +132,7 @@ func (tx *Transaction) Rollback() (err error) {
 
 // Runs the configured close function.
 // This action effectively "consumes" the
-// inner function by setting it to a NOOP.
+// inner function.
 func (tx *Transaction) Close() (err error) {
 	tx.closeRunner.Do(func() {
 		err = tx.close()
