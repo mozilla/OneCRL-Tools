@@ -35,7 +35,7 @@ type Transactor interface {
 // a struct that contains closures, which have themselves captured the target
 // pointers for state mutation.
 //
-// A Transaction object ITSELF is not thread safe (the setters are not in away locked).
+// A Transaction object ITSELF is not thread safe (the setters are not in any way locked).
 // However, you may wish to lock your own data that is being captured by a given transaction.
 // In this case, a common pattern is to build a Transaction whose Commit is the capture
 // of a lock and whose Close is the release of said lock. This may then be given as a
