@@ -16,17 +16,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mozilla/OneCRL-Tools/kinto/api/authz"
-
-	"github.com/mozilla/OneCRL-Tools/kinto/plugins/kintosigner"
-
-	"github.com/mozilla/OneCRL-Tools/kinto/api/batch"
-
-	"github.com/mozilla/OneCRL-Tools/kinto/api/buckets"
-
-	"github.com/mozilla/OneCRL-Tools/kinto/api/auth"
-
 	"github.com/mozilla/OneCRL-Tools/kinto/api"
+	"github.com/mozilla/OneCRL-Tools/kinto/api/auth"
+	"github.com/mozilla/OneCRL-Tools/kinto/api/authz"
+	"github.com/mozilla/OneCRL-Tools/kinto/api/batch"
+	"github.com/mozilla/OneCRL-Tools/kinto/api/buckets"
+	"github.com/mozilla/OneCRL-Tools/kinto/plugins/kintosigner"
 )
 
 type expectations map[int]bool
@@ -362,10 +357,9 @@ func (c *Client) newRequest(method string, endpoint string, body interface{}) (*
 }
 
 func (c *Client) do(r *http.Request, target interface{}, accept expectations) error {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	c.authenticator.Authenticate(r)
-	if c.backoff > 0 {
+	backoff := c.getBackoff()
+	c.authenticate(r)
+	if backoff > 0 {
 		// Kinto kindly asks us that we backoff when necessary
 		// See https://docs.kinto-storage.org/en/stable/api/1.x/backoff.html
 		log.Printf("Kinto has asked us to backoff for %d seconds\n", c.backoff)
@@ -375,15 +369,18 @@ func (c *Client) do(r *http.Request, target interface{}, accept expectations) er
 	if err != nil {
 		return err
 	}
-	backoff := resp.Header.Get("Backoff")
-	if backoff != "" {
-		b, err := strconv.Atoi(backoff)
+	receivedBackoff := resp.Header.Get("Backoff")
+	if receivedBackoff != "" {
+		b, err := strconv.Atoi(receivedBackoff)
 		if err != nil {
-			return fmt.Errorf("Kinto gave us a Backoff header, but it did not parse to an integer. Got '%s'", backoff)
+			return fmt.Errorf(
+				"Kinto gave us a Backoff header, but "+
+					"it did not parse to an integer. Got '%s'",
+				receivedBackoff)
 		}
-		c.backoff = time.Second * time.Duration(b)
+		c.setBackoff(time.Second * time.Duration(b))
 	} else {
-		c.backoff = time.Duration(0)
+		c.setBackoff(time.Duration(0))
 	}
 	if accept != nil {
 		if _, ok := accept[resp.StatusCode]; !ok {
@@ -400,4 +397,22 @@ func (c *Client) do(r *http.Request, target interface{}, accept expectations) er
 		return json.NewDecoder(resp.Body).Decode(&target)
 	}
 	return nil
+}
+
+func (c *Client) authenticate(r *http.Request) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.authenticator.Authenticate(r)
+}
+
+func (c *Client) getBackoff() time.Duration {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	return c.backoff
+}
+
+func (c *Client) setBackoff(backoff time.Duration) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.backoff = backoff
 }

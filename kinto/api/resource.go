@@ -8,8 +8,8 @@ package api
 // a given endpoint. The returned string should fulfill
 // all paths BEYOND the base path and "rest" resource (proto>://<hostname>/rest).
 //
-// E.G. If we are accessing a bug at "https://bugzilla-dev.allizom.org" then
-// this method should return "/bug/<id>"
+// E.G. If we are bucket a resource at "https://firefox.settings.services.mozilla.com/v1" then
+// this method should return "/buckets/<name>"
 type Resourcer interface {
 	Resource() string
 }
