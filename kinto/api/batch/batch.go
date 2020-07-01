@@ -7,9 +7,8 @@ package batch
 import (
 	"math"
 
-	"github.com/mozilla/OneCRL-Tools/kinto/api/authz"
-
 	"github.com/mozilla/OneCRL-Tools/kinto/api"
+	"github.com/mozilla/OneCRL-Tools/kinto/api/authz"
 )
 
 // https://docs.kinto-storage.org/en/stable/api/1.x/batch.html
