@@ -7,7 +7,7 @@ package onecrl
 import (
 	"fmt"
 
-	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/common"
+	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/set"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -18,7 +18,7 @@ import (
 // Asking if a CCADB entry is within this type is effectively asking whether it is in
 // at least of the aforementioned maps.
 type Set struct {
-	*common.SetImpl
+	*set.SetImpl
 }
 
 func NewSetFrom(records *OneCRL) *Set {
@@ -33,12 +33,12 @@ func NewSetFrom(records *OneCRL) *Set {
 }
 
 func NewSet() *Set {
-	return &Set{SetImpl: common.NewSetImpl(func() common.Set {
+	return &Set{SetImpl: set.NewSetImpl(func() set.Set {
 		return NewSet()
 	})}
 }
 
-func (s *Set) Add(record common.Record) {
+func (s *Set) Add(record set.Record) {
 	_, ok := record.(*Record)
 	if !ok {
 		log.WithField("record", record).
@@ -48,7 +48,7 @@ func (s *Set) Add(record common.Record) {
 	s.SetImpl.Add(record)
 }
 
-func (s *Set) Get(record common.Record) *Record {
+func (s *Set) Get(record set.Record) *Record {
 	r := s.SetImpl.Get(record)
 	if r == nil {
 		return nil

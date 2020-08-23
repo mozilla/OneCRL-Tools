@@ -7,12 +7,12 @@ package ccadb
 import (
 	"fmt"
 
-	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/common"
+	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/set"
 	log "github.com/sirupsen/logrus"
 )
 
 type Set struct {
-	*common.SetImpl
+	*set.SetImpl
 }
 
 func NewSetFrom(records CCADB) *Set {
@@ -29,10 +29,10 @@ func NewSetFrom(records CCADB) *Set {
 }
 
 func NewSet() *Set {
-	return &Set{SetImpl: common.NewSetImpl(func() common.Set { return NewSet() })}
+	return &Set{SetImpl: set.NewSetImpl(func() set.Set { return NewSet() })}
 }
 
-func (s *Set) Add(record common.Record) {
+func (s *Set) Add(record set.Record) {
 	_, ok := record.(*Certificate)
 	if !ok {
 		log.WithField("record", record).

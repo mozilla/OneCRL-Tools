@@ -15,7 +15,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/common"
+	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/set"
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/utils"
 	"github.com/pkg/errors"
 
@@ -79,7 +79,7 @@ func FromReader(reader io.Reader) ([]*Certificate, error) {
 //
 // An error will be logged and a nil IssuerSerial returned if no certificate is present or if
 // the certificate cannot be parsed..
-func (c *Certificate) IssuerSerial() *common.IssuerSerial {
+func (c *Certificate) IssuerSerial() *set.IssuerSerial {
 	cert, err := c.ParseCertificate()
 	if err != nil {
 		log.WithError(err).
@@ -89,7 +89,7 @@ func (c *Certificate) IssuerSerial() *common.IssuerSerial {
 	}
 	issuer := cert.Issuer.ToRDNSequence()
 	utils.Normalize(&issuer)
-	is := common.NewIssuerSerial(&issuer, cert.SerialNumber.Bytes())
+	is := set.NewIssuerSerial(&issuer, cert.SerialNumber.Bytes())
 	return &is
 }
 
@@ -100,7 +100,7 @@ func (c *Certificate) IssuerSerial() *common.IssuerSerial {
 //
 // An error will be logged and a nil SubjectKeyHash returned if no certificate is present or if
 // the certificate cannot be parsed..
-func (c *Certificate) SubjectKeyHash() *common.SubjectKeyHash {
+func (c *Certificate) SubjectKeyHash() *set.SubjectKeyHash {
 	cert, err := c.ParseCertificate()
 	if err != nil {
 		log.WithError(err).
@@ -113,7 +113,7 @@ func (c *Certificate) SubjectKeyHash() *common.SubjectKeyHash {
 	hasher := sha256.New()
 	hasher.Write(cert.RawSubjectPublicKeyInfo)
 	hash := hasher.Sum(nil)
-	skh := common.NewSubjectKeyHash(&subject, hash)
+	skh := set.NewSubjectKeyHash(&subject, hash)
 	return &skh
 }
 
@@ -144,6 +144,6 @@ func (c *Certificate) PEM() string {
 
 // Since the CCADB has the physical certificate, we can represent ourselves as
 // either an IssuerSerial OR a SubjectKeyHash.
-func (c *Certificate) Type() common.Type {
-	return common.Either
+func (c *Certificate) Type() set.Type {
+	return set.Either
 }
