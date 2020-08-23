@@ -9,7 +9,7 @@ import (
 	"encoding/asn1"
 	"fmt"
 
-	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/common"
+	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/set"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/ccadb"
@@ -59,17 +59,17 @@ type Details struct {
 	Created string `json:"created"`
 }
 
-func (r *Record) Type() common.Type {
+func (r *Record) Type() set.Type {
 	if r.PubKeyHash != "" && r.Subject != "" {
-		return common.SubjectKeyHashType
+		return set.SubjectKeyHashType
 	} else if r.IssuerName != "" && r.SerialNumber != "" {
-		return common.IssuerSerialType
+		return set.IssuerSerialType
 	}
 	log.WithField("entry", r).Panic("a OneCRL entry was found that does not appear to be either a " +
 		"SubjectPubKeyHash type nor the more common IssuerSerial type")
 	// The Go compiler understands that the above statement panics the program and compiles just fine, but Goland
 	// will complain endlessly (as of Aug 2020) that this method will not compile due to a missing return.
-	return common.IssuerSerialType
+	return set.IssuerSerialType
 }
 
 // IssuerSerial parses the X.509 certificate retrieved from the CCADB,
@@ -78,7 +78,7 @@ func (r *Record) Type() common.Type {
 //
 // An error will be logged and a nil IssuerSerial will be returned if the issuer field could not be
 // parsed or the serial number could not be b64 decoded.
-func (r *Record) IssuerSerial() *common.IssuerSerial {
+func (r *Record) IssuerSerial() *set.IssuerSerial {
 	issuer, err := r.parseIssuer()
 	if err != nil {
 		log.WithError(err).
@@ -96,7 +96,7 @@ func (r *Record) IssuerSerial() *common.IssuerSerial {
 			Warn("OneCRL serial base64 serial decode error")
 		return nil
 	}
-	is := common.NewIssuerSerial(issuer, serial)
+	is := set.NewIssuerSerial(issuer, serial)
 	return &is
 }
 
@@ -105,7 +105,7 @@ func (r *Record) IssuerSerial() *common.IssuerSerial {
 //
 // An error will be logged and a nil SubjectKeyHash will be returned if the subject field could not be
 // parsed or the public key hash could not be b64 decoded.
-func (r *Record) SubjectKeyHash() *common.SubjectKeyHash {
+func (r *Record) SubjectKeyHash() *set.SubjectKeyHash {
 	subject, err := r.parseSubject()
 	if err != nil {
 		log.WithError(err).
@@ -123,12 +123,12 @@ func (r *Record) SubjectKeyHash() *common.SubjectKeyHash {
 			Warn("OneCRL serial base64 key hash decode error")
 		return nil
 	}
-	skh := common.NewSubjectKeyHash(subject, hash)
+	skh := set.NewSubjectKeyHash(subject, hash)
 	return &skh
 }
 
 func (r *Record) parseSubject() (*pkix.RDNSequence, error) {
-	if r.Type() != common.SubjectKeyHashType {
+	if r.Type() != set.SubjectKeyHashType {
 		return nil, fmt.Errorf("attempted to parse a subject from a non SubjectPubKeyHash onecrl entry, got %d", r.Type())
 	}
 	subject, err := parseRDNS(r.Subject)
@@ -139,7 +139,7 @@ func (r *Record) parseSubject() (*pkix.RDNSequence, error) {
 }
 
 func (r *Record) parseIssuer() (*pkix.RDNSequence, error) {
-	if r.Type() != common.IssuerSerialType {
+	if r.Type() != set.IssuerSerialType {
 		return nil, fmt.Errorf("attempted to parse an issuer from a non IssuerSerial onecrl entry, got %d", r.Type())
 	}
 	issuer, err := parseRDNS(r.IssuerName)
@@ -188,7 +188,7 @@ type SubjectKeyHashComparison struct {
 //	}
 func (r *Record) ToComparison() (interface{}, error) {
 	switch r.Type() {
-	case common.IssuerSerialType:
+	case set.IssuerSerialType:
 		return IssuerSerialComparison{
 			Issuer: Comparison{
 				OneCRL: r.IssuerName,
@@ -199,7 +199,7 @@ func (r *Record) ToComparison() (interface{}, error) {
 				CCADB:  r.CCADB.CertificateSerialNumber,
 			},
 		}, nil
-	case common.SubjectKeyHashType:
+	case set.SubjectKeyHashType:
 		raw, err := utils.B64Decode(r.PubKeyHash)
 		if err != nil {
 			return nil, err
