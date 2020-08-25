@@ -19,12 +19,12 @@ go/bin/go build -o ccadb2onecrl main.go
 rm -rf go*
 mkdir -p /opt/ccadb2onecrl
 mv ccadb2onecrl /opt/ccadb2onecrl/
-cp config.sh /opt/ccadb2onecrl/config.sh
+cp config.env /opt/ccadb2onecrl/config.env
 
 cat <<EOF > /etc/cron.weekly/ccadb2onecrl
 #!/usr/bin/env bash
 set -e
-/opt/ccadb2onecrl/ccadb2onecrl /opt/ccadb2onecrl/config.sh
+/opt/ccadb2onecrl/ccadb2onecrl /opt/ccadb2onecrl/config.env
 EOF
 
 chmod 755 /etc/cron.weekly/ccadb2onecrl
