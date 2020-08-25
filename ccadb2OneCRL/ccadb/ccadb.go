@@ -136,7 +136,7 @@ func (c *Certificate) ParseCertificate() (*x509.Certificate, error) {
 
 // PEM returns a parseable PEM string from the PemInfo field.
 // If you want to do something with the certificate then you should use
-// this method rather than accessing the raw PemInfo field as theeCCADB h
+// this method rather than accessing the raw PemInfo field as the CCADB has
 // as the habit of double encoding strings with inner single quotes.
 func (c *Certificate) PEM() string {
 	return strings.TrimSpace(strings.Trim(c.PemInfo, "'"))
