@@ -935,6 +935,18 @@
     "enabled" : true,
     "issuerName" : "MIGsMT0wOwYDVQQDDDRUw5xSS1RSVVNUIEVsZWt0cm9uaWsgU3VudWN1IFNlcnRpZmlrYXPEsSBIaXptZXRsZXJpMQswCQYDVQQGEwJUUjFeMFwGA1UECgxVVMOcUktUUlVTVCBCaWxnaSDEsGxldGnFn2ltIHZlIEJpbGnFn2ltIEfDvHZlbmxpxJ9pIEhpem1ldGxlcmkgQS7Fni4gKGMpIEthc8SxbSAgMjAwNQ==",
     "serialNumber" : "CGQ="
+   },
+   {
+    "details": {
+      "who": "",
+      "created": "2020-09-14T18:43:23Z",
+      "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1664854",
+      "name": "revoked.badssl.com certificate",
+      "why": ""
+    },
+    "issuerName": "ME0xCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxJzAlBgNVBAMTHkRpZ2lDZXJ0IFNIQTIgU2VjdXJlIFNlcnZlciBDQQ==",
+    "serialNumber": "A3G1iob2zpw+y3v0L5II/A==",
+    "enabled": true,
    }
   ]
  }
