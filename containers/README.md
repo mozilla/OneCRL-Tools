@@ -20,3 +20,20 @@ docker run --rm --init \
   --env "BUGZILLA_CC_ACCOUNTS=example.user@mozilla.com, other.user@mozilla.com" \
   -t ccadb2onecrl:staging
 ```
+
+Alternatively, you can specify all environment variables using a dot-env file, such as:
+
+```sh
+mkdir /tmp/ccadb2onecrl
+cat >/tmp/ccadb2onecrl/config.env<<EOF
+ONECRL_STAGING_USER=a
+ONECRL_STAGING_PASSWORD=b
+ONECRL_PRODUCTION_USER=c
+ONECRL_PRODUCTION_PASSWORD=d
+BUGZILLA_API_KEY=c
+BUGZILLA_CC_ACCOUNTS="example.user@mozilla.com, other.user@mozilla.com"
+EOF
+docker run --rm --init \
+  --volume=/tmp/ccadb2onecrl:/config:ro \
+  -t ccadb2onecrl:staging
+```
