@@ -17,10 +17,12 @@ RUN apt update && apt install -y ca-certificates && \
 RUN adduser --system --uid 10001 --group --home /app app
 
 COPY --from=builder /build/bin /app/
+
+VOLUME /config
 # Don't have any default configuration; leave it to the Docker runner
-RUN touch /app/config.env
+RUN touch /config/config.env
 
 USER app
 WORKDIR /app
 
-CMD [ "/app/ccadb2OneCRL" ]
+CMD [ "/app/ccadb2OneCRL", "/config/config.env" ]
