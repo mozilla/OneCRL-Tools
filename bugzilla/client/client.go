@@ -142,6 +142,7 @@ func (c *Client) newRequest(endpoint api.Endpoint) (*http.Request, error) {
 			return nil, err
 		}
 		req.Body = ioutil.NopCloser(bytes.NewReader(b))
+		req.ContentLength = int64(len(b))
 	}
 	req.Header.Set("X-AUTOMATED-TOOL", c.tool)
 	req.Header.Set("Content-Type", "application/json")
