@@ -36,16 +36,16 @@ import (
 )
 
 const (
-	// Base URL for Kinto production [default: "https://firefox.settings.services.mozilla.com/v1"]
+	// Base URL for Kinto production [default: "https://settings.prod.mozaws.net/v1"]
 	OneCRLProduction        = "ONECRL_PRODUCTION"
-	oneCRLProductionDefault = "https://firefox.settings.services.mozilla.com/v1"
+	oneCRLProductionDefault = "https://settings.prod.mozaws.net/v1"
 	// User account for Kinto production. Requires OneCRLProductionPassword to be set. Mutually exclusive with OneCRLProductionToken.
 	OneCRLProductionUser = "ONECRL_PRODUCTION_USER"
 	// User password for Kinto production. Requires OneCRLProductionUser to be set. Mutually exclusive with OneCRLProductionToken.
 	OneCRLProductionPassword = "ONECRL_PRODUCTION_PASSWORD"
 	// Auth token for Kinto production. Mutually exclusive with OneCRLProductionUser and OneCRLProductionPassword.
 	OneCRLProductionToken = "ONECRL_PRODUCTION_TOKEN"
-	// Target production bucket [default: "security-state"]
+	// Target production bucket [default: "security-state-staging"]
 	OneCRLProductionBucket = "ONECRL_PRODUCTION_BUCKET"
 	// Target production collection [default: "onecrl"]
 	// Default is likely what you want as this is mostly configurable for testing purposes.
@@ -59,7 +59,7 @@ const (
 	OneCRLStagingPassword = "ONECRL_STAGING_PASSWORD"
 	// Auth token for Kinto staging. Mutually exclusive with OneCRLStagingUser and OneCRLStagingPassword.
 	OneCRLStagingToken = "ONECRL_STAGING_TOKEN"
-	// Target staging bucket [default: "security-state"].
+	// Target staging bucket [default: "security-state-staging"].
 	// Default is likely what you want as this is mostly configurable for testing purposes.
 	OneCRLStagingBucket = "ONECRL_STAGING_BUCKET"
 	// Target staging collection [default: "onecrl"]
