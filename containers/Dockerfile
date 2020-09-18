@@ -6,15 +6,12 @@ ENV GOPATH /build/gopath
 ADD . /build/gopath/src/github.com/mozilla/OneCRL-Tools/
 
 RUN go get github.com/mozilla/OneCRL-Tools/ccadb2OneCRL
-RUN go build -o bin/ccadb2OneCRL github.com/mozilla/OneCRL-Tools/ccadb2OneCRL
+RUN CGO_ENABLED=0 go build -o bin/ccadb2OneCRL github.com/mozilla/OneCRL-Tools/ccadb2OneCRL
 
-FROM python:3.8-buster
-RUN apt update && apt install -y ca-certificates && \
-    apt -y upgrade && apt-get autoremove --purge -y && \
-    apt-get -y clean && \
-    rm -rf /var/lib/apt/lists/*
+FROM alpine:3
+RUN apk add --no-cache ca-certificates
 
-RUN adduser --system --uid 10001 --group --home /app app
+RUN adduser -S -u 10001 -h /app app
 
 COPY --from=builder /build/bin /app/
 
