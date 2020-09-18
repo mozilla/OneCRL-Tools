@@ -146,6 +146,7 @@ func (c *Client) newRequest(endpoint api.Endpoint) (*http.Request, error) {
 	req.Header.Set("X-AUTOMATED-TOOL", c.tool)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	// The default Go user agent is blocked for bad bots
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Slackware; Linux x86_64; "+
 		"rv:80.0) Gecko/20100101 Firefox/80.0 OneCRL-Tools")
 	c.authenticator.Authenticate(req.Header)
