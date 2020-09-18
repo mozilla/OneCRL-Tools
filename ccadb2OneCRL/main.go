@@ -603,7 +603,7 @@ func (u *Updater) UpdateRecordsWithBugID() transaction.Transactor {
 				return errors.WithStack(err)
 			}
 		}
-		return errors.WithStack(u.staging.ToSign(collection))
+		return nil
 	}).WithRollback(func(_ error) error {
 		// Upstream transactions are going to delete these changes
 		// anyways, so I don't really see much of anything to do here.
