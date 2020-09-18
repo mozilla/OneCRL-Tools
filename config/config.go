@@ -156,7 +156,7 @@ func (config *OneCRLConfig) loadConfig() error {
 			config.BugzillaAPIKey = os.Getenv("bzapikey")
 		}
 	}
-	
+
 	//Bug report settings
 	if config.BugProduct == DEFAULT_BUG_PRODUCT && loaded.BugProduct != "" {
 		config.BugProduct = loaded.BugProduct

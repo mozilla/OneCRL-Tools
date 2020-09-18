@@ -77,7 +77,6 @@ func main() {
 			}
 		}
 
-
 		switch *revocationTypePtr {
 		case "issuer-serial":
 			issuerString := base64.StdEncoding.EncodeToString(cert.RawIssuer)
