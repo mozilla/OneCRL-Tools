@@ -53,7 +53,7 @@ type BugResponse struct {
 }
 
 type Comment struct {
-	ApiKey	string	`json:"api_key"`
+	ApiKey  string `json:"api_key"`
 	Comment struct {
 		Body       string `json:"body"`
 		IsPrivate  bool   `json:"is_private"`
