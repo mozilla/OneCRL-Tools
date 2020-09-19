@@ -38,15 +38,15 @@ var rootSchema = map[string]string{"CA Owner": "string",
 	"Certificate Subject Common Name":        "string",
 	"Certificate Subject Organization":       "csv",
 	"Certificate Subject Organization Unit":  "csv",
-	"Subject":                   "string",
-	"Valid From [GMT]":          "string",
-	"Valid To [GMT]":            "string",
-	"Certificate Serial Number": "string",
-	"Signature Hash Algorithm":  "string",
-	"Public Key Algorithm":      "string",
-	"SHA-1 Fingerprint":         "string",
-	"Certificate ID":            "string",
-	"PEM Info":                  "string"}
+	"Subject":                                "string",
+	"Valid From [GMT]":                       "string",
+	"Valid To [GMT]":                         "string",
+	"Certificate Serial Number":              "string",
+	"Signature Hash Algorithm":               "string",
+	"Public Key Algorithm":                   "string",
+	"SHA-1 Fingerprint":                      "string",
+	"Certificate ID":                         "string",
+	"PEM Info":                               "string"}
 
 const intermediateQuery = `
 SELECT c.'SHA-256 Fingerprint', c.'%v', o.'%v'
