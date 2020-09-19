@@ -14,6 +14,7 @@ RUN apk add --no-cache ca-certificates
 RUN adduser -S -u 10001 -h /app app
 
 COPY --from=builder /build/bin /app/
+ADD version.json /app/
 
 VOLUME /config
 # Don't have any default configuration; leave it to the Docker runner
