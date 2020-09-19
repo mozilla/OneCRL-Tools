@@ -33,8 +33,8 @@ type RevokedCertInfo struct {
 }
 
 type PublicIntermediateInfo struct {
-	PEM          string
-	DecodedCert  []byte
+	PEM         string
+	DecodedCert []byte
 }
 
 func FetchSalesforceCSV(stream io.ReadCloser) SalesforceCSV {
@@ -150,7 +150,7 @@ func FetchPublicIntermediates(stream io.ReadCloser) []PublicIntermediateInfo {
 		intermediates = append(intermediates, intInfo)
 	}
 
-	return intermediates;
+	return intermediates
 }
 
 func CertDataFromSalesforcePEM(PEM string) ([]byte, error) {

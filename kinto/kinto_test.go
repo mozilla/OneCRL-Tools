@@ -5,6 +5,7 @@
 package kinto
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -73,6 +74,12 @@ var devRW = &authz.Permissions{
 }
 
 func TestMain(m *testing.M) {
+	flag.Parse()
+	if testing.Short() {
+		os.Exit(0)
+		return
+	}
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		panic(err)

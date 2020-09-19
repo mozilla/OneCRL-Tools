@@ -5,84 +5,84 @@
 package util
 
 import (
-  "encoding/json"
-  "errors"
-  "fmt"
-  "github.com/mozilla/OneCRL-Tools/oneCRL"
-  "io/ioutil"
-  "net/http"
-  "strings"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"github.com/mozilla/OneCRL-Tools/oneCRL"
+	"io/ioutil"
+	"net/http"
+	"strings"
 )
 
 func getDataFromURL(url string) ([]byte, error) {
-  r, err := http.Get(url)
-  if err != nil {
-    return nil, err
-  }
-  defer r.Body.Close()
+	r, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
 
-  return ioutil.ReadAll(r.Body)
+	return ioutil.ReadAll(r.Body)
 }
 
 func RecordExists(item oneCRL.Record, records *oneCRL.Records) bool {
-  for _, record := range records.Data {
-    if item.EqualsRecord(record) {
-      return true
-    }
-  }
-  return false
+	for _, record := range records.Data {
+		if item.EqualsRecord(record) {
+			return true
+		}
+	}
+	return false
 }
 
 func LoadExceptions(location string, existing *oneCRL.Records, records *oneCRL.Records) error {
-  res := new(oneCRL.Records)
-  var data []byte
+	res := new(oneCRL.Records)
+	var data []byte
 
-  if 0 != strings.Index(strings.ToUpper(location), "HTTP") {
-    // if it's not an HTTP URL, attempt to load from a file
-    if fileData, err := ioutil.ReadFile(location); nil != err {
-      fmt.Printf("problem loading oneCRL exceptions from file %s\n", err)
-    } else {
-      data = fileData
-    }
-  } else {
-    // ensure it's not an HTTP location
-    if 0 != strings.Index(strings.ToUpper(location), "HTTPS") {
-      return errors.New("Cowardly refusing to load exceptions from a non HTTPS location")
-    }
-    if resp, err := http.Get(location); nil != err {
-      return err
-    } else {
-      defer resp.Body.Close()
-      if urlData, err := ioutil.ReadAll(resp.Body); nil != err {
-        return err
-      } else {
-        data = urlData
-      }
-    }
-  }
+	if 0 != strings.Index(strings.ToUpper(location), "HTTP") {
+		// if it's not an HTTP URL, attempt to load from a file
+		if fileData, err := ioutil.ReadFile(location); nil != err {
+			fmt.Printf("problem loading oneCRL exceptions from file %s\n", err)
+		} else {
+			data = fileData
+		}
+	} else {
+		// ensure it's not an HTTP location
+		if 0 != strings.Index(strings.ToUpper(location), "HTTPS") {
+			return errors.New("Cowardly refusing to load exceptions from a non HTTPS location")
+		}
+		if resp, err := http.Get(location); nil != err {
+			return err
+		} else {
+			defer resp.Body.Close()
+			if urlData, err := ioutil.ReadAll(resp.Body); nil != err {
+				return err
+			} else {
+				data = urlData
+			}
+		}
+	}
 
-  if err := json.Unmarshal(data, res); nil != err {
-    return err
-  }
+	if err := json.Unmarshal(data, res); nil != err {
+		return err
+	}
 
-  for idx := range res.Data {
-    record := res.Data[idx]
-    if !RecordExists(record, existing) {
-      records.Data = append(records.Data, record)
-    }
-  }
-  return nil
+	for idx := range res.Data {
+		record := res.Data[idx]
+		if !RecordExists(record, existing) {
+			records.Data = append(records.Data, record)
+		}
+	}
+	return nil
 }
 
 func StoreExceptions(location string, records *oneCRL.Records) error {
-  if 0 == strings.Index(strings.ToUpper(location), "HTTP") {
-    return fmt.Errorf("Cannot store to a network URL")
-  }
+	if 0 == strings.Index(strings.ToUpper(location), "HTTP") {
+		return fmt.Errorf("Cannot store to a network URL")
+	}
 
-  formattedJson, err := json.MarshalIndent(records, " ", " ")
-  if nil != err {
-    return err
-  }
+	formattedJson, err := json.MarshalIndent(records, " ", " ")
+	if nil != err {
+		return err
+	}
 
-  return ioutil.WriteFile(location, formattedJson, 0666)
+	return ioutil.WriteFile(location, formattedJson, 0666)
 }
