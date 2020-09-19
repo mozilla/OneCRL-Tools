@@ -187,12 +187,17 @@ type SubjectKeyHashComparison struct {
 //		}
 //	}
 func (r *Record) ToComparison() (interface{}, error) {
+	cert, err := r.CCADB.ParseCertificate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse the certificate bundled with the CCADB when building a comparison "+
+			"between the CCADB and OneCRL, err: %v", err)
+	}
 	switch r.Type() {
 	case set.IssuerSerialType:
 		return IssuerSerialComparison{
 			Issuer: Comparison{
 				OneCRL: r.IssuerName,
-				CCADB:  r.CCADB.CertificateIssuerName,
+				CCADB:  cert.Issuer.String(),
 			},
 			Serial: Comparison{
 				OneCRL: r.SerialNumber,
@@ -207,7 +212,7 @@ func (r *Record) ToComparison() (interface{}, error) {
 		return SubjectKeyHashComparison{
 			Subject: Comparison{
 				OneCRL: r.Subject,
-				CCADB:  r.CCADB.CertificateSubjectCommonName,
+				CCADB:  cert.Subject.String(),
 			},
 			Keyhash: Comparison{
 				OneCRL: r.PubKeyHash,
