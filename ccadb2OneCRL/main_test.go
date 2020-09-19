@@ -23,6 +23,11 @@ import (
 )
 
 func TestE2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping docker end-to-end test because -short")
+		return
+	}
+
 	setup()
 	c, err := godotenv.Unmarshal(testConfig)
 	if err != nil {
