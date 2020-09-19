@@ -3,3 +3,9 @@
 *config-example.yml
 *config-sample.yml
 obsDiffCCADB/generated
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+.*.yml
