@@ -73,6 +73,11 @@ var devRW = &authz.Permissions{
 }
 
 func TestMain(m *testing.M) {
+	if testing.Short() {
+		t.Skip("Skipping docker end-to-end test because -short")
+		return
+	}
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		panic(err)
