@@ -24,4 +24,3 @@ USER app
 WORKDIR /app
 
 ENTRYPOINT [ "/app/ccadb2OneCRL" ]
-CMD [ "/config/config.env" ]
