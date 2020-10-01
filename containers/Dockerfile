@@ -23,4 +23,5 @@ RUN touch /config/config.env
 USER app
 WORKDIR /app
 
-CMD [ "/app/ccadb2OneCRL", "/config/config.env" ]
+ENTRYPOINT [ "/app/ccadb2OneCRL" ]
+CMD [ "/config/config.env" ]
