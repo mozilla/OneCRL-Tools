@@ -16,9 +16,8 @@ RUN adduser -S -u 10001 -h /app app
 COPY --from=builder /build/bin /app/
 ADD version.json /app/
 
-VOLUME /config
 # Don't have any default configuration; leave it to the Docker runner
-RUN touch /config/config.env
+RUN echo "# Deliberately empty default config file" > /app/config.env
 
 USER app
 WORKDIR /app
