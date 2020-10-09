@@ -96,7 +96,7 @@ func main() {
 }
 
 // _main is just a unit testable main (since main is looking at command line args
-// and loading configs from the filesyste it's not a great target for testing).
+// and loading configs from the filesystem it's not a great target for testing).
 func _main() {
 	err := SetLogOut()
 	if err != nil {
