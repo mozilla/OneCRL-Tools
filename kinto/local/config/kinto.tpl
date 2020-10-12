@@ -41,6 +41,10 @@ kinto.includes = kinto.plugins.default_bucket
 kinto.signer.resources =
     /buckets/to_sign/collections/onecrl -> /buckets/signed/collections/onecrl
 
+kinto.signer.signer_backend = kinto.signer.signer.local_ecdsa
+kinto.signer.ecdsa.private_key = /app/kinto/config/signer.priv.pem
+kinto.signer.ecdsa.public_key = /app/kinto/config/signer.pub.pem
+
 # Backends
 # https://kinto.readthedocs.io/en/latest/configuration/settings.html#storage
 #

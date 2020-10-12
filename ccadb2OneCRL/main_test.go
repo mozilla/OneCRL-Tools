@@ -60,10 +60,16 @@ var local = kinto.NewClient("http", "localhost:8888", "/v1").WithAuthenticator(d
 var staging = kinto.NewClient("https", "settings.stage.mozaws.net", "/v1")
 var production = kinto.NewClient("https", "firefox.settings.services.mozilla.com", "/v1")
 
+var isSetUp = false
+
 func setup() {
+	if isSetUp {
+		return
+	}
 	makeLocal()
 	syncStaging()
 	syncProduction()
+	isSetUp = true
 }
 
 func syncStaging() {
@@ -79,6 +85,7 @@ func syncStaging() {
 	if err != nil {
 		panic(err)
 	}
+	dataA.Bucket.ID = "to_sign"
 	batches := batch.NewBatches(d, max, nil, http.MethodPost, dataA.Get())
 	for _, b := range batches {
 		if err := local.Batch(b); err != nil {
@@ -100,7 +107,6 @@ func syncProduction() {
 	if err != nil {
 		panic(err)
 	}
-	dataA.Bucket.ID = "production-security-state"
 	batches := batch.NewBatches(d, max, nil, http.MethodPost, dataA.Get())
 	for _, b := range batches {
 		if err := local.Batch(b); err != nil {
@@ -153,7 +159,16 @@ func makeLocal() {
 	if err != nil {
 		panic(err)
 	}
-	oneCRL.Bucket.ID = "production-security-state"
+	oneCRL.Bucket.ID = "to_sign"
+	err = local.NewBucketWithPermissions(oneCRL.Bucket, devRW)
+	if err != nil {
+		panic(err)
+	}
+	err = local.NewCollectionWithPermissions(oneCRL.Collection, devRW)
+	if err != nil {
+		panic(err)
+	}
+	oneCRL.Bucket.ID = "signed"
 	err = local.NewBucketWithPermissions(oneCRL.Bucket, devRW)
 	if err != nil {
 		panic(err)
@@ -224,7 +239,7 @@ ONECRL_STAGING="http://localhost:8888/v1"
 ONECRL_STAGING_USER="superDev"
 ONECRL_STAGING_PASSWORD="password"
 
-ONECRL_STAGING_BUCKET="production-security-state"
+ONECRL_STAGING_BUCKET="to_sign"
 ONECRL_STAGING_COLLECTION="onecrl"
 
 BUGZILLA="https://bugzilla-dev.allizom.org"
@@ -235,3 +250,45 @@ LOG_LEVEL="trace"
 
 LOG_DIR=/tmp/ccadb2onecrl/logs
 `
+
+func TestPendingUpdates(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping docker end-to-end test because -short")
+		return
+	}
+
+	setup()
+	c, err := godotenv.Unmarshal(testConfig)
+	if err != nil {
+		panic(err)
+	}
+	for k, v := range c {
+		err = os.Setenv(k, v)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	bugz := BugzillaClient()
+	updater := NewUpdate(local, local, bugz)
+
+	inReview, err := updater.AnySignerInReview()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if inReview {
+		t.Fatal("No signer should be in review yet")
+	}
+
+	if err := local.ToReview(StagingCollection()); err != nil {
+		t.Fatalf("Unexpected push to review error: %v", err)
+	}
+	inReview, err = updater.AnySignerInReview()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !inReview {
+		t.Fatal("Signer should be in review!")
+	}
+}
