@@ -96,7 +96,7 @@ func main() {
 }
 
 // _main is just a unit testable main (since main is looking at command line args
-// and loading configs from the filesyste it's not a great target for testing).
+// and loading configs from the filesystem it's not a great target for testing).
 func _main() {
 	err := SetLogOut()
 	if err != nil {
@@ -279,14 +279,14 @@ func (u *Updater) Update() error {
 	if err != nil {
 		return err
 	}
-	// Policy is that if staging is in review then we bail
+	// Policy is that if staging or prod (or both) are in review then we bail
 	// out of this operation early and send out emails.
-	inReview, err := u.StagingIsInReview()
+	inReview, err := u.AnySignerInReview()
 	if err != nil {
 		return err
 	}
 	if inReview {
-		log.Info("staging is in review")
+		log.Info("changes at staging or production (or both) are in review")
 		// We want to find the intersection between the CCADB
 		// and OneCRL as those are the revocations that are still
 		// in review. Once we find them we would like to post
@@ -414,12 +414,16 @@ func (u *Updater) NoDiffs() bool {
 	return len(u.changes) == 0
 }
 
-func (u *Updater) StagingIsInReview() (bool, error) {
-	status, err := u.staging.SignerStatusFor(StagingCollection())
+func (u *Updater) AnySignerInReview() (bool, error) {
+	stagingStatus, err := u.staging.SignerStatusFor(StagingCollection())
 	if err != nil {
 		return false, errors.WithStack(err)
 	}
-	return status.InReview(), nil
+	prodStatus, err := u.production.SignerStatusFor(ProductionCollection())
+	if err != nil {
+		return false, errors.WithStack(err)
+	}
+	return stagingStatus.InReview() || prodStatus.InReview(), nil
 }
 
 func (u *Updater) PushToStaging() transaction.Transactor {
@@ -638,7 +642,7 @@ func (u *Updater) PushToProduction() transaction.Transactor {
 func (u *Updater) BlastEmails(intersection *onecrl.Set) {
 	bugIDs := make(map[int]bool, 0)
 	builder := strings.Builder{}
-	builder.WriteString("Staging is in review. The following bugs appear to require resolution.\n")
+	builder.WriteString("Changes are still in review. The following bugs appear to require resolution.\n")
 	for e := range intersection.Iter() {
 		entry := e.(*onecrl.Record)
 		id, err := u.bugzilla.IDFromShowBug(entry.Details.Bug)
