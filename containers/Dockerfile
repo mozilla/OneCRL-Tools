@@ -22,4 +22,4 @@ RUN echo "# Deliberately empty default config file" > /app/config.env
 USER app
 WORKDIR /app
 
-ENTRYPOINT [ "/app/ccadb2OneCRL" ]
+CMD [ "/app/ccadb2OneCRL" ]
