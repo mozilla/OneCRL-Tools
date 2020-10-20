@@ -315,6 +315,7 @@ func (u *Updater) Update() error {
 		Then(u.UpdateRecordsWithBugID()).
 		Then(u.PutStagingIntoReview()).
 		Then(u.PushToProduction()).
+		Then(u.PutProductionIntoReview()).
 		AutoRollbackOnError(true).
 		AutoClose(true).
 		Commit()
@@ -636,6 +637,14 @@ func (u *Updater) PushToProduction() transaction.Transactor {
 			}
 		}
 		return nil
+	})
+}
+
+func (u *Updater) PutProductionIntoReview() transaction.Transactor {
+	return transaction.NewTransaction().WithCommit(func() error {
+		return errors.WithStack(u.production.ToReview(ProductionCollection()))
+	}).WithRollback(func(_ error) error {
+		return errors.WithStack(u.production.ToRollBack(ProductionCollection()))
 	})
 }
 
