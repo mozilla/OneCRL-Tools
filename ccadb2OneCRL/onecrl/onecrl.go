@@ -25,7 +25,7 @@ import (
 
 func NewOneCRL() *OneCRL {
 	return &OneCRL{
-		Collection: collections.NewCollection(buckets.NewBucket("security-state"), "onecrl"),
+		Collection: collections.NewCollection(buckets.NewBucket("security-state-staging"), "onecrl"),
 		Data:       []*Record{},
 	}
 }
