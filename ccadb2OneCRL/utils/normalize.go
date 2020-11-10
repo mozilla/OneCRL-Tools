@@ -5,35 +5,12 @@
 package utils
 
 import (
-	"crypto/x509/pkix"
-	"encoding/asn1"
 	"encoding/base64"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
 )
-
-func Normalize(rdn *pkix.RDNSequence) {
-	for _, set := range *rdn {
-		sort.Slice(set, func(i, j int) bool {
-			return CmpOID(set[i].Type, set[j].Type)
-		})
-	}
-}
-
-func CmpOID(left, right asn1.ObjectIdentifier) bool {
-	if len(left) != len(right) {
-		return len(left) < len(right)
-	}
-	for i, _ := range left {
-		if left[i] != right[i] {
-			return left[i] < right[i]
-		}
-	}
-	return false
-}
 
 // B64Decode attempts to decode the give string first as an
 // RFC 4648 encoded string (with padding). If that fails, then
