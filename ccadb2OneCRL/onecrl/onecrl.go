@@ -127,7 +127,7 @@ func (r *Record) parseSubject() ([]byte, error) {
 	if r.Type() != set.SubjectKeyHashType {
 		return nil, fmt.Errorf("attempted to parse a subject from a non SubjectPubKeyHash onecrl entry, got %d", r.Type())
 	}
-	subject, err := parseRDNS(r.Subject)
+	subject, err := unbase64RawDistinguishedName(r.Subject)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (r *Record) parseIssuer() ([]byte, error) {
 	if r.Type() != set.IssuerSerialType {
 		return nil, fmt.Errorf("attempted to parse an issuer from a non IssuerSerial onecrl entry, got %d", r.Type())
 	}
-	issuer, err := parseRDNS(r.IssuerName)
+	issuer, err := unbase64RawDistinguishedName(r.IssuerName)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +249,7 @@ func FromCCADB(c *ccadb.Certificate) (*Record, error) {
 	return record, nil
 }
 
-func parseRDNS(rdns string) ([]byte, error) {
+func unbase64RawDistinguishedName(rdns string) ([]byte, error) {
 	i, err := utils.B64Decode(rdns)
 	if err != nil {
 		return nil, errors.Wrap(err, "OneCRL RDNS b64 decode error")
