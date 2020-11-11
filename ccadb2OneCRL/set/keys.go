@@ -5,7 +5,6 @@
 package set
 
 import (
-	"crypto/x509/pkix"
 	"fmt"
 
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/utils"
@@ -29,14 +28,14 @@ type IssuerSerial EntryType
 // IssuerSerial is an alias for a string that is formatted as "<SubjectName>,<B64 Key Hash>"
 type SubjectKeyHash EntryType
 
-func NewIssuerSerial(issuer *pkix.RDNSequence, serial []byte) IssuerSerial {
+func NewIssuerSerial(issuer []byte, serial []byte) IssuerSerial {
 	return IssuerSerial(format(issuer, serial))
 }
 
-func NewSubjectKeyHash(subject *pkix.RDNSequence, hash []byte) SubjectKeyHash {
+func NewSubjectKeyHash(subject []byte, hash []byte) SubjectKeyHash {
 	return SubjectKeyHash(format(subject, hash))
 }
 
-func format(name *pkix.RDNSequence, data []byte) string {
-	return fmt.Sprintf("%s,%s", name.String(), utils.B64Encode(data))
+func format(name []byte, data []byte) string {
+	return fmt.Sprintf("%s,%s", utils.B64Encode(name), utils.B64Encode(data))
 }

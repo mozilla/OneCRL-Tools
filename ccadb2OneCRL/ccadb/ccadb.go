@@ -16,7 +16,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/set"
-	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/utils"
 	"github.com/pkg/errors"
 
 	"github.com/gocarina/gocsv"
@@ -87,9 +86,7 @@ func (c *Certificate) IssuerSerial() *set.IssuerSerial {
 			Warn("failed to parse the CCADB certificate when constructing a Issuer:Serial pair")
 		return nil
 	}
-	issuer := cert.Issuer.ToRDNSequence()
-	utils.Normalize(&issuer)
-	is := set.NewIssuerSerial(&issuer, cert.SerialNumber.Bytes())
+	is := set.NewIssuerSerial(cert.RawIssuer, cert.SerialNumber.Bytes())
 	return &is
 }
 
@@ -108,12 +105,10 @@ func (c *Certificate) SubjectKeyHash() *set.SubjectKeyHash {
 			Warn("failed to parse the CCADB certificate when constructing a Subject:KeyHash pair")
 		return nil
 	}
-	subject := cert.Subject.ToRDNSequence()
-	utils.Normalize(&subject)
 	hasher := sha256.New()
 	hasher.Write(cert.RawSubjectPublicKeyInfo)
 	hash := hasher.Sum(nil)
-	skh := set.NewSubjectKeyHash(&subject, hash)
+	skh := set.NewSubjectKeyHash(cert.RawSubject, hash)
 	return &skh
 }
 

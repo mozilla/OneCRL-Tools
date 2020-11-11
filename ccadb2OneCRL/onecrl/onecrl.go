@@ -5,8 +5,6 @@
 package onecrl
 
 import (
-	"crypto/x509/pkix"
-	"encoding/asn1"
 	"fmt"
 
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/set"
@@ -86,7 +84,6 @@ func (r *Record) IssuerSerial() *set.IssuerSerial {
 			Warn("failed to parse an issuer field from OneCRL")
 		return nil
 	}
-	utils.Normalize(issuer)
 	// Decoding and re-encoding the string coerces everyone to the same b64 standard.
 	// That is, those without padding get forced into having padding.
 	serial, err := utils.B64Decode(r.SerialNumber)
@@ -113,7 +110,6 @@ func (r *Record) SubjectKeyHash() *set.SubjectKeyHash {
 			Warn("failed to parse an subject field from OneCRL")
 		return nil
 	}
-	utils.Normalize(subject)
 	// Decoding and re-encoding the string coerces everyone to the same b64 standard.
 	// That is, those without padding get forced into having padding.
 	hash, err := utils.B64Decode(r.PubKeyHash)
@@ -127,22 +123,22 @@ func (r *Record) SubjectKeyHash() *set.SubjectKeyHash {
 	return &skh
 }
 
-func (r *Record) parseSubject() (*pkix.RDNSequence, error) {
+func (r *Record) parseSubject() ([]byte, error) {
 	if r.Type() != set.SubjectKeyHashType {
 		return nil, fmt.Errorf("attempted to parse a subject from a non SubjectPubKeyHash onecrl entry, got %d", r.Type())
 	}
-	subject, err := parseRDNS(r.Subject)
+	subject, err := unbase64RawDistinguishedName(r.Subject)
 	if err != nil {
 		return nil, err
 	}
 	return subject, nil
 }
 
-func (r *Record) parseIssuer() (*pkix.RDNSequence, error) {
+func (r *Record) parseIssuer() ([]byte, error) {
 	if r.Type() != set.IssuerSerialType {
 		return nil, fmt.Errorf("attempted to parse an issuer from a non IssuerSerial onecrl entry, got %d", r.Type())
 	}
-	issuer, err := parseRDNS(r.IssuerName)
+	issuer, err := unbase64RawDistinguishedName(r.IssuerName)
 	if err != nil {
 		return nil, err
 	}
@@ -253,15 +249,10 @@ func FromCCADB(c *ccadb.Certificate) (*Record, error) {
 	return record, nil
 }
 
-func parseRDNS(rdns string) (*pkix.RDNSequence, error) {
+func unbase64RawDistinguishedName(rdns string) ([]byte, error) {
 	i, err := utils.B64Decode(rdns)
 	if err != nil {
 		return nil, errors.Wrap(err, "OneCRL RDNS b64 decode error")
 	}
-	r := &pkix.RDNSequence{}
-	_, err = asn1.Unmarshal(i, r)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("OneCRL RDNS asn1 decode error for '%s'", rdns))
-	}
-	return r, nil
+	return i, nil
 }

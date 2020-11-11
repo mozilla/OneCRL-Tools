@@ -5,87 +5,31 @@
 package utils
 
 import (
-	"crypto/x509/pkix"
-	"encoding/asn1"
-	"reflect"
+	"bytes"
 	"testing"
 )
 
-func TestNormalize(t *testing.T) {
-	got := &pkix.RDNSequence{
-		pkix.RelativeDistinguishedNameSET{
-			pkix.AttributeTypeAndValue{Type: []int{5, 4, 3, 2}},
-			pkix.AttributeTypeAndValue{Type: []int{5, 5, 4}},
-			pkix.AttributeTypeAndValue{Type: []int{2, 2}},
-			pkix.AttributeTypeAndValue{Type: []int{1, 2, 3}},
-			pkix.AttributeTypeAndValue{Type: []int{1}},
-		},
+func assertBytes(t *testing.T, data string, expected []byte) {
+	result, err := B64Decode(data)
+	if err != nil {
+		t.Errorf("Expected %s to decode to %v but error: %v", data, expected, err)
+		return
 	}
-	want := &pkix.RDNSequence{
-		pkix.RelativeDistinguishedNameSET{
-			pkix.AttributeTypeAndValue{Type: []int{1}},
-			pkix.AttributeTypeAndValue{Type: []int{2, 2}},
-			pkix.AttributeTypeAndValue{Type: []int{1, 2, 3}},
-			pkix.AttributeTypeAndValue{Type: []int{5, 5, 4}},
-			pkix.AttributeTypeAndValue{Type: []int{5, 4, 3, 2}},
-		},
-	}
-	Normalize(got)
-	if !reflect.DeepEqual(want, got) {
-		t.Fatalf("unexpected sort of OIDs, wanted %v got %v", want, got)
+	if !bytes.Equal(result, expected) {
+		t.Errorf("Expected %s to decode to %v but got: %v", data, expected, result)
 	}
 }
 
-type cmpTest struct {
-	left  asn1.ObjectIdentifier
-	right asn1.ObjectIdentifier
-	want  bool
-}
+func TestBase64Decoder(t *testing.T) {
+	// Tolerate spaces
+	assertBytes(t, "b2theSB0aGVyZQ==", []byte("okay there"))
+	assertBytes(t, "b2theSB0aGVyZQ== ", []byte("okay there"))
+	assertBytes(t, " b2theSB0aGVyZQ==", []byte("okay there"))
+	assertBytes(t, " b2theSB0aGVyZQ== ", []byte("okay there"))
 
-var cmpData = []cmpTest{
-	{
-		left:  asn1.ObjectIdentifier{1},
-		right: asn1.ObjectIdentifier{2},
-		want:  true,
-	},
-	{
-		left:  asn1.ObjectIdentifier{2},
-		right: asn1.ObjectIdentifier{1},
-		want:  false,
-	},
-	{
-		left:  asn1.ObjectIdentifier{1},
-		right: asn1.ObjectIdentifier{1},
-		want:  false,
-	},
-	{
-		left:  asn1.ObjectIdentifier{1},
-		right: asn1.ObjectIdentifier{1, 1},
-		want:  true,
-	},
-	{
-		left:  asn1.ObjectIdentifier{1, 1},
-		right: asn1.ObjectIdentifier{2},
-		want:  false,
-	},
-	{
-		left:  asn1.ObjectIdentifier{1, 2, 3, 4},
-		right: asn1.ObjectIdentifier{1, 2, 4, 3},
-		want:  true,
-	},
-	{
-		left:  asn1.ObjectIdentifier{1, 2, 4, 3},
-		right: asn1.ObjectIdentifier{1, 2, 3, 4},
-		want:  false,
-	},
-}
+	// Handle high bytes
+	assertBytes(t, "/+7dzLuqmYg=", []byte{0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88})
 
-func TestCmpOID(t *testing.T) {
-	for _, data := range cmpData {
-		got := CmpOID(data.left, data.right)
-		if got != data.want {
-			t.Errorf("unexpected comparison answer, wanted %v got %v.", data.want, got)
-			t.Errorf("left: %v, right %v", data.left, data.right)
-		}
-	}
+	// Handle having no padding
+	assertBytes(t, "/+7dzLuqmYg", []byte{0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88})
 }
