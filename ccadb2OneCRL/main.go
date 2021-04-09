@@ -500,8 +500,8 @@ func (u *Updater) OpenBug() transaction.Transactor {
 			log.WithField("CC", cc).Debug("using CC environment variable")
 		}
 		bug := &bugs.Create{
-			Product:     "Toolkit",
-			Component:   "Blocklist Policy Requests",
+			Product:     "Core",
+			Component:   "Security Block-lists, Allow-lists, and other State",
 			Summary:     fmt.Sprintf("CCADB entries generated %s", time.Now().UTC().Format(time.RFC3339)),
 			Version:     "unspecified",
 			Severity:    "normal",
