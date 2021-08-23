@@ -50,7 +50,7 @@ type Client struct {
 }
 
 // NewClient constructs a client with the scheme (E.G "https"),
-// the host (E.G "settings.stage.mozaws.net"), and the API base (E.G "/v1").
+// the host (E.G "settings-cdn.stage.mozaws.net"), and the API base (E.G "/v1").
 func NewClient(scheme, host, base string) *Client {
 	return &Client{
 		host:          host,
