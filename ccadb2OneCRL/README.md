@@ -90,8 +90,8 @@ ONECRL_PRODUCTION_TOKEN=
 # Default is likely what you want as this is mostly configurable for testing purposes.
 #ONECRL_PRODUCTION_COLLECTION="onecrl"
 
-# Base URL for Kinto production [default: "https://settings.stage.mozaws.net/v1"]
-#ONECRL_STAGING="https://settings.stage.mozaws.net/v1"
+# Base URL for Kinto production [default: "https://settings-cdn.stage.mozaws.net/v1"]
+#ONECRL_STAGING="https://settings-cdn.stage.mozaws.net/v1"
 
 # User account for Kinto staging. Requires OneCRLStagingPassword to be set. Mutually exclusive with OneCRLStagingToken.
 #ONECRL_STAGING_USER=
