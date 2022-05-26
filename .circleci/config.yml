@@ -60,6 +60,10 @@ jobs:
       - run:
           name: Test with race-finder
           command: go test -race -short ./...
+      - run:
+          name: Test 
+          command: echo Dummy
+        
 
   publish-dev-pods:
     executor: docker/docker
