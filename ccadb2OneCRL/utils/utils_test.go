@@ -20,6 +20,20 @@ func assertBytes(t *testing.T, data string, expected []byte) {
 	}
 }
 
+func TestRawSerialBytes(t *testing.T) {
+	// DER for the version and serialNumber fields of a tbsCertificate.
+	tbsCertPrefix := []byte{
+		0x30, 0x0f,
+		0xa0, 0x03, 0x02, 0x01, 0x02,
+		0x02, 0x08, 0x00, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+	}
+
+	b, _ := RawSerialBytes(tbsCertPrefix)
+	if !bytes.Equal(b, []byte{0x00, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa}) {
+		t.Errorf("error")
+	}
+}
+
 func TestBase64Decoder(t *testing.T) {
 	// Tolerate spaces
 	assertBytes(t, "b2theSB0aGVyZQ==", []byte("okay there"))

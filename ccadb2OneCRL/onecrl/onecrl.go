@@ -231,6 +231,10 @@ func FromCCADB(c *ccadb.Certificate) (*Record, error) {
 	if err != nil {
 		return nil, err
 	}
+	serial, err := utils.RawSerialBytes(cert.RawTBSCertificate)
+	if err != nil {
+		return nil, err
+	}
 	record := &Record{
 		CCADB: c,
 		Details: Details{
@@ -242,7 +246,7 @@ func FromCCADB(c *ccadb.Certificate) (*Record, error) {
 		},
 		Enabled:      false,
 		IssuerName:   utils.B64Encode(cert.RawIssuer),
-		SerialNumber: utils.B64Encode(cert.SerialNumber.Bytes()),
+		SerialNumber: utils.B64Encode(serial),
 		Subject:      "",
 		PubKeyHash:   "",
 	}
