@@ -5,12 +5,29 @@
 package utils
 
 import (
+	"encoding/asn1"
 	"encoding/base64"
 	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
 )
+
+type tbsCertWithRawSerial struct {
+	Raw          asn1.RawContent
+	Version      asn1.RawValue `asn1:"optional,explicit,default:0,tag:0"`
+	SerialNumber asn1.RawValue
+}
+
+// Extract the raw bytes of the serial number field from a tbsCertificate..
+func RawSerialBytes(rawTBSCertificate []byte) ([]byte, error) {
+	var tbsCert tbsCertWithRawSerial
+	_, err := asn1.Unmarshal(rawTBSCertificate, &tbsCert)
+	if err != nil {
+		return nil, err
+	}
+	return tbsCert.SerialNumber.Bytes, nil
+}
 
 // B64Decode attempts to decode the give string first as an
 // RFC 4648 encoded string (with padding). If that fails, then

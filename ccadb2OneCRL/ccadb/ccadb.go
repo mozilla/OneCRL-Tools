@@ -16,6 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/set"
+	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/utils"
 	"github.com/pkg/errors"
 
 	"github.com/gocarina/gocsv"
@@ -86,7 +87,14 @@ func (c *Certificate) IssuerSerial() *set.IssuerSerial {
 			Warn("failed to parse the CCADB certificate when constructing a Issuer:Serial pair")
 		return nil
 	}
-	is := set.NewIssuerSerial(cert.RawIssuer, cert.SerialNumber.Bytes())
+	serial, err := utils.RawSerialBytes(cert.RawTBSCertificate)
+	if err != nil {
+		log.WithError(err).
+			WithField("revocation", c).
+			Warn("failed to parse serial number")
+		return nil
+	}
+	is := set.NewIssuerSerial(cert.RawIssuer, serial)
 	return &is
 }
 
