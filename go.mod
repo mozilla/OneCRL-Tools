@@ -16,6 +16,7 @@ require (
 	github.com/termie/go-shutil v0.0.0-20140729215957-bcacb06fecae
 	github.com/wellington/go-libsass v0.9.2
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
+	golang.org/x/sys v0.0.0-20220708085239-5a0f0661e09d // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
 

@@ -19,7 +19,7 @@ type tbsCertWithRawSerial struct {
 	SerialNumber asn1.RawValue
 }
 
-// Extract the raw bytes of the serial number field from a tbsCertificate..
+// Extract the raw bytes of the serial number field from a tbsCertificate.
 func RawSerialBytes(rawTBSCertificate []byte) ([]byte, error) {
 	var tbsCert tbsCertWithRawSerial
 	_, err := asn1.Unmarshal(rawTBSCertificate, &tbsCert)
