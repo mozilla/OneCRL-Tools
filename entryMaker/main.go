@@ -7,13 +7,14 @@ package main
 import (
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/asn1"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/google/certificate-transparency-go/asn1"
+	"github.com/google/certificate-transparency-go/x509/pkix"
 	"github.com/mozilla/OneCRL-Tools/oneCRL"
 	"github.com/mozilla/OneCRL-Tools/util"
 	"io/ioutil"
@@ -24,6 +25,51 @@ func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+
+// certificate-transparency-go/x509 is too strict for our purposes.
+// re-purpose it to be less strict.
+type certificate struct {
+	Raw                asn1.RawContent
+	TBSCertificate     tbsCertificate
+	SignatureAlgorithm pkix.AlgorithmIdentifier
+	SignatureValue     asn1.BitString
+}
+
+type tbsCertificate struct {
+	Raw                asn1.RawContent
+	Version            int `asn1:"optional,explicit,default:0,tag:0"`
+	SerialNumber       asn1.RawValue
+	SignatureAlgorithm pkix.AlgorithmIdentifier
+	Issuer             asn1.RawValue
+	Validity           validity
+	Subject            asn1.RawValue
+	PublicKey          publicKeyInfo
+	UniqueId           asn1.BitString  `asn1:"optional,tag:1"`
+	SubjectUniqueId    asn1.BitString  `asn1:"optional,tag:2"`
+	Extensions         []asn1.RawValue `asn1:"optional,explicit,tag:3"`
+}
+
+type validity struct {
+	NotBefore, NotAfter time.Time
+}
+
+type publicKeyInfo struct {
+	Raw       asn1.RawContent
+	Algorithm pkix.AlgorithmIdentifier
+	PublicKey asn1.BitString
+}
+
+func parseCertificate(asn1Data []byte) (*certificate, error) {
+	var cert certificate
+	rest, err := asn1.UnmarshalWithParams(asn1Data, &cert, "lax")
+	if err != nil {
+		return nil, err
+	}
+	if len(rest) > 0 {
+		return nil, asn1.SyntaxError{Msg: "trailing data"}
+	}
+	return &cert, nil
 }
 
 func main() {
@@ -66,30 +112,27 @@ func main() {
 		}
 		certData = block.Bytes
 
-		cert, err := x509.ParseCertificate(certData)
+		cert, err := parseCertificate(certData)
 		check(err)
 
 		// Check to see if the cert is still valid (if it's not, we don't want
 		// an entry
 		if "yes" == *checkValidityPtr {
-			if time.Now().After(cert.NotAfter) {
-				panic(errors.New(fmt.Sprintf("Cert is no longer valid (NotAfter %v)", cert.NotAfter)))
+			if time.Now().After(cert.TBSCertificate.Validity.NotAfter) {
+				panic(errors.New(fmt.Sprintf("Cert is no longer valid (NotAfter %v)", cert.TBSCertificate.Validity.NotAfter)))
 			}
 		}
 
 		switch *revocationTypePtr {
 		case "issuer-serial":
-			issuerString := base64.StdEncoding.EncodeToString(cert.RawIssuer)
-
-			if marshalled, err := asn1.Marshal(cert.SerialNumber); err == nil {
-				serialString := base64.StdEncoding.EncodeToString(marshalled[2:])
-				record = oneCRL.Record{IssuerName: issuerString, SerialNumber: serialString}
-			}
+			issuerString := base64.StdEncoding.EncodeToString(cert.TBSCertificate.Issuer.FullBytes)
+			serialString := base64.StdEncoding.EncodeToString(cert.TBSCertificate.SerialNumber.Bytes)
+			record = oneCRL.Record{IssuerName: issuerString, SerialNumber: serialString}
 
 		case "subject-pubkey":
-			subjectString := base64.StdEncoding.EncodeToString(cert.RawSubject)
+			subjectString := base64.StdEncoding.EncodeToString(cert.TBSCertificate.Subject.FullBytes)
 
-			if pubKeyData, err := x509.MarshalPKIXPublicKey(cert.PublicKey); err == nil {
+			if pubKeyData, err := x509.MarshalPKIXPublicKey(cert.TBSCertificate.PublicKey); err == nil {
 				hash := sha256.Sum256(pubKeyData)
 				base64EncodedHash := base64.StdEncoding.EncodeToString(hash[:])
 				record = oneCRL.Record{Subject: subjectString, PubKeyHash: base64EncodedHash}
@@ -105,7 +148,7 @@ func main() {
 	record.Details.Why = *whyPtr
 	record.Details.Name = *namePtr
 	record.Details.Bug = *bugPtr
-	record.Details.Created = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	record.Details.Created = ""
 
 	var toPrint interface{}
 
@@ -121,7 +164,7 @@ func main() {
 			panic(err)
 		}
 	} else {
-		formattedJson, err := json.MarshalIndent(toPrint, "  ", "  ")
+		formattedJson, err := json.MarshalIndent(toPrint, "", "  ")
 		if err != nil {
 			panic(err)
 		}
