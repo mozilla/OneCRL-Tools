@@ -50,9 +50,9 @@ const (
 	// Target production collection [default: "onecrl"]
 	// Default is likely what you want as this is mostly configurable for testing purposes.
 	OneCRLProductionCollection = "ONECRL_PRODUCTION_COLLECTION"
-	// Base URL for Kinto production [default: "https://settings-cdn.stage.mozaws.net/v1"]
+	// Base URL for Kinto production [default: "https://firefox.settings.services.allizom.org/v1"]
 	OneCRLStaging        = "ONECRL_STAGING"
-	oneCRLStagingDefault = "https://settings-cdn.stage.mozaws.net/v1"
+	oneCRLStagingDefault = "https://firefox.settings.services.allizom.org/v1"
 	// User account for Kinto staging. Requires OneCRLStagingPassword to be set. Mutually exclusive with OneCRLStagingToken.
 	OneCRLStagingUser = "ONECRL_STAGING_USER"
 	// User password for Kinto staging. Requires OneCRLStagingUser to be set. Mutually exclusive with OneCRLStagingToken.

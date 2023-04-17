@@ -57,7 +57,7 @@ var devRW = &authz.Permissions{
 }
 
 var local = kinto.NewClient("http", "localhost:8888", "/v1").WithAuthenticator(dev)
-var staging = kinto.NewClient("https", "settings-cdn.stage.mozaws.net", "/v1")
+var staging = kinto.NewClient("https", "firefox.settings.services.allizom.org", "/v1")
 var production = kinto.NewClient("https", "firefox.settings.services.mozilla.com", "/v1")
 
 func setup() {
