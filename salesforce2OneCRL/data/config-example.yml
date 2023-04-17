@@ -7,4 +7,4 @@ preview: no
 # The kinto bearer authorization token
 kintotoken: aBearerAuthorizationToken=
 # The URL of the records in your kinto collection
-collectionurl: https://kinto.dev.mozaws.net/v1/buckets/default/collections/test-items/records
+collectionurl: https://remote-settings-dev.allizom.org/v1/buckets/default/collections/test-items/records

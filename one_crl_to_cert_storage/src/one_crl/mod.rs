@@ -10,7 +10,7 @@ use std::convert::TryInto;
 use crate::errors::*;
 
 const PRODUCTION: &str = "https://firefox.settings.services.mozilla.com/v1/buckets/security-state/collections/onecrl/records";
-const STAGING: &str =  "https://settings-cdn.stage.mozaws.net/v1/buckets/security-state/collections/onecrl/records";
+const STAGING: &str =  "https://firefox.settings.services.allizom.org/v1/buckets/security-state/collections/onecrl/records";
 
 pub enum Environment {
     Production,
