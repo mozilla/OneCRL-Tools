@@ -39,7 +39,7 @@ jobs:
       # specify the version
       - image: circleci/golang:1.15
 
-    working_directory: /go/src/github.com/mozilla.com/OneCRL-Tools/
+    working_directory: /go/src/github.com/mozilla/OneCRL-Tools/
     steps:
       - checkout
 
