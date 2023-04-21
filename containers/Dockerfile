@@ -1,12 +1,13 @@
-FROM golang:1.15-buster as builder
+FROM golang:1.20-buster as builder
 RUN mkdir /build
 WORKDIR /build
 RUN mkdir bin gopath
 ENV GOPATH /build/gopath
 ADD . /build/gopath/src/github.com/mozilla/OneCRL-Tools/
 
-RUN go get github.com/mozilla/OneCRL-Tools/ccadb2OneCRL
-RUN CGO_ENABLED=0 go build -o bin/ccadb2OneCRL github.com/mozilla/OneCRL-Tools/ccadb2OneCRL
+WORKDIR /build/gopath/src/github.com/mozilla/OneCRL-Tools/ccadb2OneCRL
+RUN CGO_ENABLED=0 go build -o /build/bin/ccadb2OneCRL
+WORKDIR /build
 
 FROM alpine:3
 RUN apk add --no-cache ca-certificates

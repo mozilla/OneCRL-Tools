@@ -19,5 +19,3 @@ require (
 	golang.org/x/sys v0.0.0-20220708085239-5a0f0661e09d // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
-
-replace github.com/mozilla/OneCRL-Tools v0.0.0-20200707043610-3371182b2d48 => ./
