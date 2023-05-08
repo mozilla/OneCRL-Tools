@@ -36,9 +36,9 @@ import (
 )
 
 const (
-	// Base URL for Kinto production [default: "https://settings.prod.mozaws.net/v1"]
+	// Base URL for Kinto production [default: "https://remote-settings.mozilla.org/v1"]
 	OneCRLProduction        = "ONECRL_PRODUCTION"
-	oneCRLProductionDefault = "https://settings.prod.mozaws.net/v1"
+	oneCRLProductionDefault = "https://remote-settings.mozilla.org/v1"
 	// User account for Kinto production. Requires OneCRLProductionPassword to be set. Mutually exclusive with OneCRLProductionToken.
 	OneCRLProductionUser = "ONECRL_PRODUCTION_USER"
 	// User password for Kinto production. Requires OneCRLProductionUser to be set. Mutually exclusive with OneCRLProductionToken.
