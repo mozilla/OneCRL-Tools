@@ -22,7 +22,7 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
-const source = "https://ccadb-public.secure.force.com/mozilla/PublicInterCertsReadyToAddToOneCRLPEMCSV"
+const source = "https://ccadb.my.salesforce-sites.com/mozilla/PublicInterCertsReadyToAddToOneCRLPEMCSV"
 
 type OneCRLStatus string
 
