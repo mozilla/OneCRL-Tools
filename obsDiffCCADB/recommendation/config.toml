@@ -1,6 +1,0 @@
-baseURL = "http://ccadb.chenderson.org/"
-languageCode = "en-us"
-title = "CCADB Migration Report"
-theme = "docuapi"
-pygmentsCodeFences = true
-pygmentsStyle = "native"

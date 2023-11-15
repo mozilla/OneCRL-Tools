@@ -1,6 +1,0 @@
-github.com/hashicorp/golang-lru v0.0.0-20160813221303-0a025b7e63ad h1:eMxs9EL0PvIGS9TTtxg4R+JxuPGav82J8rA+GFnY7po=
-github.com/hashicorp/golang-lru v0.0.0-20160813221303-0a025b7e63ad/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
-github.com/mozilla/OneCRL-Tools v0.0.0-20171120153052-ab5f27a61690 h1:0jOPkg97B49BaGzHfdRA0VEdPhNT3Ft5x5BOFy7kyKw=
-github.com/mozilla/OneCRL-Tools v0.0.0-20171120153052-ab5f27a61690/go.mod h1:ayLJla+tv168dLVSaBmwAixdm7EXM1im4DotOT6unl8=
-github.com/throttled/throttled v0.0.0-20171201095108-8bde2fa97341 h1:aeRAOvEx8Rlna6yE3UGpv//BCv8Om+SszrTrtAP+bb4=
-github.com/throttled/throttled v0.0.0-20171201095108-8bde2fa97341/go.mod h1:0BjlrEGQmvxps+HuXLsyRdqpSRvJpq0PNIsOtqP9Nos=
