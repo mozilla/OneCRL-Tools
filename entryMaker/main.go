@@ -15,8 +15,8 @@ import (
 	"fmt"
 	"github.com/google/certificate-transparency-go/asn1"
 	"github.com/google/certificate-transparency-go/x509/pkix"
-	"github.com/mozilla/OneCRL-Tools/oneCRL"
-	"github.com/mozilla/OneCRL-Tools/util"
+	"github.com/mozilla/OneCRL-Tools/entryMaker/oneCRL"
+	"github.com/mozilla/OneCRL-Tools/entryMaker/util"
 	"io/ioutil"
 	"time"
 )
