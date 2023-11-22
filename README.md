@@ -73,13 +73,3 @@ Below is a description of each folder in this repository.
 **Usage:** See ccadb2OneCRL/main.go
 
 **Used By:** ccadb2OneCRL
-
-## util
-
-**Status:** In Use
-
-**Description:** 
-
-**Usage:** See entryMaker/main.go
-
-**Used By:** entryMaker
