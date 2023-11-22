@@ -15,7 +15,7 @@ go build
 Example:
 
 ```sh
-./entryMaker -cert ~/certs/Information_Security_Certification_Authority_CA_pem.crt -bug 1864724
+./entryMaker -cert ~/certs/certificate.pem -bug 1864724
 ```
 will produce an output like
 ```sh
