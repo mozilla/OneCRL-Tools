@@ -1,0 +1,12 @@
+[package]
+name = "cert-storage-inspector"
+version = "0.1.0"
+authors = ["Dana Keeler <mozkeeler@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+base64 = "0.10"
+clap = {version = "2.33", features = ["yaml"]}
+curl = "^0.4"
+rkv = { git = "https://github.com/mozilla/rkv", rev="6a866fdad2ca880df9b87fcbc9921abac1e91914", default-features = false }
+serde_json = "1.0"

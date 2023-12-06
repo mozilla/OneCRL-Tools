@@ -20,9 +20,20 @@ Below is a description of each folder in this repository.
 
 **Description:** Automates much of the process for taking reported/verified revocation data from the CCADB and adding it to OneCRL.
 
-**Usage:** See the README in https://github.com/mozilla/OneCRL-Tools/tree/main/ccadb2OneCRL.
+**Usage:** See the README in https://github.com/mozilla/OneCRL-Tools/tree/main/ccadb2OneCRL
 
 **Used By:** Security Engineers and Cloud Services
+
+## cert-storage-inspector
+
+**Status:** In use
+
+**Description:** Compares the OneCRL data in a given Firefox profile against 
+ the OneCRL data in [DEFAULT_ONECRL_URL](https://firefox.settings.services.mozilla.com/v1/buckets/security-state/collections/onecrl/records).
+
+**Usage:** See the README in https://github.com/mozilla/OneCRL-Tools/tree/main/cert-storage-inspector
+
+**Used By:** CA Program Managers
 
 ## containers
 
@@ -33,6 +44,16 @@ Below is a description of each folder in this repository.
 **Usage:** See the README in https://github.com/mozilla/OneCRL-Tools/tree/main/containers
 
 **Used By:** Security Engineers and Cloud Services
+
+## decodeEntries
+
+**Status:** In use
+
+**Description:** Converts OneCRL entry data from hexadecimal serials/hashes to non-encoded human-readable format.
+
+**Usage:** See the README in https://github.com/mozilla/OneCRL-Tools/tree/main/decodeEntries
+
+**Used By:** CA Program Managers
 
 ## entryMaker
 
