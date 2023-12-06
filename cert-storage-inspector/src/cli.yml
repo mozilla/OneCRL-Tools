@@ -1,0 +1,15 @@
+name: OneCRL download checker
+args:
+    - onecrl-endpoint:
+        short: o
+        long: onecrl-endpoint
+        value_name: URL
+        help: URL of OneCRL endpoint
+        takes_value: true
+    - profile-path:
+        short: p
+        long: profile-path
+        value_name: PROFILE
+        help: path to Firefox profile
+        takes_value: true
+        required: true
