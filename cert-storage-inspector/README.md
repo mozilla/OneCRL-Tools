@@ -28,11 +28,15 @@ cargo run -- --profile-path ~/Library/Application\ Support/Firefox/Profiles/4q9e
 
 duplicate entry in OneCRL? 
 * Some older profiles may have a duplicate entry or two.
+\  
 current OneCRL revocations: 
 * The number of entries in DEFAULT_ONECRL_URL.
+\  
 revocations in profile: 
 * The number of entries in your Firefox profile. In steady-state the above two numbers should match.They will vary when DEFAULT_ONECRL_URL has been updated, but the change has not yet propagated to your Firefox profile. They may also vary if you have a Firefox profile that has entries that are no longer in OneCRL (should only happen for older profiles).
+\  
 revocations in OneCRL but not in profile:
 * The list of entries that are in DEFAULT_ONECRL_URL that have not yet propagated to your Firefox profile.
+\  
 revocations in profile but not in OneCRL:
 * Should be empty, but some older Firefox profiles may have entries that are no longer in OneCRL.
