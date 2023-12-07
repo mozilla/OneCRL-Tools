@@ -264,7 +264,8 @@ fn download_current_revocations(onecrl_url: &str) -> Result<BTreeSet<Revocation>
             continue;
         };
         if revocations.contains(&revocation) {
-            eprintln!("duplicate entry in OneCRL? ({:?})", revocation);
+  // Commenting this out, because the duplicate entry information is not typically used.
+  //          eprintln!("duplicate entry in OneCRL? ({:?})", revocation);
         } else {
             revocations.insert(revocation);
         }
