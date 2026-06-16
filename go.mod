@@ -1,22 +1,21 @@
 module github.com/mozilla/OneCRL-Tools
 
-go 1.14
+go 1.24.0
 
 require (
-	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/gocarina/gocsv v0.0.0-20200330101823-46266ca37bd3
-	github.com/google/certificate-transparency-go v1.1.4 // indirect
-	github.com/jcjones/constraintcrypto v0.0.0-20181102151840-8bf88cbc6c7c
+	github.com/google/certificate-transparency-go v1.1.4
 	github.com/joho/godotenv v1.3.0
-	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
-	github.com/tdewolff/minify v2.3.6+incompatible
-	github.com/tdewolff/parse v2.3.4+incompatible // indirect
-	github.com/tdewolff/test v1.0.6 // indirect
-	github.com/termie/go-shutil v0.0.0-20140729215957-bcacb06fecae
-	github.com/wellington/go-libsass v0.9.2
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
+	golang.org/x/crypto v0.45.0
 	gopkg.in/yaml.v2 v2.4.0
+)
+
+require (
+	github.com/kr/text v0.2.0 // indirect
+	github.com/stretchr/testify v1.7.1 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/term v0.37.0 // indirect
 )
