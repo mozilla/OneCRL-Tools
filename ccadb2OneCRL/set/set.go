@@ -82,15 +82,15 @@ func NewDynamicSetImpl() *SetImpl {
 
 // Add will ATTEMPT to add the provided to record to the set.
 // If the record cannot serialize itself into the appropriate type
-// (IsserSerial:SubjectKeyHash) then it will be silent ignored.
+// (IssuerSerial:SubjectKeyHash) then it will be silently ignored.
 // Implementors of Record SHOULD log errors this case as implementors
 // are much closer to the data and can provide more meaningful messages
 // than can be accomplished in this stack frame.
 //
-// The reason why this is an attemp is because there are entries within
+// The reason why this is an attempt is because there are entries within
 // staging that are junk data  that result in a B64 or ASN1 decoding error.
 // We would HOPE that "real" entries aren't going to suffer from
-// this, however we have not way to tell which entries are
+// this, however we have no way to tell which entries are
 // test data and which are destined for production. I
 // suppose if an entry doesn't show up on Bugzilla, but you
 // see it logged, then we know why.
@@ -185,7 +185,7 @@ func (s *SetImpl) Contains(record Record) bool {
 	return s.Get(record) != nil
 }
 
-// Union returns the unino of self and other. If self and other
+// Union returns the union of self and other. If self and other
 // are homogenous and of same type, then the returned Set will
 // also be homogenous of the same type. Otherwise the returned set
 // will be heterogeneous.
@@ -206,7 +206,7 @@ func (s *SetImpl) Union(other Set) Set {
 
 // Difference returns a Set of all Records that are in self
 // but are NOT in other. If self is homogenous then the returned
-// Set will be homogenous and off the same type as self.
+// Set will be homogenous and of the same type as self.
 func (s *SetImpl) Difference(other Set) Set {
 	difference := s.setFactory()
 	for r := range s.Iter() {
@@ -219,7 +219,7 @@ func (s *SetImpl) Difference(other Set) Set {
 
 // Intersection returns a Set of all Records that are both in self
 // AND in other. If self is homogenous then the returned
-//// Set will be homogenous and off the same type as self.
+// Set will be homogenous and of the same type as self.
 func (s *SetImpl) Intersection(other Set) Set {
 	intersection := s.setFactory()
 	for r := range s.Iter() {

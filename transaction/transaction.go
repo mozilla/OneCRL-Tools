@@ -176,7 +176,7 @@ func Start() *Transactions {
 // true, then the Transactions.Close function is deferred before
 // any attempts to commit are executed.
 //
-// If AutoRollbackonError is set then this closure will be executed
+// If AutoRollbackOnError is set then this closure will be executed
 // AFTER the rollbacks are attempted (if they are attempted).
 //
 // If any errors occur during closure then they will be wrapped up
@@ -190,7 +190,7 @@ func (txs *Transactions) AutoClose(should bool) *Transactions {
 // AutoRollbackOnError is true then a function is deferred that checks
 // the result of Commit. If the returned error is non-nil, then
 // Transactions.Rollback is called. Else, if error is nil then
-// no operations is taken.
+// no operation is taken.
 //
 // If any errors occur during rollback then they will be wrapped up
 // and reported by the Commit procedure itself.
@@ -257,7 +257,7 @@ func (txs *Transactions) Rollback(cause error) error {
 
 // Close closes out all composited transactors.
 //
-// Closing is done a FIFO manner and is done all
+// Closing is done in a FIFO manner and is done all
 // composited transactors if-and-only if their
 // commit function was called.
 func (txs *Transactions) Close() error {
