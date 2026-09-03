@@ -78,7 +78,7 @@ func FromReader(reader io.Reader) ([]*Certificate, error) {
 // serial number (https://tools.ietf.org/html/rfc5280#section-4.1.2.2)
 //
 // An error will be logged and a nil IssuerSerial returned if no certificate is present or if
-// the certificate cannot be parsed..
+// the certificate cannot be parsed.
 func (c *Certificate) IssuerSerial() *set.IssuerSerial {
 	cert, err := c.ParseCertificate()
 	if err != nil {
@@ -104,7 +104,7 @@ func (c *Certificate) IssuerSerial() *set.IssuerSerial {
 // with SHA256.
 //
 // An error will be logged and a nil SubjectKeyHash returned if no certificate is present or if
-// the certificate cannot be parsed..
+// the certificate cannot be parsed.
 func (c *Certificate) SubjectKeyHash() *set.SubjectKeyHash {
 	cert, err := c.ParseCertificate()
 	if err != nil {
@@ -132,7 +132,7 @@ func (c *Certificate) ParseCertificate() (*x509.Certificate, error) {
 	}
 	b, _ := pem.Decode([]byte(p))
 	if b == nil {
-		return nil, fmt.Errorf("fail to decode pem from CCADB: '%s'", c.PemInfo)
+		return nil, fmt.Errorf("failed to decode pem from CCADB: '%s'", c.PemInfo)
 	}
 	return x509.ParseCertificate(b.Bytes)
 }
