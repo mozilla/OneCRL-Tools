@@ -6,7 +6,6 @@ package main
 
 import (
 	"crypto/sha256"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
@@ -132,11 +131,9 @@ func main() {
 		case "subject-pubkey":
 			subjectString := base64.StdEncoding.EncodeToString(cert.TBSCertificate.Subject.FullBytes)
 
-			if pubKeyData, err := x509.MarshalPKIXPublicKey(cert.TBSCertificate.PublicKey); err == nil {
-				hash := sha256.Sum256(pubKeyData)
-				base64EncodedHash := base64.StdEncoding.EncodeToString(hash[:])
-				record = oneCRL.Record{Subject: subjectString, PubKeyHash: base64EncodedHash}
-			}
+			hash := sha256.Sum256(cert.TBSCertificate.PublicKey.Raw)
+			base64EncodedHash := base64.StdEncoding.EncodeToString(hash[:])
+			record = oneCRL.Record{Subject: subjectString, PubKeyHash: base64EncodedHash}
 		default:
 			panic("Unexpected revocation type")
 		}
