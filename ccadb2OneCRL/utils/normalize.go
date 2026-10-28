@@ -5,8 +5,10 @@
 package utils
 
 import (
+	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -56,4 +58,16 @@ func B64Decode(b64 string) ([]byte, error) {
 
 func B64Encode(src []byte) string {
 	return base64.StdEncoding.EncodeToString(src)
+}
+
+// NameString formats a DER encoded distinguished name the way crypto/x509 does,
+// e.g. "CN=Example CA,O=Example,C=US". Names that cannot be parsed are hex encoded.
+func NameString(raw []byte) string {
+	var rdns pkix.RDNSequence
+	if rest, err := asn1.Unmarshal(raw, &rdns); err != nil || len(rest) != 0 {
+		return hex.EncodeToString(raw)
+	}
+	var name pkix.Name
+	name.FillFromRDNSequence(&rdns)
+	return name.String()
 }
