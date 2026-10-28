@@ -57,6 +57,21 @@ It removes the entries that are no longer in OneCRL, and adds an entry for each 
 
 Entries whose certificate is known to neither the CCADB nor crt.sh are not listed, and so are never removed automatically. As of 2026-11-04 there are 61 of them, added by bugs [1267648](https://bugzilla.mozilla.org/show_bug.cgi?id=1267648) (54), [1155145](https://bugzilla.mozilla.org/show_bug.cgi?id=1155145) (5), [1181126](https://bugzilla.mozilla.org/show_bug.cgi?id=1181126) (1), and [1484798](https://bugzilla.mozilla.org/show_bug.cgi?id=1484798) (1).
 
+### CRLSet check
+
+After each update, the tool checks whether Chrome's [CRLSet](https://www.chromium.org/Home/chromium-security/crlsets/) revokes any intermediate certificates that are neither in OneCRL nor staged for it. It runs even if the update fails or stops early because a change is in review.
+
+The check compares the current CRLSet with the records in the production collection that changes are staged in (`ONECRL_PRODUCTION_BUCKET`). Records that are awaiting review, including any that this run just staged, therefore count as being in OneCRL. In a dry run, so do the records that a real run would have added. Every run reports every certificate that it finds, so a certificate is reported until it is added to OneCRL or, if it does not belong in OneCRL, its CCADB OneCRL status is set to "Not Applicable".
+
+An entry in the CRLSet is reported if it is neither in OneCRL nor staged for it, and it is one of the following. Each group has its own Slack message, written to a file in `CRLSET_REPORT_DIR`:
+
+* `revoked-only-in-crlset.txt`: The CCADB does not record the certificate as revoked (`ccadb-not-revoked`), or does not have it at all, although it was issued by an included root (`undisclosed`). This tool starts from the CCADB, so it won't add these to OneCRL.
+* `revoked-in-ccadb.txt`: The CCADB records the certificate as revoked (`not-in-onecrl`), but this tool has not staged it. This tool only stages certificates whose CCADB OneCRL status is "Ready to Add", and it stages nothing while a previous change is in review. Certificates whose CCADB OneCRL status is "Not Applicable" are not reported.
+
+Certificates whose extended key usage extension excludes TLS server authentication are ignored, and so are revocations of certificates issued by intermediates, as these are almost all end-entity certificates. OneCRL entries that are not in the CRLSet are not reported.
+
+If the check fails, it writes a message about the failure to `crlset-check-failed.txt` instead. A failure of the check does not change the tool's exit status. Each run removes the messages left by the previous one. If `CRLSET_REPORT_DIR` is not set, the messages are logged instead.
+
 ### Sample Output
 
 The following is a sample output to Bugzilla dev of a successful run:
@@ -172,5 +187,11 @@ BUGZILLA_API_KEY=
 # Target directory for logs [default: stdout/stderr]
 # Each run of the tool will be logged to the timestamp of when it was ran.
 LOG_DIR=/opt/ccadb2onecrl/logs
+
+# Directory to write Slack messages about the CRLSet check to [default: log them]
+#CRLSET_REPORT_DIR=/opt/ccadb2onecrl/crlset-reports
+
+# Check this "crl-set" file rather than fetching the CRLSet from Google.
+#CRLSET_FILE=
 
 ```
