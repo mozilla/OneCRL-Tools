@@ -6,7 +6,6 @@ package ccadb
 
 import (
 	"crypto/sha256"
-	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"io"
@@ -14,6 +13,7 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/zmap/zcrypto/x509"
 
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/set"
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/utils"
@@ -120,15 +120,21 @@ func (c *Certificate) SubjectKeyHash() *set.SubjectKeyHash {
 	return &skh
 }
 
+// ErrNoCertificate is returned by ParseCertificate if the CCADB record does not have a certificate.
+var ErrNoCertificate = errors.New("CCADB record has an empty certificate field")
+
 // ParseCertificate returns the parsed x509.Certificate.
 //
 // A nil certificate and an error is returned if the CCADB does not
 // have a certificate, the certificate cannot be PEM decoded, or
 // the certificate cannot be x509 decoded.
+//
+// The CCADB has certificates that Go's crypto/x509 rejects (e.g. because of
+// malformed name constraints), so we use the more lenient parser from zcrypto.
 func (c *Certificate) ParseCertificate() (*x509.Certificate, error) {
 	p := c.PEM()
 	if p == "" {
-		return nil, errors.New("CCADB record has an empty certificate field")
+		return nil, ErrNoCertificate
 	}
 	b, _ := pem.Decode([]byte(p))
 	if b == nil {

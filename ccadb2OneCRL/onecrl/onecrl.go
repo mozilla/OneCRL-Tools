@@ -193,7 +193,7 @@ func (r *Record) ToComparison() (interface{}, error) {
 		return IssuerSerialComparison{
 			Issuer: Comparison{
 				OneCRL: r.IssuerName,
-				CCADB:  cert.Issuer.String(),
+				CCADB:  utils.NameString(cert.RawIssuer),
 			},
 			Serial: Comparison{
 				OneCRL: r.SerialNumber,
@@ -208,7 +208,7 @@ func (r *Record) ToComparison() (interface{}, error) {
 		return SubjectKeyHashComparison{
 			Subject: Comparison{
 				OneCRL: r.Subject,
-				CCADB:  cert.Subject.String(),
+				CCADB:  utils.NameString(cert.RawSubject),
 			},
 			Keyhash: Comparison{
 				OneCRL: r.PubKeyHash,
