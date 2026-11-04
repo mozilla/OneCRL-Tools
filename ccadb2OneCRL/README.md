@@ -73,9 +73,19 @@ A convenience script, `deploy.sh`, has been provided for deployment that is port
 ### Testing
 If you have Docker installed, then `go test .` will fire up a local Kinto instance that is used to simulate Kinto Staging/Production and uses Bugzilla's open development instance.
 
+### Dry run
+
+With `-dry-run`, the tool computes the entries that it would add to and remove from OneCRL, prints them to stdout as JSON, and stops without changing Kinto or Bugzilla. The `additions` and `removals` have the same contents as the `OneCRLAdditions.txt` and `OneCRLRemovals.txt` bug attachments, and `stagingDeletions` and `productionDeletions` count the records that would be deleted from each collection.
+
+```bash
+./ccadb2OneCRL -dry-run /opt/configDir/prod.env | jq '.removals | length'
+```
+
+A dry run does not need credentials, as Kinto allows anonymous reads of OneCRL. If authentication fails, it logs a warning and continues. If staging or production is in review, it logs the bugs that a real run would post reminders to. Logs go to stderr rather than to `LOG_DIR`.
+
 ### Configuration
 
-This tool takes in exactly one optional argument - a path to a configuration file.
+This tool takes one optional flag, `-dry-run` (see [Dry run](#dry-run)), and one optional argument - a path to a configuration file. The flag must come before the path.
 
 ```bash
 ./ccadb2OneCRL /opt/configDir/prod.env

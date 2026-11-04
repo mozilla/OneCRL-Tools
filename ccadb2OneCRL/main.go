@@ -6,7 +6,9 @@ package main // import "github.com/mozilla/OneCRL-Tools/ccadb2OneCRL"
 import (
 	"encoding/csv"
 	"encoding/json"
+	"flag"
 	"fmt"
+	"io"
 	"path/filepath"
 	"strings"
 
@@ -85,25 +87,36 @@ const (
 )
 
 func main() {
+	dryRun := flag.Bool("dry-run", false, "print the entries that would be added to and removed from OneCRL, "+
+		"without changing Kinto or Bugzilla")
+	flag.Usage = func() {
+		_, _ = fmt.Fprintf(flag.CommandLine.Output(), "usage: %s [-dry-run] [config.env]\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+	flag.Parse()
 	config := filepath.Join(filepath.Dir(os.Args[0]), "config.env")
-	if len(os.Args) > 1 {
-		config = os.Args[1]
+	if flag.NArg() > 0 {
+		config = flag.Arg(0)
 	}
 	err := godotenv.Load(config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "config.env appears to be malformed, err: %v\n", err)
 		os.Exit(1)
 	}
-	_main()
+	_main(*dryRun)
 }
 
 // _main is just a unit testable main (since main is looking at command line args
 // and loading configs from the filesystem it's not a great target for testing).
-func _main() {
-	err := SetLogOut()
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to set logging out file, err: %v\n", err)
-		os.Exit(1)
+//
+// A dry run logs to stderr, rather than to LOG_DIR, as it is meant to be run by hand.
+func _main(dryRun bool) {
+	if !dryRun {
+		err := SetLogOut()
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "failed to set logging out file, err: %v\n", err)
+			os.Exit(1)
+		}
 	}
 	level, err := ParseLogLevel()
 	if err != nil {
@@ -129,6 +142,7 @@ func _main() {
 	}
 	bugz := BugzillaClient()
 	updater := NewUpdate(staging, production, bugz)
+	updater.DryRun = dryRun
 	err = updater.Update()
 	if err != nil {
 		log.WithError(err).Error("update failed")
@@ -264,9 +278,12 @@ type Updater struct {
 	stagingRemovals    []*onecrl.Record
 	productionRemovals []*onecrl.Record
 	bugID              int
-	staging            *kinto.Client
-	production         *kinto.Client
-	bugzilla           *bugzilla.Client
+	// DryRun makes Update report what it would change, rather than changing
+	// anything in Kinto or Bugzilla.
+	DryRun     bool
+	staging    *kinto.Client
+	production *kinto.Client
+	bugzilla   *bugzilla.Client
 }
 
 func NewUpdate(staging, production *kinto.Client, bugz *bugzilla.Client) *Updater {
@@ -284,7 +301,11 @@ func (u *Updater) Update() error {
 	// staging before we move on with anything.
 	err := u.TryAuth()
 	if err != nil {
-		return err
+		if !u.DryRun {
+			return err
+		}
+		// Kinto allows anonymous reads of OneCRL, which is all that a dry run needs.
+		log.WithError(err).Warn("dry run: continuing without authentication, but a real run would stop here")
 	}
 	// Policy is that if staging or prod (or both) are in review then we bail
 	// out of this operation early and send out emails.
@@ -302,6 +323,10 @@ func (u *Updater) Update() error {
 		if err != nil {
 			return err
 		}
+		if u.DryRun {
+			u.reportReminders(intersection)
+			return nil
+		}
 		u.BlastEmails(intersection)
 		return nil
 	}
@@ -312,6 +337,9 @@ func (u *Updater) Update() error {
 	err = u.FindExpired()
 	if err != nil {
 		return err
+	}
+	if u.DryRun {
+		return u.reportDryRun(os.Stdout)
 	}
 	if u.NoDiffs() {
 		log.Info("no differences found between the CCADB and OneCRL staging/production, and no expired entries")
@@ -788,8 +816,8 @@ type removedEntry struct {
 	Bug          string `json:"bug"`
 }
 
-// attachRemovals attaches the entries that are removed because they have expired.
-func (u *Updater) attachRemovals(bugID int) error {
+// removedEntries describes the entries that are removed because they have expired.
+func (u *Updater) removedEntries() []removedEntry {
 	entries := make([]removedEntry, 0, len(u.removals))
 	for _, removal := range u.removals {
 		entries = append(entries, removedEntry{
@@ -804,7 +832,12 @@ func (u *Updater) attachRemovals(bugID int) error {
 			Bug:          removal.Record.Details.Bug,
 		})
 	}
-	d, err := json.MarshalIndent(entries, "", "  ")
+	return entries
+}
+
+// attachRemovals attaches the entries that are removed because they have expired.
+func (u *Updater) attachRemovals(bugID int) error {
+	d, err := json.MarshalIndent(u.removedEntries(), "", "  ")
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -873,6 +906,51 @@ func (u *Updater) PutProductionIntoReview() transaction.Transactor {
 	}).WithRollback(func(_ error) error {
 		return errors.WithStack(u.production.ToRollBack(ProductionCollection()))
 	})
+}
+
+// dryRunReport is what a dry run prints. Additions and Removals have the same
+// contents as the OneCRLAdditions.txt and OneCRLRemovals.txt bug attachments.
+type dryRunReport struct {
+	Additions []*onecrl.Record `json:"additions"`
+	Removals  []removedEntry   `json:"removals"`
+	// The number of records that would be deleted from each of staging and production.
+	// Staging and production may each have more than one record for an entry.
+	StagingDeletions    int `json:"stagingDeletions"`
+	ProductionDeletions int `json:"productionDeletions"`
+}
+
+// reportDryRun writes the changes that Update would make, as JSON, to out.
+func (u *Updater) reportDryRun(out io.Writer) error {
+	log.WithField("additions", len(u.changes)).
+		WithField("removals", len(u.removals)).
+		WithField("stagingDeletions", len(u.stagingRemovals)).
+		WithField("productionDeletions", len(u.productionRemovals)).
+		Info("dry run: not changing Kinto or Bugzilla")
+	d, err := json.MarshalIndent(dryRunReport{
+		Additions:           u.changes,
+		Removals:            u.removedEntries(),
+		StagingDeletions:    len(u.stagingRemovals),
+		ProductionDeletions: len(u.productionRemovals),
+	}, "", "  ")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, err = fmt.Fprintf(out, "%s\n", d)
+	return errors.WithStack(err)
+}
+
+// reportReminders logs the bugs that BlastEmails would post reminders to.
+func (u *Updater) reportReminders(intersection *onecrl.Set) {
+	seen := make(map[string]bool)
+	bugs := make([]string, 0)
+	for e := range intersection.Iter() {
+		bug := e.(*onecrl.Record).Details.Bug
+		if !seen[bug] {
+			seen[bug] = true
+			bugs = append(bugs, bug)
+		}
+	}
+	log.WithField("bugs", bugs).Info("dry run: not posting reminders to the bugs for the changes in review")
 }
 
 func (u *Updater) BlastEmails(intersection *onecrl.Set) {

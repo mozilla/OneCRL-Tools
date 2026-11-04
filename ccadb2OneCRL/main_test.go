@@ -39,7 +39,7 @@ func TestE2E(t *testing.T) {
 			panic(err)
 		}
 	}
-	_main()
+	_main(false)
 }
 
 var dev = &auth.User{
