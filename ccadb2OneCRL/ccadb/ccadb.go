@@ -24,6 +24,10 @@ import (
 
 const source = "https://ccadb.my.salesforce-sites.com/mozilla/PublicInterCertsReadyToAddToOneCRLPEMCSV"
 
+// RevokedIntermediatesSource is the CCADB report of revoked intermediate
+// certificates. Unlike the other reports, it includes certificates that have expired.
+const RevokedIntermediatesSource = "https://ccadb.my.salesforce-sites.com/mozilla/PublicIntermediateCertsRevokedWithPEMCSV"
+
 type OneCRLStatus string
 
 var ReadyToAdd OneCRLStatus = "Ready to Add"
