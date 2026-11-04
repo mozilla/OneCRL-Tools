@@ -18,7 +18,7 @@ import (
 )
 
 const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
-const StagePrefix string = "https://firefox.settings.services.allizom.org"
+const StagePrefix string = "https://remote-settings.allizom.org"
 const RecordsPathPrefix string = "/v1/buckets/"
 const RecordsPathSuffix string = "/collections/onecrl/records"
 
