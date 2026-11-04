@@ -6,6 +6,7 @@ require (
 	github.com/gocarina/gocsv v0.0.0-20200330101823-46266ca37bd3
 	github.com/google/certificate-transparency-go v1.1.4
 	github.com/joho/godotenv v1.3.0
+	github.com/lib/pq v1.10.9
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3

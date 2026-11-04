@@ -45,7 +45,15 @@ This file lists issuer:serial entries in OneCRL that the CCADB report of revoked
 * 154 with a `certificate` found on [crt.sh](https://crt.sh) by issuer and serial number (`source` is `crt.sh`, with a `crtsh_id`).
 * 12 with a `certificate` from the CCADB's other reports, which list certificates that are not revoked and drop them once they expire (`source` is `ccadb`).
 
-Each entry has the record's `issuerName` and `serialNumber` (record IDs differ between Kinto Staging and Kinto Production), the decoded `issuer` and hex `serial`, the `bug` that added it, and the `certificate` (required). When an entry is added to OneCRL for a certificate that is not in the CCADB report of revoked intermediates, add it here too.
+Each entry has the record's `issuerName` and `serialNumber` (record IDs differ between Kinto Staging and Kinto Production), the decoded `issuer` and hex `serial`, the `bug` that added it, and the `certificate` (required).
+
+To update the file, run the following from the root of the repository:
+
+```sh
+go run ./ccadb2OneCRL/updateSupplemental [-dry-run]
+```
+
+It removes the entries that are no longer in OneCRL, and adds an entry for each issuer:serial entry in OneCRL that neither the CCADB report of revoked intermediates nor the file covers, looking up its certificate in the CCADB's reports of intermediates and included roots and then in [crt.sh](https://crt.sh)'s public PostgreSQL database. It lists the entries whose certificate it cannot find. Run it after entries are added to OneCRL other than by ccadb2OneCRL, and after ccadb2OneCRL removes entries.
 
 Entries whose certificate is known to neither the CCADB nor crt.sh are not listed, and so are never removed automatically. As of 2026-11-04 there are 61 of them, added by bugs [1267648](https://bugzilla.mozilla.org/show_bug.cgi?id=1267648) (54), [1155145](https://bugzilla.mozilla.org/show_bug.cgi?id=1155145) (5), [1181126](https://bugzilla.mozilla.org/show_bug.cgi?id=1181126) (1), and [1484798](https://bugzilla.mozilla.org/show_bug.cgi?id=1484798) (1).
 
