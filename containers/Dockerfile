@@ -1,4 +1,4 @@
-FROM golang:1.20-buster as builder
+FROM golang:1.24-bookworm AS builder
 RUN mkdir /build
 WORKDIR /build
 RUN mkdir bin gopath
