@@ -101,6 +101,12 @@ func key(issuer, serial []byte) string {
 	return string(issuer) + "|" + string(serial)
 }
 
+// Key identifies the issuer:serial entry that would revoke this certificate.
+// It is comparable with the Key of a record.
+func (c *Certificate) Key() string {
+	return key(c.Issuer, c.Serial)
+}
+
 // Find returns the issuer:serial entries among records for which every
 // certificate in certs with the same issuer and serial number expired more
 // than GracePeriod before now. Entries without any such certificate are not
@@ -108,7 +114,7 @@ func key(issuer, serial []byte) string {
 func Find(records []*onecrl.Record, certs []*Certificate, now time.Time) []*Removal {
 	latest := make(map[string]*Certificate)
 	for _, cert := range certs {
-		k := key(cert.Issuer, cert.Serial)
+		k := cert.Key()
 		if existing, ok := latest[k]; !ok || cert.NotAfter.After(existing.NotAfter) {
 			latest[k] = cert
 		}
