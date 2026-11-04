@@ -32,6 +32,8 @@ import (
 	"github.com/mozilla/OneCRL-Tools/kinto"
 
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/ccadb"
+	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/prune"
+	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/utils"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -255,11 +257,16 @@ func SetLogOut() error {
 // Updater is all of the state necessary to keep track of a SINGLE round of updates.
 // It is not intended to be reused (although it could be with a bit of modification).
 type Updater struct {
-	changes    []*onecrl.Record
-	bugID      int
-	staging    *kinto.Client
-	production *kinto.Client
-	bugzilla   *bugzilla.Client
+	changes []*onecrl.Record
+	// Entries to remove because the certificates they revoke have expired, and
+	// the records for those entries in staging and production.
+	removals           []*prune.Removal
+	stagingRemovals    []*onecrl.Record
+	productionRemovals []*onecrl.Record
+	bugID              int
+	staging            *kinto.Client
+	production         *kinto.Client
+	bugzilla           *bugzilla.Client
 }
 
 func NewUpdate(staging, production *kinto.Client, bugz *bugzilla.Client) *Updater {
@@ -302,8 +309,12 @@ func (u *Updater) Update() error {
 	if err != nil {
 		return err
 	}
+	err = u.FindExpired()
+	if err != nil {
+		return err
+	}
 	if u.NoDiffs() {
-		log.Info("no differences found between the CCADB and OneCRL staging/production")
+		log.Info("no differences found between the CCADB and OneCRL staging/production, and no expired entries")
 		return nil
 	}
 	// From here on we begin mutating datasets (OneCRL staging/production and Bugzilla)
@@ -311,10 +322,12 @@ func (u *Updater) Update() error {
 	// each step should be able to undo itself if necessary.
 	err = transaction.Start().
 		Then(u.PushToStaging()).
+		Then(u.RemoveFromStaging()).
 		Then(u.OpenBug()).
 		Then(u.UpdateRecordsWithBugID()).
 		Then(u.PutStagingIntoReview()).
 		Then(u.PushToProduction()).
+		Then(u.RemoveFromProduction()).
 		Then(u.PutProductionIntoReview()).
 		AutoRollbackOnError(true).
 		AutoClose(true).
@@ -365,14 +378,102 @@ func (u *Updater) FindDiffs() error {
 	}
 	diffs := c.Difference(oneCRL)
 	u.changes = make([]*onecrl.Record, 0)
+	now := time.Now()
 	for diff := range diffs.Iter() {
-		record, err := onecrl.FromCCADB(diff.(*ccadb.Certificate))
+		certificate := diff.(*ccadb.Certificate)
+		// Don't add an entry that FindExpired would immediately remove.
+		if cert, err := certificate.ParseCertificate(); err == nil && prune.Expired(cert.NotAfter, now) {
+			log.WithField("issuer", certificate.CertificateIssuerName).
+				WithField("serial", certificate.CertificateSerialNumber).
+				WithField("notAfter", cert.NotAfter).
+				Info("not adding an entry for a certificate that has expired")
+			continue
+		}
+		record, err := onecrl.FromCCADB(certificate)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		u.changes = append(u.changes, record)
 	}
 	return nil
+}
+
+// FindExpired finds the issuer:serial entries in OneCRL staging and production
+// for which every known matching certificate expired more than
+// prune.GracePeriod ago. Entries that do not match any known certificate are
+// left alone.
+func (u *Updater) FindExpired() error {
+	production := ProductionCollection()
+	if err := u.production.AllRecords(production); err != nil {
+		return errors.WithStack(err)
+	}
+	staging := StagingCollection()
+	if err := u.staging.AllRecords(staging); err != nil {
+		return errors.WithStack(err)
+	}
+	certs, err := knownCertificates()
+	if err != nil {
+		return err
+	}
+	records := append(append([]*onecrl.Record{}, production.Data...), staging.Data...)
+	u.removals = prune.Find(records, certs, time.Now())
+	expired := make(map[string]bool, len(u.removals))
+	for _, removal := range u.removals {
+		k, _ := prune.Key(removal.Record)
+		expired[k] = true
+	}
+	inExpired := func(records []*onecrl.Record) []*onecrl.Record {
+		matching := make([]*onecrl.Record, 0)
+		for _, record := range records {
+			if k, ok := prune.Key(record); ok && expired[k] {
+				matching = append(matching, record)
+			}
+		}
+		return matching
+	}
+	u.stagingRemovals = inExpired(staging.Data)
+	u.productionRemovals = inExpired(production.Data)
+	log.WithField("entries", len(u.removals)).
+		WithField("staging", len(u.stagingRemovals)).
+		WithField("production", len(u.productionRemovals)).
+		Info("found expired OneCRL entries")
+	return nil
+}
+
+// knownCertificates returns the certificates in the CCADB report of revoked
+// intermediates, and those in prune/supplemental.json for entries that the
+// report does not cover.
+func knownCertificates() ([]*prune.Certificate, error) {
+	certs, err := prune.Supplemental()
+	if err != nil {
+		return nil, err
+	}
+	records, err := ccadb.FromURL(ccadb.RevokedIntermediatesSource)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to fetch %s", ccadb.RevokedIntermediatesSource)
+	}
+	for _, record := range records {
+		cert, err := record.ParseCertificate()
+		if err != nil {
+			if !errors.Is(err, ccadb.ErrNoCertificate) {
+				log.WithError(err).
+					WithField("issuer", record.CertificateIssuerName).
+					WithField("serial", record.CertificateSerialNumber).
+					Warn("failed to parse CCADB certificate")
+			}
+			continue
+		}
+		c, err := prune.FromX509(cert)
+		if err != nil {
+			log.WithError(err).
+				WithField("issuer", record.CertificateIssuerName).
+				WithField("serial", record.CertificateSerialNumber).
+				Warn("failed to read CCADB certificate")
+			continue
+		}
+		certs = append(certs, c)
+	}
+	return certs, nil
 }
 
 // FindIntersection finds the intersection between
@@ -412,7 +513,7 @@ func (u *Updater) getDataSets() (*onecrl.Set, *ccadb.Set, error) {
 }
 
 func (u *Updater) NoDiffs() bool {
-	return len(u.changes) == 0
+	return len(u.changes) == 0 && len(u.removals) == 0
 }
 
 func (u *Updater) AnySignerInReview() (bool, error) {
@@ -450,6 +551,45 @@ func (u *Updater) PushToStaging() transaction.Transactor {
 		for i := 0; i < committed; i++ {
 			_, e := u.staging.Delete(collection, u.changes[i])
 			if e != nil {
+				if err == nil {
+					err = e
+				} else {
+					err = errors.Wrap(err, e.Error())
+				}
+			}
+		}
+		return errors.WithStack(err)
+	})
+}
+
+// RemoveFromStaging deletes the records for expired entries from staging.
+func (u *Updater) RemoveFromStaging() transaction.Transactor {
+	return removeRecords(u.staging, StagingCollection, u.stagingRemovals)
+}
+
+// RemoveFromProduction deletes the records for expired entries from production.
+func (u *Updater) RemoveFromProduction() transaction.Transactor {
+	return removeRecords(u.production, ProductionCollection, u.productionRemovals)
+}
+
+// removeRecords deletes the given records. If a downstream step fails, the
+// deleted records are recreated with their original IDs.
+func removeRecords(client *kinto.Client, collection func() *onecrl.OneCRL, records []*onecrl.Record) transaction.Transactor {
+	deleted := make([]*onecrl.Record, 0, len(records))
+	return transaction.NewTransaction().WithCommit(func() error {
+		for _, record := range records {
+			if _, err := client.Delete(collection(), record); err != nil {
+				return errors.WithStack(err)
+			}
+			deleted = append(deleted, record)
+		}
+		return nil
+	}).WithRollback(func(_ error) error {
+		// As with PushToStaging, a single failure does not stop the rollback.
+		var err error = nil
+		for _, record := range deleted {
+			record.LastModified = 0
+			if e := client.NewRecord(collection(), record); e != nil {
 				if err == nil {
 					err = e
 				} else {
@@ -502,11 +642,11 @@ func (u *Updater) OpenBug() transaction.Transactor {
 		bug := &bugs.Create{
 			Product:     "Core",
 			Component:   "Security Block-lists, Allow-lists, and other State",
-			Summary:     fmt.Sprintf("CCADB entries generated %s", time.Now().UTC().Format(time.RFC3339)),
+			Summary:     u.bugSummary(time.Now().UTC().Format(time.RFC3339)),
 			Version:     "unspecified",
 			Severity:    "normal",
 			Type:        "enhancement",
-			Description: "Adding entries to OneCRL based on revoked intermediate certificates reported in the CCADB.",
+			Description: u.bugDescription(),
 			Cc:          cc,
 		}
 		log.WithField("payload", bug).Debug("sending bugzilla creation payload")
@@ -522,57 +662,15 @@ func (u *Updater) OpenBug() transaction.Transactor {
 		for _, record := range u.changes {
 			record.Details.Bug = u.bugzilla.ShowBug(u.bugID)
 		}
-		log.WithField("issuerSerialPairs", issuerSerialPairs).Debug("attempting to post issuer/serial pairs")
-		_, err = u.bugzilla.CreateAttachment((&attachments.Create{
-			BugId:       resp.Id,
-			Data:        []byte(issuerSerialPairs),
-			FileName:    "BugData.txt",
-			Summary:     "Line delimited issuer/serial pairs",
-			ContentType: "text/plain",
-		}).AddBug(resp.Id))
-		if err != nil {
-			log.WithError(err).WithField("attachment", "BugData.txt").Warn(attachmentWarning)
-		}
-		additions, err := json.MarshalIndent(proposedAdditions, "", "  ")
-		log.WithField("additions", proposedAdditions).Debug("attempting to post proposed OneCRL additions")
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		_, err = u.bugzilla.CreateAttachment((&attachments.Create{
-			BugId:       resp.Id,
-			Data:        additions,
-			FileName:    "OneCRLAdditions.txt",
-			Summary:     "The additions to OneCRL proposed by this bug.",
-			ContentType: "text/plain",
-		}).AddBug(resp.Id))
-		if err != nil {
-			log.WithError(err).WithField("attachment", "OneCRLAdditions.txt").Warn(attachmentWarning)
-		}
-		comparisons := make([]interface{}, 0)
-		for _, record := range u.changes {
-			d, err := record.ToComparison()
-			if err != nil {
-				log.WithField("record", record).
-					WithError(err).
-					Error("failed to generate a OneCRL/CCADB comparison")
-				return errors.WithStack(err)
+		if len(u.changes) > 0 {
+			if err := u.attachAdditions(resp.Id, issuerSerialPairs, proposedAdditions); err != nil {
+				return err
 			}
-			comparisons = append(comparisons, d)
 		}
-		d, err := json.MarshalIndent(comparisons, "", "  ")
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		log.WithField("comparison", comparisons).Debug("attempting to post OneCRL/CCADB comparison")
-		_, err = u.bugzilla.CreateAttachment((&attachments.Create{
-			BugId:       resp.Id,
-			Data:        d,
-			FileName:    "DecodedEntries.txt",
-			Summary:     "Entries with their names decoded to plain text and hexadecimal serials/hashes.",
-			ContentType: "text/plain",
-		}).AddBug(resp.Id))
-		if err != nil {
-			log.WithError(err).WithField("attachment", "DecodedEntries.txt").Warn(attachmentWarning)
+		if len(u.removals) > 0 {
+			if err := u.attachRemovals(resp.Id); err != nil {
+				return err
+			}
 		}
 		return nil
 	}).WithRollback(func(cause error) error {
@@ -592,6 +690,135 @@ func (u *Updater) OpenBug() transaction.Transactor {
 		_, err := u.bugzilla.UpdateBug(bugs.Invalidate(u.bugID, report.String()))
 		return errors.WithStack(err)
 	})
+}
+
+// bugSummary returns the summary of the bug for this round of updates.
+func (u *Updater) bugSummary(now string) string {
+	switch {
+	case len(u.changes) > 0 && len(u.removals) > 0:
+		return fmt.Sprintf("CCADB entries generated and expired entries removed %s", now)
+	case len(u.removals) > 0:
+		return fmt.Sprintf("Expired OneCRL entries removed %s", now)
+	default:
+		return fmt.Sprintf("CCADB entries generated %s", now)
+	}
+}
+
+// bugDescription returns the description of the bug for this round of updates.
+func (u *Updater) bugDescription() string {
+	description := make([]string, 0, 2)
+	if len(u.changes) > 0 {
+		description = append(description, "Adding entries to OneCRL based on revoked intermediate certificates reported in the CCADB.")
+	}
+	if len(u.removals) > 0 {
+		description = append(description, fmt.Sprintf("Removing %d entries from OneCRL because the certificates they "+
+			"revoke expired more than %d days ago.", len(u.removals), int(prune.GracePeriod.Hours()/24)))
+	}
+	return strings.Join(description, "\n\n")
+}
+
+// attachAdditions attaches the issuer/serial pairs, the proposed OneCRL records, and a
+// decoded comparison of the CCADB and OneCRL representations of the additions.
+func (u *Updater) attachAdditions(bugID int, issuerSerialPairs string, proposedAdditions []*onecrl.Record) error {
+	log.WithField("issuerSerialPairs", issuerSerialPairs).Debug("attempting to post issuer/serial pairs")
+	_, err := u.bugzilla.CreateAttachment((&attachments.Create{
+		BugId:       bugID,
+		Data:        []byte(issuerSerialPairs),
+		FileName:    "BugData.txt",
+		Summary:     "Line delimited issuer/serial pairs",
+		ContentType: "text/plain",
+	}).AddBug(bugID))
+	if err != nil {
+		log.WithError(err).WithField("attachment", "BugData.txt").Warn(attachmentWarning)
+	}
+	additions, err := json.MarshalIndent(proposedAdditions, "", "  ")
+	log.WithField("additions", proposedAdditions).Debug("attempting to post proposed OneCRL additions")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, err = u.bugzilla.CreateAttachment((&attachments.Create{
+		BugId:       bugID,
+		Data:        additions,
+		FileName:    "OneCRLAdditions.txt",
+		Summary:     "The additions to OneCRL proposed by this bug.",
+		ContentType: "text/plain",
+	}).AddBug(bugID))
+	if err != nil {
+		log.WithError(err).WithField("attachment", "OneCRLAdditions.txt").Warn(attachmentWarning)
+	}
+	comparisons := make([]interface{}, 0)
+	for _, record := range u.changes {
+		d, err := record.ToComparison()
+		if err != nil {
+			log.WithField("record", record).
+				WithError(err).
+				Error("failed to generate a OneCRL/CCADB comparison")
+			return errors.WithStack(err)
+		}
+		comparisons = append(comparisons, d)
+	}
+	d, err := json.MarshalIndent(comparisons, "", "  ")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	log.WithField("comparison", comparisons).Debug("attempting to post OneCRL/CCADB comparison")
+	_, err = u.bugzilla.CreateAttachment((&attachments.Create{
+		BugId:       bugID,
+		Data:        d,
+		FileName:    "DecodedEntries.txt",
+		Summary:     "Entries with their names decoded to plain text and hexadecimal serials/hashes.",
+		ContentType: "text/plain",
+	}).AddBug(bugID))
+	if err != nil {
+		log.WithError(err).WithField("attachment", "DecodedEntries.txt").Warn(attachmentWarning)
+	}
+	return nil
+}
+
+// removedEntry describes an entry that is removed from OneCRL in the bug attachment.
+type removedEntry struct {
+	IssuerName   string `json:"issuerName"`
+	SerialNumber string `json:"serialNumber"`
+	Issuer       string `json:"issuer"`
+	Serial       string `json:"serial"`
+	Subject      string `json:"subject"`
+	NotAfter     string `json:"notAfter"`
+	Source       string `json:"source"`
+	CrtshID      string `json:"crtsh_id,omitempty"`
+	Bug          string `json:"bug"`
+}
+
+// attachRemovals attaches the entries that are removed because they have expired.
+func (u *Updater) attachRemovals(bugID int) error {
+	entries := make([]removedEntry, 0, len(u.removals))
+	for _, removal := range u.removals {
+		entries = append(entries, removedEntry{
+			IssuerName:   removal.Record.IssuerName,
+			SerialNumber: removal.Record.SerialNumber,
+			Issuer:       utils.NameString(removal.Cert.Issuer),
+			Serial:       fmt.Sprintf("%X", removal.Cert.Serial),
+			Subject:      removal.Cert.Subject,
+			NotAfter:     removal.Cert.NotAfter.UTC().Format(time.RFC3339),
+			Source:       removal.Cert.Source,
+			CrtshID:      removal.Cert.CrtshID,
+			Bug:          removal.Record.Details.Bug,
+		})
+	}
+	d, err := json.MarshalIndent(entries, "", "  ")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, err = u.bugzilla.CreateAttachment((&attachments.Create{
+		BugId:       bugID,
+		Data:        d,
+		FileName:    "OneCRLRemovals.txt",
+		Summary:     "Entries removed from OneCRL because the certificates they revoke have expired.",
+		ContentType: "text/plain",
+	}).AddBug(bugID))
+	if err != nil {
+		log.WithError(err).WithField("attachment", "OneCRLRemovals.txt").Warn(attachmentWarning)
+	}
+	return nil
 }
 
 // After we have created the bug in question on Bugzilla, we need to go back to

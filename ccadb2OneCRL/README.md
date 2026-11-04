@@ -4,13 +4,16 @@
 
 1. Authentication for Kinto Staging and Kinto Production is attempted. If authentication fails for either-or-both, exit.
 2. If Kinto Staging is in the `in-review` state then a comment is posted to Bugzilla for the issues that are still open. Exit.
-3. Compute all entries that are within the CCADB that are not within either Kinto Staging nor Kinto Production. If no such entries are found, exit.
-4. The following transaction is built and executed
+3. Compute all entries that are within the CCADB that are not within either Kinto Staging nor Kinto Production, skipping certificates that expired more than 30 days ago.
+4. Compute all entries that are within Kinto Staging or Kinto Production and that have expired (see [Expired entries](#expired-entries)). If no entries were found in this step or the previous one, exit.
+5. The following transaction is built and executed
 
 ```go
 transaction.Start().
     // Push the candidate changes to staging. 
     Then(u.PushToStaging()).
+    // Remove the expired entries from staging.
+    Then(u.RemoveFromStaging()).
     // Open a Bugzilla ticket with information about the above changes.
     Then(u.OpenBug()).
     // Update the records from PushToStaging to hold the Bugzilla IF just generated.
@@ -19,9 +22,32 @@ transaction.Start().
     Then(u.PutStagingIntoReview()).
     // Push the candidate changes to production. Accepting these changes remains a manual step.
     Then(u.PushToProduction()).
+    // Remove the expired entries from production.
+    Then(u.RemoveFromProduction()).
+    // Put Kinto Production into review.
+    Then(u.PutProductionIntoReview()).
 ```
 
 Each step in the transaction holds a rollback procedure in the event of a downstream failure. For example, if putting staging into review fails, then Bugzilla ticket will be closed as `INVALID` with a stacktrace attached and all entries that were pushed to staging will be deleted.
+
+### Expired entries
+
+An issuer-serial entry is removed once every known certificate with the same issuer and serial number expired more than 30 days ago (`prune.GracePeriod`). Removed entries are listed in an `OneCRLRemovals.txt` attachment on the bug.
+
+The known certificates are those in the CCADB report of revoked intermediates, which includes certificates that have expired, and those in [`prune/supplemental.json`](prune/supplemental.json), which is compiled into the binary.
+
+An issuer-serial entry that does not match a known certificate will not be removed automatically. Neither will a subject-pubKeyHash entry.
+
+#### `prune/supplemental.json`
+
+This file lists issuer:serial entries in OneCRL that the CCADB report of revoked intermediates does not cover, together with the certificates they revoke. Most of them are entries for end-entity certificates. As of 2026-11-04 it has 166 entries:
+
+* 154 with a `certificate` found on [crt.sh](https://crt.sh) by issuer and serial number (`source` is `crt.sh`, with a `crtsh_id`).
+* 12 with a `certificate` from the CCADB's other reports, which list certificates that are not revoked and drop them once they expire (`source` is `ccadb`).
+
+Each entry has the record's `issuerName` and `serialNumber` (record IDs differ between Kinto Staging and Kinto Production), the decoded `issuer` and hex `serial`, the `bug` that added it, and the `certificate` (required). When an entry is added to OneCRL for a certificate that is not in the CCADB report of revoked intermediates, add it here too.
+
+Entries whose certificate is known to neither the CCADB nor crt.sh are not listed, and so are never removed automatically. As of 2026-11-04 there are 61 of them, added by bugs [1267648](https://bugzilla.mozilla.org/show_bug.cgi?id=1267648) (54), [1155145](https://bugzilla.mozilla.org/show_bug.cgi?id=1155145) (5), [1181126](https://bugzilla.mozilla.org/show_bug.cgi?id=1181126) (1), and [1484798](https://bugzilla.mozilla.org/show_bug.cgi?id=1484798) (1).
 
 ### Sample Output
 
