@@ -68,7 +68,7 @@ func TestAddComment(t *testing.T) {
 
 // It is worth noting that this "fails" on https://bugzilla-dev.allizom.org. You will receive the following...
 //
-// 		Failed to fetch attachment ID 9139509 from S3: The requested key was not found
+//	Failed to fetch attachment ID 9139509 from S3: The requested key was not found
 //
 // However, if you browse to the target bug you will absolutely see the attachment present.
 //

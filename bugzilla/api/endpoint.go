@@ -26,7 +26,6 @@ package api
 //	func (u *UpdateBug) Resource() string {
 //		return fmt.Sprintf("/bug/%d", u.BugId)
 //	}
-//
 type Endpoint interface {
 	Methoder
 	Expecter

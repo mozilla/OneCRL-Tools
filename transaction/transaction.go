@@ -65,7 +65,6 @@ type Transactor interface {
 //				return nil
 //			})).
 //		AutoClose(true).Commit()
-//
 type Transaction struct {
 	commit         Work
 	rollback       Rollback

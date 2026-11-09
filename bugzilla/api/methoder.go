@@ -14,7 +14,7 @@ import "net/http"
 //	type UpdateBug struct {
 //		...
 //		api.Update
-//  }
+//	}
 type Methoder interface {
 	Method() string
 }
