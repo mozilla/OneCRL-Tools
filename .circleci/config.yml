@@ -36,17 +36,16 @@ commands:
 jobs:
   golang-build-and-test:
     docker:
-      # specify the version
-      - image: circleci/golang:1.15
+      # Keep in step with the go directive in go.mod and containers/Dockerfile.
+      - image: cimg/go:1.24
 
-    working_directory: /go/src/github.com/mozilla.com/OneCRL-Tools/
     steps:
       - checkout
 
       # specify any bash command here prefixed with `run: `
       - run:
           name: Download and build
-          command: go get -v -t -d ./...
+          command: go mod download && go build ./...
       - run:
           name: gofmt
           command: >
