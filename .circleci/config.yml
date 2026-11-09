@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  docker: circleci/docker@1.2.1
+  docker: circleci/docker@4.0.1
 
 commands:
   docker-build-and-publish:
@@ -27,11 +27,11 @@ commands:
           image: ${DOCKER_IMAGE}
           tag: <<parameters.tag>>
           dockerfile: containers/Dockerfile
-          step-name: build crlite container
+          step_name: build ccadb2OneCRL container
       - docker/push:
           image: ${DOCKER_IMAGE}
           tag: <<parameters.tag>>
-          step-name: push crlite container
+          step_name: push ccadb2OneCRL container
 
 jobs:
   golang-build-and-test:
