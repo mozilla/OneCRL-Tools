@@ -14,7 +14,7 @@ import "net/http"
 //	type GetBug struct {
 //		...
 //		api.Ok
-//  }
+//	}
 type Expecter interface {
 	Expect() int
 }

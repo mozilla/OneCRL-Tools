@@ -18,7 +18,7 @@ import (
 )
 
 const ProductionPrefix string = "https://firefox.settings.services.mozilla.com"
-const StagePrefix string = "https://firefox.settings.services.allizom.org"
+const StagePrefix string = "https://remote-settings.allizom.org"
 const RecordsPathPrefix string = "/v1/buckets/"
 const RecordsPathSuffix string = "/collections/onecrl/records"
 
@@ -73,7 +73,7 @@ const DEFAULT_ONECRLCONFIG string = ".config.yml"
 const DEFAULT_ONECRLENV string = "production"
 const DEFAULT_ONECRLBUCKET string = "security-state"
 const DEFAULT_ONECRLVERBOSE string = "no"
-const DEFAULT_COLLECTION_URL string = "https://remote-settings.allizom.org/v1/buckets/ecurity-state-staging/collections/onecrl"
+const DEFAULT_COLLECTION_URL string = "https://remote-settings.allizom.org/v1/buckets/security-state-staging/collections/onecrl"
 const DEFAULT_DEFAULT string = ""
 const DEFAULT_PREVIEW string = "no"
 const DEFAULT_ENFORCE_CRL_CHECKS string = "yes"

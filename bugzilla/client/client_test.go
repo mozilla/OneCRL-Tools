@@ -15,15 +15,24 @@ import (
 	"github.com/mozilla/OneCRL-Tools/bugzilla/api/auth"
 )
 
+// requireBugzillaDev skips tests that talk to a Bugzilla instance, and change
+// bugs on it, unless BUGZILLA_DEV_HOST names one.
+func requireBugzillaDev(t *testing.T) {
+	if os.Getenv("BUGZILLA_DEV_HOST") == "" {
+		t.Skip("BUGZILLA_DEV_HOST is not set")
+	}
+}
+
 func bugzillaDev() *Client {
 	// A good goto is https://bugzilla-dev.allizom.org
 	return NewClient(os.Getenv("BUGZILLA_DEV_HOST")).
 		// Create an account in your target Bugzilla, head
 		// to preferences, and generate an API key for yourself.
-		WithAuth(&auth.ApiKey{os.Getenv("BUGZILLA_DEV_API_KEY")})
+		WithAuth(&auth.ApiKey{ApiKey: os.Getenv("BUGZILLA_DEV_API_KEY")})
 }
 
 func TestVersion(t *testing.T) {
+	requireBugzillaDev(t)
 	_, err := bugzillaDev().Version()
 	if err != nil {
 		t.Fatal(err)
@@ -31,6 +40,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestBugCreate(t *testing.T) {
+	requireBugzillaDev(t)
 	bug := &bugs.Create{
 		Product:   "Core",
 		Component: "Security: PSM",
@@ -46,6 +56,7 @@ func TestBugCreate(t *testing.T) {
 }
 
 func TestGetBug(t *testing.T) {
+	requireBugzillaDev(t)
 	_, err := bugzillaDev().GetBug(1548159)
 	if err != nil {
 		t.Fatal(err)
@@ -53,6 +64,7 @@ func TestGetBug(t *testing.T) {
 }
 
 func TestInvalidate(t *testing.T) {
+	requireBugzillaDev(t)
 	_, err := bugzillaDev().UpdateBug(bugs.Invalidate(1628766, "This isn't the greatest song in the world."))
 	if err != nil {
 		t.Fatal(err)
@@ -60,6 +72,7 @@ func TestInvalidate(t *testing.T) {
 }
 
 func TestAddComment(t *testing.T) {
+	requireBugzillaDev(t)
 	_, err := bugzillaDev().UpdateBug(bugs.AddComment(1628766, "No, this is just a tribute."))
 	if err != nil {
 		t.Fatal(err)
@@ -68,7 +81,7 @@ func TestAddComment(t *testing.T) {
 
 // It is worth noting that this "fails" on https://bugzilla-dev.allizom.org. You will receive the following...
 //
-// 		Failed to fetch attachment ID 9139509 from S3: The requested key was not found
+//	Failed to fetch attachment ID 9139509 from S3: The requested key was not found
 //
 // However, if you browse to the target bug you will absolutely see the attachment present.
 //
@@ -79,6 +92,7 @@ func TestAddComment(t *testing.T) {
 //
 // ...and that database is failing to find an attachment it just inserted moments ago.
 func TestAttachment(t *testing.T) {
+	requireBugzillaDev(t)
 	attach := &attachments.Create{
 		BugId:       1628767,
 		Data:        []byte("Couldn't remember the greatest song in the world."),

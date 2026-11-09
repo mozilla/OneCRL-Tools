@@ -219,7 +219,7 @@ func (s *SetImpl) Difference(other Set) Set {
 
 // Intersection returns a Set of all Records that are both in self
 // AND in other. If self is homogenous then the returned
-//// Set will be homogenous and off the same type as self.
+// Set will be homogenous and of the same type as self.
 func (s *SetImpl) Intersection(other Set) Set {
 	intersection := s.setFactory()
 	for r := range s.Iter() {
