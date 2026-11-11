@@ -34,7 +34,7 @@ type Client struct {
 }
 
 // NewClient constructs an unauthenticated client. To add
-// and authenticator please see the WithAuth method.
+// an authenticator please see the WithAuth method.
 //
 // The provided "host" string must be <protocol>://<hostname>[:<port>]
 // WITHOUT any path. The "rest" resource is automatically appended to

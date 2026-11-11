@@ -36,7 +36,7 @@ type OneCRL struct {
 type Record struct {
 	// It is rather awkward to hold onto a pointer to the associated CCADB entry,
 	// however it makes constructing a Comparison struct much easier in main
-	// as you can bundle the two together as soon has you find the match.
+	// as you can bundle the two together as soon as you find the match.
 	// However, this could be a good opportunity for refactoring/decoupling.
 	CCADB        *ccadb.Certificate `json:"-"`
 	Schema       int                `json:"schema"`
@@ -107,7 +107,7 @@ func (r *Record) SubjectKeyHash() *set.SubjectKeyHash {
 	if err != nil {
 		log.WithError(err).
 			WithField("record", r).
-			Warn("failed to parse an subject field from OneCRL")
+			Warn("failed to parse a subject field from OneCRL")
 		return nil
 	}
 	// Decoding and re-encoding the string coerces everyone to the same b64 standard.
@@ -167,7 +167,7 @@ type SubjectKeyHashComparison struct {
 }
 
 // ToComparison generates a comparison between OneCRL and
-// CCADB that easy for a human to read in a left/right
+// CCADB that is easy for a human to read in a left/right
 // sort of way.
 //
 // Example object may be:
@@ -225,7 +225,7 @@ func (r *Record) ToComparison() (interface{}, error) {
 // CCADB certificate.
 //
 // The outcome of this procedure ultimately is what becomes
-// the proposed changed to OneCRL.
+// the proposed change to OneCRL.
 func FromCCADB(c *ccadb.Certificate) (*Record, error) {
 	cert, err := c.ParseCertificate()
 	if err != nil {
