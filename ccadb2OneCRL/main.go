@@ -34,6 +34,7 @@ import (
 	"github.com/mozilla/OneCRL-Tools/kinto"
 
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/ccadb"
+	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/crlsetcheck"
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/prune"
 	"github.com/mozilla/OneCRL-Tools/ccadb2OneCRL/utils"
 	log "github.com/sirupsen/logrus"
@@ -84,6 +85,11 @@ const (
 	// Target directory for logs. Each run of the tool will be logged to the timestamp
 	// of when it was ran. [default: stdout/stderr]
 	LogDir = "LOG_DIR"
+	// Optional. Directory to write Slack messages about the CRLSet check to. If unset,
+	// the messages are logged.
+	CRLSetReportDir = "CRLSET_REPORT_DIR"
+	// Optional. Check this "crl-set" file rather than fetching the CRLSet from Google.
+	CRLSetFile = "CRLSET_FILE"
 )
 
 func main() {
@@ -144,6 +150,12 @@ func _main(dryRun bool) {
 	updater := NewUpdate(staging, production, bugz)
 	updater.DryRun = dryRun
 	err = updater.Update()
+	// The CRLSet check runs after the update so that it can take into account
+	// anything that the update staged. It runs even if the update failed, and
+	// its own failures are reported separately rather than failing the run.
+	if checkErr := updater.CheckCRLSet(); checkErr != nil {
+		log.WithError(checkErr).Error("CRLSet check failed")
+	}
 	if err != nil {
 		log.WithError(err).Error("update failed")
 		os.Exit(1)
@@ -538,6 +550,30 @@ func (u *Updater) getDataSets() (*onecrl.Set, *ccadb.Set, error) {
 	}
 	ccadbSet := ccadb.NewSetFrom(ccadbRecords)
 	return oneCRLUnion, ccadbSet, nil
+}
+
+// CheckCRLSet reports revoked intermediates in Chrome's CRLSet that are
+// neither in OneCRL nor staged for it.
+//
+// It compares the CRLSet with the production collection that changes are
+// staged in, so records that are awaiting review count as being in OneCRL. In
+// a dry run, so do the records that a real run would have added.
+func (u *Updater) CheckCRLSet() error {
+	cfg := crlsetcheck.Config{
+		ReportDir:  os.Getenv(CRLSetReportDir),
+		CRLSetFile: os.Getenv(CRLSetFile),
+	}
+	return crlsetcheck.Run(cfg, func() ([]*onecrl.Record, error) {
+		production := ProductionCollection()
+		if err := u.production.AllRecords(production); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		records := production.Data
+		if u.DryRun {
+			records = append(records, u.changes...)
+		}
+		return records, nil
+	})
 }
 
 func (u *Updater) NoDiffs() bool {
